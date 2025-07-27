@@ -17,6 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyConfigEntry,
@@ -31,9 +32,6 @@ class ExampleBinarySensor(ExampleBaseEntity, BinarySensorEntity):
     """Implementation of a sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_has_entity_name = True
-    _attr_translation_key = "connection"
-    _attr_should_poll = True
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -63,4 +61,3 @@ class ExampleBinarySensor(ExampleBaseEntity, BinarySensorEntity):
             return None
         # This needs to enumerate to true or false
         return self.coordinator.data.connected
-

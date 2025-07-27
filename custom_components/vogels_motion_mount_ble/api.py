@@ -14,6 +14,7 @@ from .const import CHAR_DISTANCE_UUID, CHAR_PRESET_UUID, CHAR_ROTATION_UUID
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @dataclass
 class VogelsMotionMountData:
     """Class to hold api data."""
@@ -21,6 +22,7 @@ class VogelsMotionMountData:
     connected: bool = False
     distance: int | None = None
     rotation: int | None = None
+
 
 class API:
     """Class for example API."""
@@ -44,11 +46,11 @@ class API:
             _LOGGER.error("Failed to connect to device: %s", err)
             raise APIConnectionError("Error connecting to api.") from err
 
-
-    async def perform_action(self):
-        _LOGGER.exception("write_gatt_char")
-        result = await self._client.write_gatt_char(CHAR_PRESET_UUID, bytes([1]), response=True)
-        _LOGGER.exception("write_gatt_char result: %s", result)
+    async def select_preset(self, preset_id: int):
+        """Select a preset"""
+        await self._client.write_gatt_char(
+            CHAR_PRESET_UUID, bytes([preset_id]), response=True
+        )
 
     def update(self, **kwargs):
         """Update one or more fields, retaining others from existing data. Then notify the coordinator."""
@@ -81,23 +83,35 @@ class API:
 
             try:
                 _LOGGER.debug("connecting to device")
-                async with BleakClient(device, disconnected_callback=self._handle_disconnect, timeout=120) as client:
+                async with BleakClient(
+                    device, disconnected_callback=self._handle_disconnect, timeout=120
+                ) as client:
                     self.connected = client.is_connected
                     self._client = client
-                    _LOGGER.debug("maintain connected to device %s", self._client.is_connected)
-                    self.update(connected = self._client.is_connected)
+                    _LOGGER.debug(
+                        "maintain connected to device %s", self._client.is_connected
+                    )
+                    self.update(connected=self._client.is_connected)
 
-                    self._handle_distance_change(None, await client.read_gatt_char(CHAR_DISTANCE_UUID))
-                    self._handle_rotation_change(None, await client.read_gatt_char(CHAR_ROTATION_UUID))
+                    self._handle_distance_change(
+                        None, await client.read_gatt_char(CHAR_DISTANCE_UUID)
+                    )
+                    self._handle_rotation_change(
+                        None, await client.read_gatt_char(CHAR_ROTATION_UUID)
+                    )
 
-                    await client.start_notify(CHAR_DISTANCE_UUID, self._handle_distance_change)
-                    await client.start_notify(CHAR_ROTATION_UUID, self._handle_rotation_change)
+                    await client.start_notify(
+                        CHAR_DISTANCE_UUID, self._handle_distance_change
+                    )
+                    await client.start_notify(
+                        CHAR_ROTATION_UUID, self._handle_rotation_change
+                    )
 
                     await self._disconnected_event.wait()
                     # reset event
                     self._disconnected_event.clear()
                     _LOGGER.debug("device disconnected %s", self.connected)
-                    self.update(connected = client.is_connected)
+                    self.update(connected=client.is_connected)
                     await asyncio.sleep(1)
             except Exception:
                 # catch bleak.exc.BleakError: No backend with an available connection slot that can reach address D9:13:5D:AB:3B:37 was found
