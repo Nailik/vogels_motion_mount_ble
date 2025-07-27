@@ -11,9 +11,7 @@ and what additional properties and methods you need to add for each entity type.
 """
 
 import logging
-from typing import Any
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

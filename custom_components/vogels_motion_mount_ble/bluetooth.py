@@ -1,10 +1,13 @@
-from bleak import BleakClient, BleakScanner
-import logging
 import asyncio
-from .const import CHAR_DISTANCE_UUID, CHAR_ROTATION_UUID, CHAR_PRESET_UUIDS
-from homeassistant.core import HomeAssistant
+import logging
+
+from bleak import BleakClient, BleakScanner
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import CHAR_DISTANCE_UUID, CHAR_PRESET_UUIDS, CHAR_ROTATION_UUID
 
 logger = logging.getLogger(__name__)
 

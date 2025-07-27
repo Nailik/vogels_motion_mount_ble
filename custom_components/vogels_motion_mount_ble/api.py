@@ -7,8 +7,10 @@ of making this example code executable.
 import asyncio
 from dataclasses import dataclass, replace
 import logging
-from .const import CHAR_DISTANCE_UUID, CHAR_ROTATION_UUID, CHAR_PRESET_UUID
+
 from bleak import BleakClient, BleakScanner
+
+from .const import CHAR_DISTANCE_UUID, CHAR_PRESET_UUID, CHAR_ROTATION_UUID
 
 _LOGGER = logging.getLogger(__name__)
 

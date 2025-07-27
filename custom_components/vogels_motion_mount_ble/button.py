@@ -1,18 +1,14 @@
 
 import logging
+
 from homeassistant.components.button import ButtonEntity
-from .base import ExampleBaseEntity
-from .const import DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyConfigEntry
 from .base import ExampleBaseEntity
 from .const import DOMAIN
-from .coordinator import ExampleCoordinator
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-        
+
 _LOGGER = logging.getLogger(__name__)
 
 @callback

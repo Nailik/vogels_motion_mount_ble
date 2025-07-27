@@ -7,12 +7,11 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 from .api import API, APIConnectionError
 from .const import DOMAIN

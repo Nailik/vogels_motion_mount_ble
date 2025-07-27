@@ -2,6 +2,8 @@
 
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -12,10 +14,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import MyConfigEntry
 from .base import ExampleBaseEntity
 from .const import DOMAIN
-from homeassistant.helpers import config_validation as cv
-import voluptuous as vol
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.core import HomeAssistant, ServiceCall, callback
 
 _LOGGER = logging.getLogger(__name__)
 
