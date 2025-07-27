@@ -9,21 +9,35 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyConfigEntry
 from .base import ExampleBaseEntity
-from .const import DOMAIN, HA_SERVICE_SELECT_PRESET, HA_SERVICE_SELECT_PRESET_ID
+from .const import (
+    DOMAIN,
+    HA_SERVICE_SELECT_PRESET,
+    HA_SERVICE_SELECT_PRESET_ID,
+    HA_SERVICE_DEVICE_ID,
+)
 from .coordinator import ExampleCoordinator
 from homeassistant.core import ServiceCall
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import device_registry as dr
 
 _LOGGER = logging.getLogger(__name__)
 
-HA_SERVICE_SELECT_PRESET_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(HA_SERVICE_SELECT_PRESET_ID): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=7, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-    }
-)
+
+async def _select_preset_service(call: ServiceCall) -> None:
+    """My first service."""
+    device_registry = dr.async_get(call.hass)
+    device = device_registry.async_get(call.data[HA_SERVICE_DEVICE_ID])
+
+    _LOGGER.info(
+        "Device %s is linked to config entries: %s",
+        call.data[HA_SERVICE_DEVICE_ID],
+        list(device.config_entries),
+    )
+
+    entry_id = next(iter(device.config_entries))
+    coordinator: ExampleCoordinator = call.hass.data[DOMAIN].get(entry_id)
+
+    await coordinator.api.select_preset(call.data[HA_SERVICE_SELECT_PRESET_ID])
 
 
 async def async_setup_entry(
@@ -33,16 +47,10 @@ async def async_setup_entry(
 ):
     """Set up the Buttons."""
     coordinator: ExampleCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    async def _select_preset_service(call: ServiceCall) -> None:
-        """My first service."""
-        await coordinator.api.select_preset(call[HA_SERVICE_SELECT_PRESET_ID])
-
     hass.services.async_register(
         DOMAIN,
         HA_SERVICE_SELECT_PRESET,
         _select_preset_service,
-        schema=HA_SERVICE_SELECT_PRESET_SERVICE_SCHEMA,
     )
 
     # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
