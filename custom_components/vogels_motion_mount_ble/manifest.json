@@ -1,0 +1,11 @@
+{
+  "codeowners": ["@Nailik"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Nailik/vogels_motion_mount_ble",
+  "domain": "vogels_motion_mount_ble",
+  "iot_class": "local_polling",
+  "name": "Vogels MotionMount (BLE)",
+  "requirements": [],
+  "version": "0.0.1"
+}
