@@ -1,3 +1,5 @@
+"""Button entities to define actions for Vogels Motion Mount BLE entities."""
+
 import logging
 
 import voluptuous as vol
@@ -7,15 +9,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyConfigEntry
-from .base import ExampleBaseEntity
+from . import VogelsMotionMountBleConfigEntry
+from .base import VogelsMotionMountBleBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_SELECT_PRESET,
     HA_SERVICE_SELECT_PRESET_ID,
     HA_SERVICE_DEVICE_ID,
 )
-from .coordinator import ExampleCoordinator
+from .coordinator import VogelsMotionMountBleCoordinator
 from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import device_registry as dr
@@ -35,18 +37,20 @@ async def _select_preset_service(call: ServiceCall) -> None:
     )
 
     entry_id = next(iter(device.config_entries))
-    coordinator: ExampleCoordinator = call.hass.data[DOMAIN].get(entry_id)
+    coordinator: VogelsMotionMountBleCoordinator = call.hass.data[DOMAIN].get(entry_id)
 
     await coordinator.api.select_preset(call.data[HA_SERVICE_SELECT_PRESET_ID])
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MyConfigEntry,
+    config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up the Buttons."""
-    coordinator: ExampleCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: VogelsMotionMountBleCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     hass.services.async_register(
         DOMAIN,
         HA_SERVICE_SELECT_PRESET,
@@ -59,10 +63,12 @@ async def async_setup_entry(
     )
 
 
-class SelectPresetButton(ExampleBaseEntity, ButtonEntity):
+class SelectPresetButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     """Set up the Buttons."""
 
-    def __init__(self, coordinator: ExampleCoordinator, preset_id: int) -> None:
+    def __init__(
+        self, coordinator: VogelsMotionMountBleCoordinator, preset_id: int
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(coordinator)
         self._preset_id = preset_id
@@ -70,7 +76,7 @@ class SelectPresetButton(ExampleBaseEntity, ButtonEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"action-{self._preset_id}"
+        return f"Select preset {self._preset_id}"
 
     @property
     def unique_id(self) -> str:

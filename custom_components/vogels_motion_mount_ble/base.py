@@ -1,27 +1,18 @@
-"""Base entity which all other entity platform classes can inherit.
-
-As all entity types have a common set of properties, you can
-create a base entity like this and inherit it in all your entity platforms.
-
-This just makes your code more efficient and is totally optional.
-
-See each entity platform (ie sensor.py, switch.py) for how this is inheritted
-and what additional properties and methods you need to add for each entity type.
-
-"""
+"""Base entity to define common properties and methods for Vogels Motion Mount BLE entities."""
 
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ExampleCoordinator
+from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ExampleBaseEntity(CoordinatorEntity):
+class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
     """Base Entity Class.
 
     This inherits a CoordinatorEntity class to register your entites to be updated
@@ -29,37 +20,18 @@ class ExampleBaseEntity(CoordinatorEntity):
     interval or by forcing an update.
     """
 
-    coordinator: ExampleCoordinator
+    coordinator: VogelsMotionMountBleCoordinator
 
-    # ----------------------------------------------------------------------------
-    # Using attr_has_entity_name = True causes HA to name your entities with the
-    # device name and entity name.  Ie if your name property of your entity is
-    # Voltage and this entity belongs to a device, Lounge Socket, this will name
-    # your entity to be sensor.lounge_socket_voltage
-    #
-    # It is highly recommended (by me) to use this to give a good name structure
-    # to your entities.  However, totally optional.
-    # ----------------------------------------------------------------------------
+    # True causes HA to name your entities with the device name and entity name.
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: ExampleCoordinator) -> None:
+    def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
         """Initialise entity."""
         super().__init__(coordinator)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-
-        # ----------------------------------------------------------------------------
-        # Identifiers are what group entities into the same device.
-        # If your device is created elsewhere, you can just specify the indentifiers
-        # parameter to link an entity to a device.
-        # If your device connects via another device, add via_device parameter with
-        # the indentifiers of that device.
-        #
-        # Device identifiers should be unique, so use your integration name (DOMAIN)
-        # and a device uuid, mac address or some other unique attribute.
-        # ----------------------------------------------------------------------------
         return DeviceInfo(
             name=self.coordinator.name,
             manufacturer="Vogelsr",
@@ -67,10 +39,10 @@ class ExampleBaseEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self.coordinator.mac)},
         )
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self.coordinator.name
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:

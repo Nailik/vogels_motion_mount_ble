@@ -1,4 +1,4 @@
-"""The Integration 101 Template integration."""
+"""Integration for a Vogels Motion Mount via BLE."""
 
 from __future__ import annotations
 
@@ -12,76 +12,50 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .coordinator import ExampleCoordinator
+from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.BUTTON]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
 
-type MyConfigEntry = ConfigEntry[RuntimeData]
+type VogelsMotionMountBleConfigEntry = ConfigEntry[RuntimeData]
+
 
 @dataclass
 class RuntimeData:
-    """Class to hold your data."""
+    """Holds coordinator for access in hass domain."""
 
     coordinator: DataUpdateCoordinator
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
+) -> bool:
     """Set up VogelsMotionMount Integration from a config entry."""
-
+    _LOGGER.debug("async_setup_entry called with config_entry: %s", config_entry)
     # Initialise the coordinator that manages data updates from your api.
-    # This is defined in coordinator.py
-    coordinator = ExampleCoordinator(hass, config_entry)
-
-    # Perform an initial data load from api.
-    # async_config_entry_first_refresh() is special in that it does not log errors if it fails
-    # todo calls coordinator _async_update_data await coordinator.async_config_entry_first_refresh()
-
-    # Store coordinator or data in hass.data
+    coordinator = VogelsMotionMountBleCoordinator(hass, config_entry)
+    # Creates initial dictionary for the DOMAIN in hass.data
     hass.data.setdefault(DOMAIN, {})
+    # Store coordinator
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
-
-    # Initialise a listener for config flow options changes.
-    # This will be removed automatically if the integraiton is unloaded.
-    # See config_flow for defining an options setting that shows up as configure
-    # on the integration.
-    # If you do not want any config flow options, no need to have listener.
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(_async_update_listener)
-    )
-
-    # Add the coordinator and update listener to config runtime data to make
-    # accessible throughout your integration
     config_entry.runtime_data = RuntimeData(coordinator)
-
-    # Setup platforms (based on the list of entity types in PLATFORMS defined above)
-    # This calls the async_setup method in each of your entity type files.
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    # Return true to denote a successful setup.
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, config_entry):
-    """Handle config options update."""
-    # Reload the integration when the options change.
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Delete device if selected from UI."""
-    # Adding this function shows the delete device option in the UI.
-    # Remove this function if you do not want that option.
-    # You may need to do some checks here before allowing devices to be removed.
+    # TODO: Implement your logic to remove the device.
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: MyConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
+) -> bool:
     """Unload a config entry."""
-    # This is called when you remove your integration or shutdown HA.
-    # If you have created any custom services, they need to be removed here too.
-
-    # Unload platforms and return result
+    # TODO: Implement your logic to remove the device.
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

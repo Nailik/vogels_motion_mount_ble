@@ -1,4 +1,4 @@
-"""Integration 101 Template integration using DataUpdateCoordinator."""
+"""Coordinator for Vogels Motion Mount BLE integration in order to hold api."""
 
 import logging
 
@@ -7,16 +7,18 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import API
+from .api import API, VogelsMotionMountData
 
 _LOGGER = logging.getLogger(__name__)
 
-class ExampleCoordinator(DataUpdateCoordinator):
-    """My example coordinator."""
+
+class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
+    """Vogels Motion Mount BLE coordinator."""
+
+    data: VogelsMotionMountData
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
-
         # Set variables from values entered in config flow setup
         self.mac = config_entry.data[CONF_HOST]
         self._name = config_entry.data[CONF_NAME]

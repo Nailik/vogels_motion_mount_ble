@@ -1,8 +1,4 @@
-"""API Placeholder.
-
-You should create your api seperately and have it hosted on PYPI.  This is included here for the sole purpose
-of making this example code executable.
-"""
+"""Bluetooth api to connect to Vogels MotionMount and send and recieve data."""
 
 import asyncio
 from dataclasses import dataclass, replace
@@ -17,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class VogelsMotionMountData:
-    """Class to hold api data."""
+    """Holds the data of the device."""
 
     connected: bool = False
     distance: int | None = None
@@ -25,10 +21,10 @@ class VogelsMotionMountData:
 
 
 class API:
-    """Class for example API."""
+    """Bluetooth API."""
 
     def __init__(self, mac: str, pin: str | None, coordinator) -> None:
-        """Initialise."""
+        """Setup default data."""
         self._mac = mac
         self._pin = pin
         self._coordinator = coordinator
@@ -45,12 +41,6 @@ class API:
         except Exception as err:
             _LOGGER.error("Failed to connect to device: %s", err)
             raise APIConnectionError("Error connecting to api.") from err
-
-    async def select_preset(self, preset_id: int):
-        """Select a preset"""
-        await self._client.write_gatt_char(
-            CHAR_PRESET_UUID, bytes([preset_id]), response=True
-        )
 
     def update(self, **kwargs):
         """Update one or more fields, retaining others from existing data. Then notify the coordinator."""
@@ -69,9 +59,9 @@ class API:
         _LOGGER.debug("rotation change %s", data)
         self.update(rotation=int.from_bytes(data, "little"))
 
-    # todo make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
     async def maintainConnection(self):
         """Maintain connection to device."""
+        # TODO make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
         while True:
             _LOGGER.debug("scanning for device %s", self._mac)
             device = await BleakScanner.find_device_by_address(self._mac)
@@ -82,11 +72,10 @@ class API:
                 continue
 
             try:
-                _LOGGER.debug("connecting to device")
+                _LOGGER.debug("maintai connecting to device")
                 async with BleakClient(
                     device, disconnected_callback=self._handle_disconnect, timeout=120
                 ) as client:
-                    self.connected = client.is_connected
                     self._client = client
                     _LOGGER.debug(
                         "maintain connected to device %s", self._client.is_connected
@@ -110,13 +99,21 @@ class API:
                     await self._disconnected_event.wait()
                     # reset event
                     self._disconnected_event.clear()
-                    _LOGGER.debug("device disconnected %s", self.connected)
+                    _LOGGER.debug(
+                        "maintain device disconnected %s", self._client.is_connected
+                    )
                     self.update(connected=client.is_connected)
                     await asyncio.sleep(1)
             except Exception:
-                # catch bleak.exc.BleakError: No backend with an available connection slot that can reach address D9:13:5D:AB:3B:37 was found
+                # TODO catch bleak.exc.BleakError: No backend with an available connection slot that can reach address D9:13:5D:AB:3B:37 was found
                 _LOGGER.exception("Exception while connecting/connected")
                 await asyncio.sleep(5)
+
+    async def select_preset(self, preset_id: int):
+        """Select a preset index to move the MotionMount to."""
+        await self._client.write_gatt_char(
+            CHAR_PRESET_UUID, bytes([preset_id]), response=True
+        )
 
 
 class APIConnectionError(Exception):

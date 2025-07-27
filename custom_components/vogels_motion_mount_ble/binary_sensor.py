@@ -1,18 +1,16 @@
-"""Interfaces with the Integration 101 Template api sensors."""
+"""Binary sensor entities to define properties for Vogels Motion Mount BLE entities."""
 
 import logging
-
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyConfigEntry
-from .base import ExampleBaseEntity
+from . import VogelsMotionMountBleConfigEntry
+from .base import VogelsMotionMountBleBaseEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,25 +18,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MyConfigEntry,
+    config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up the Binary Sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([ExampleBinarySensor(coordinator)])
+    async_add_entities([ConnectionBinarySensor(coordinator)])
 
 
-class ExampleBinarySensor(ExampleBaseEntity, BinarySensorEntity):
-    """Implementation of a sensor."""
+class ConnectionBinarySensor(VogelsMotionMountBleBaseEntity, BinarySensorEntity):
+    """Sensor to indicate if the Vogels Motion Mount is connected."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update sensor with latest data from coordinator."""
-        _LOGGER.exception("_handle_coordinator_update binary sensor")
-        # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.async_write_ha_state()
 
     @property
     def name(self) -> str:
@@ -48,16 +39,11 @@ class ExampleBinarySensor(ExampleBaseEntity, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique id."""
-        # All entities must have a unique id.  Think carefully what you want this to be as
-        # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.coordinator.mac}-connected"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self):
         """Return if the binary sensor is on."""
-        _LOGGER.exception("is_on binary sensor")
         if not self.coordinator.data:
-            _LOGGER.error("No data available in coordinator")
             return None
-        # This needs to enumerate to true or false
         return self.coordinator.data.connected

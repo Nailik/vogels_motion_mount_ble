@@ -1,4 +1,4 @@
-"""Config flow for Integration 101 Template integration."""
+"""Config flow for Vogels Motion Mount BLE integration."""
 
 from __future__ import annotations
 
@@ -79,8 +79,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
                         vol.Required(
                             CONF_NAME,
-                            description={"suggested_value": "Vogel's Motion Mount"},
-                            default=user_input.get(CONF_NAME),
+                            default=f"Vogel's Motion Mount ({user_input.get(CONF_HOST)})",
                         ): str,
                         vol.Optional(
                             CONF_PIN, default=user_input.get(CONF_PIN)
