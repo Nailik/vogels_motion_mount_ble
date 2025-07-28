@@ -31,6 +31,7 @@ class API:
         self._data = VogelsMotionMountData(connected=False)
         self._client: BleakClient | None = None
         self._disconnected_event = asyncio.Event()
+        self._connected_event = asyncio.Event()
 
     async def testConnect(self):
         """Test connection to the BLE device once using BleakClient."""
@@ -59,51 +60,75 @@ class API:
         _LOGGER.debug("rotation change %s", data)
         self.update(rotation=int.from_bytes(data, "little"))
 
-    async def maintainConnection(self):
-        """Maintain connection to device."""
-        # TODO make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
-        while True:
+    async def _get_client(self):
+        if self._client is None:
             _LOGGER.debug("scanning for device %s", self._mac)
             device = await BleakScanner.find_device_by_address(self._mac)
-
             if device is None:
                 _LOGGER.debug("no device %s found, wait then scan again", self._mac)
-                await asyncio.sleep(5)
-                continue
+                return None
+            return BleakClient(
+                device, disconnected_callback=self._handle_disconnect, timeout=120
+            )
+        return self._client
 
+    async def _read_initial_data(self):
+        self.update(connected=self._client.is_connected)
+
+        self._handle_distance_change(
+            None, await self._client.read_gatt_char(CHAR_DISTANCE_UUID)
+        )
+        self._handle_rotation_change(
+            None, await self._client.read_gatt_char(CHAR_ROTATION_UUID)
+        )
+
+        await self._client.start_notify(
+            CHAR_DISTANCE_UUID, self._handle_distance_change
+        )
+        await self._client.start_notify(
+            CHAR_ROTATION_UUID, self._handle_rotation_change
+        )
+
+    async def maintain_connection(self):
+        """Maintain connection to device."""
+        _LOGGER.debug("Maintain connection to device %s", self._mac)
+        # TODO make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
+        while True:
             try:
-                _LOGGER.debug("maintai connecting to device")
-                async with BleakClient(
-                    device, disconnected_callback=self._handle_disconnect, timeout=120
-                ) as client:
-                    self._client = client
-                    _LOGGER.debug(
-                        "maintain connected to device %s", self._client.is_connected
-                    )
-                    self.update(connected=self._client.is_connected)
+                self._client = await self._get_client()
+                if self._client is None:
+                    # sleep for a while before trying to connect again
+                    await asyncio.sleep(5)
+                    continue
 
-                    self._handle_distance_change(
-                        None, await client.read_gatt_char(CHAR_DISTANCE_UUID)
-                    )
-                    self._handle_rotation_change(
-                        None, await client.read_gatt_char(CHAR_ROTATION_UUID)
-                    )
+                if not self._client.is_connected:
+                    _LOGGER.debug("Client connnected after _get_client")
+                    await self._client.connect()
+                else:
+                    _LOGGER.debug("Client ot connnected after _get_client")
+                    # sleep for a while before trying to connect again
+                    await asyncio.sleep(5)
+                    continue
 
-                    await client.start_notify(
-                        CHAR_DISTANCE_UUID, self._handle_distance_change
-                    )
-                    await client.start_notify(
-                        CHAR_ROTATION_UUID, self._handle_rotation_change
-                    )
+                if self._client.is_connected:
+                    self._connected_event.set()
 
-                    await self._disconnected_event.wait()
-                    # reset event
-                    self._disconnected_event.clear()
-                    _LOGGER.debug(
-                        "maintain device disconnected %s", self._client.is_connected
-                    )
-                    self.update(connected=client.is_connected)
-                    await asyncio.sleep(1)
+                _LOGGER.debug(
+                    "maintain connected to device %s", self._client.is_connected
+                )
+
+                await self._read_initial_data()
+
+                await self._disconnected_event.wait()
+                # reset event
+                self._disconnected_event.clear()
+                self._connected_event.clear()
+
+                _LOGGER.debug(
+                    "maintain device disconnected %s", self._client.is_connected
+                )
+                self.update(connected=self._client.is_connected)
+                await asyncio.sleep(1)
             except Exception:
                 # TODO catch bleak.exc.BleakError: No backend with an available connection slot that can reach address D9:13:5D:AB:3B:37 was found
                 _LOGGER.exception("Exception while connecting/connected")
@@ -111,6 +136,7 @@ class API:
 
     async def select_preset(self, preset_id: int):
         """Select a preset index to move the MotionMount to."""
+        await self._connected_event.wait()
         await self._client.write_gatt_char(
             CHAR_PRESET_UUID, bytes([preset_id]), response=True
         )

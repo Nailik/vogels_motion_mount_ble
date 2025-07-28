@@ -34,4 +34,4 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
 
         # Initialise your api here
         self.api = API(mac=self.mac, pin=self._pin, coordinator=self)
-        hass.loop.create_task(self.api.maintainConnection())
+        hass.loop.create_task(self.api.maintain_connection())
