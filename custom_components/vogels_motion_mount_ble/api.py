@@ -49,6 +49,7 @@ class API:
         self._disconnected_event = asyncio.Event()
         self._connected_event = asyncio.Event()
         self._maintain_connection = False
+        self._initial_data_loaded = False
 
     async def test_connection(self):
         """Test connection to the BLE device once using BleakClient."""
@@ -102,9 +103,6 @@ class API:
         await self._client.start_notify(
             CHAR_ROTATION_UUID, self._handle_rotation_change
         )
-        #await self._client.start_notify(
-         #   CHAR_WIDTH_UUID, self._handle_width_change
-        #)
 
     async def _read_initial_data(self):
         _LOGGER.debug("_read_initial_data")
@@ -121,6 +119,29 @@ class API:
             rotation = self._data.current_rotation,
             distance = self._data.current_distance
         )
+
+    async def load_initial_data(self):
+        """Initial data connection to device."""
+        # TODO make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
+        while not self._initial_data_loaded:
+            try:
+                _LOGGER.debug("initial data connection to device %s connecting ...", self._mac)
+                await self._client.connect(timeout=120)
+                self._connected_event.set()
+                self._update(connected=self._client.is_connected)
+
+                _LOGGER.debug(
+                    "initial data connected to device connected: %s, reading initial data",
+                    self._client.is_connected,
+                )
+                await self._setup_notifications()
+                await self._read_initial_data()
+
+                self._initial_data_loaded = True
+            except Exception:
+                # TODO catch bleak.exc.BleakError: No backend with an available connection slot that can reach address D9:13:5D:AB:3B:37 was found
+                _LOGGER.exception("Exception while connecting/connected")
+                await asyncio.sleep(5)
 
     async def maintain_connection(self):
         """Maintain connection to device."""
@@ -194,7 +215,7 @@ class API:
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
         await self._client.write_gatt_char(
-            CHAR_DISTANCE_UUID, distance.to_bytes(2, byteorder='big'), response=True
+            CHAR_DISTANCE_UUID, int(distance).to_bytes(2, byteorder='big'), response=True
         )
 
     async def set_rotation(self, rotation: int):

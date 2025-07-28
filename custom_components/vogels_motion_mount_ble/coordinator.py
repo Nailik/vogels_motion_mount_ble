@@ -47,3 +47,4 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         else:
             # TODO load initial data
             _LOGGER.debug("Starting maintain connection off")
+            self.hass.loop.create_task(self.api.load_initial_data())
