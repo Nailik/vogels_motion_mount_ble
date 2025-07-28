@@ -26,10 +26,12 @@ HA_SERVICE_SELECT_PRESET = "select_preset"
 HA_SERVICE_SET_DISTANCE = "set_distance"
 HA_SERVICE_SET_ROTATION = "set_rotation"
 HA_SERVICE_SET_TV_WIDTH = "set_tv_width"
+HA_SERVICE_SET_NAME = "set_name"
 
 HA_SERVICE_DISTANCE_ID = "distance"
 HA_SERVICE_ROTATION_ID = "rotation"
 HA_SERVICE_TV_WIDTH_ID = "tv_width"
 HA_SERVICE_SELECT_PRESET_ID = "preset_id"
+HA_SERVICE_NAME_ID = "name"
 
 CONF_MAINTAIN_CONNECTION = "maintain_connection"

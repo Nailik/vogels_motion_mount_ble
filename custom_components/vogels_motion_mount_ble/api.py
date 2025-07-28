@@ -13,6 +13,7 @@ from .const import (
     CHAR_PRESET_UUID,
     CHAR_ROTATION_UUID,
     CHAR_WIDTH_UUID,
+    CHAR_NAME_UUID,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ class VogelsMotionMountData:
     current_distance: int | None = None
     current_rotation: int | None = None
     width: int | None = None
+    name: str | None = None
 
 class API:
     """Bluetooth API."""
@@ -83,17 +85,21 @@ class API:
         _LOGGER.debug("handle Device disconnected!")
         self._disconnected_event.set()
 
-    def _handle_distance_change(self, _, data):
+    def _handle_distance_change(self, _, data: bytearray):
         _LOGGER.debug("distance change %s", data)
         self._update(current_distance=int.from_bytes(data, "big"))
 
-    def _handle_rotation_change(self, _, data):
+    def _handle_rotation_change(self, _, data: bytearray):
         _LOGGER.debug("rotation change %s", data)
         self._update(current_rotation=int.from_bytes(data, "big"))
 
-    def _handle_width_change(self, _, data):
+    def _handle_width_change(self, _, data: bytearray):
         _LOGGER.debug("width change %s", data)
         self._update(width=data[0])
+
+    def _handle_name_change(self, _, data: bytearray):
+        _LOGGER.debug("name change %s", data.decode('utf-8'))
+        self._update(name=data.decode('utf-8'))
 
     async def _setup_notifications(self):
         _LOGGER.debug("_setup_notifications")
@@ -115,9 +121,8 @@ class API:
         self._handle_width_change(
             None, await self._client.read_gatt_char(CHAR_WIDTH_UUID)
         )
-        self._update(
-            rotation = self._data.current_rotation,
-            distance = self._data.current_distance
+        self._handle_name_change(
+            None, await self._client.read_gatt_char(CHAR_NAME_UUID)
         )
 
     async def load_initial_data(self):
@@ -193,10 +198,6 @@ class API:
             await self._setup_notifications()
             await self._read_initial_data()
 
-    async def load_initial_data(self):
-        """Connect to MotionMount and load initial data."""
-        await self._wait_for_connection()
-
     async def select_preset(self, preset_id: int):
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
@@ -224,6 +225,14 @@ class API:
         await self._client.write_gatt_char(
             CHAR_ROTATION_UUID, int(rotation).to_bytes(2, byteorder='big'), response=True
         )
+
+    async def set_name(self, name: str):
+        """Select a preset index to move the MotionMount to."""
+        await self._wait_for_connection()
+        await self._client.write_gatt_char(
+            CHAR_NAME_UUID, bytearray(name.encode("utf-8")), response=True
+        )
+        self._update(name=name)
 
 class APIConnectionError(Exception):
     """Exception class for connection error."""
