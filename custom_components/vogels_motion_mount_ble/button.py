@@ -2,25 +2,20 @@
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.button import ButtonEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import selector
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .const import (
     DOMAIN,
+    HA_SERVICE_DEVICE_ID,
     HA_SERVICE_SELECT_PRESET,
     HA_SERVICE_SELECT_PRESET_ID,
-    HA_SERVICE_DEVICE_ID,
 )
 from .coordinator import VogelsMotionMountBleCoordinator
-from homeassistant.core import ServiceCall
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import device_registry as dr
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,7 +8,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
-from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    sensors = [DistanceSensor(coordinator), RotationSensor(coordinator)]
+    sensors = [DistanceSensor(coordinator), RotationSensor(coordinator), TVWidthSensor(coordinator)]
 
     # Create the sensors.
     async_add_entities(sensors)
@@ -55,7 +54,6 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
             return None
         return self.coordinator.data.distance
 
-
 class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Implementation of a sensor."""
 
@@ -78,3 +76,26 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.rotation
+
+class TVWidthSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
+    """Implementation of a sensor."""
+
+    _attr_device_class = SensorDeviceClass.DISTANCE
+    _attr_native_unit_of_measurement = "cm"
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return "tvwidth"
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+        return "tv_width"
+
+    @property
+    def native_value(self):
+        """Return the state of the entity."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.width

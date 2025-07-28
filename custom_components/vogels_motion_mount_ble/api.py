@@ -4,9 +4,11 @@ import asyncio
 from dataclasses import dataclass, replace
 import logging
 
-from bleak import BleakClient, BleakScanner
+from bleak import BleakClient, BleakError, BleakScanner
 
-from .const import CHAR_DISTANCE_UUID, CHAR_PRESET_UUID, CHAR_ROTATION_UUID
+from homeassistant.core import Callable
+
+from .const import CHAR_DISTANCE_UUID, CHAR_PRESET_UUID, CHAR_ROTATION_UUID, CHAR_WIDTH_UUID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,35 +20,56 @@ class VogelsMotionMountData:
     connected: bool = False
     distance: int | None = None
     rotation: int | None = None
-
+    width: int | None = None
 
 class API:
     """Bluetooth API."""
 
-    def __init__(self, mac: str, pin: str | None, coordinator) -> None:
+    def __init__(
+        self,
+        mac: str,
+        pin: str | None,
+        callback: Callable[[VogelsMotionMountData], None],
+    ) -> None:
         """Setup default data."""
         self._mac = mac
         self._pin = pin
-        self._coordinator = coordinator
+        self._callback = callback
         self._data = VogelsMotionMountData(connected=False)
-        self._client: BleakClient | None = None
+        self._client: BleakClient = BleakClient(
+            self._mac, disconnected_callback=self._handle_disconnect, timeout=120
+        )
         self._disconnected_event = asyncio.Event()
         self._connected_event = asyncio.Event()
+        self._maintain_connection = False
 
-    async def testConnect(self):
+    async def test_connection(self):
         """Test connection to the BLE device once using BleakClient."""
         try:
             _LOGGER.debug("start test connection")
-            async with BleakClient(self._mac, timeout=120) as client:
-                _LOGGER.debug("Connected to device: %s", client.is_connected)
+            self._client.connect(timeout=120)
         except Exception as err:
             _LOGGER.error("Failed to connect to device: %s", err)
             raise APIConnectionError("Error connecting to api.") from err
 
-    def update(self, **kwargs):
-        """Update one or more fields, retaining others from existing data. Then notify the coordinator."""
+    async def wait_for_ble_backend(self, timeout):
+        """Wait until BLE backend is available or timeout."""
+        total_wait = 0
+        while total_wait < timeout:
+            try:
+                await BleakScanner.discover(timeout=1)
+                _LOGGER.debug("Bakend Ready!")
+            except BleakError as e:
+                _LOGGER.debug("BLE backend not ready yet %s!", e)
+                await asyncio.sleep(5)
+                total_wait += 5
+
+        raise RuntimeError("BLE backend not available after waiting.")
+
+    def _update(self, **kwargs):
+        # Update one or more fields, retaining others from existing data. Then notify the coordinator.
         self._data = replace(self._data, **kwargs)
-        self._coordinator.async_set_updated_data(self._data)
+        self._callback(self._data)
 
     def _handle_disconnect(self, _):
         _LOGGER.debug("handle Device disconnected!")
@@ -54,32 +77,27 @@ class API:
 
     def _handle_distance_change(self, _, data):
         _LOGGER.debug("distance change %s", data)
-        self.update(distance=int.from_bytes(data, "little"))
+        self._update(distance=int.from_bytes(data, "little"))
 
     def _handle_rotation_change(self, _, data):
         _LOGGER.debug("rotation change %s", data)
-        self.update(rotation=int.from_bytes(data, "little"))
+        self._update(rotation=int.from_bytes(data, "little"))
 
-    async def _get_client(self):
-        if self._client is None:
-            _LOGGER.debug("scanning for device %s", self._mac)
-            device = await BleakScanner.find_device_by_address(self._mac)
-            if device is None:
-                _LOGGER.debug("no device %s found, wait then scan again", self._mac)
-                return None
-            return BleakClient(
-                device, disconnected_callback=self._handle_disconnect, timeout=120
-            )
-        return self._client
+    def _handle_width_change(self, _, data):
+        _LOGGER.debug("width change %s", data)
+        self._update(width=int.from_bytes(data, "little"))
 
     async def _read_initial_data(self):
-        self.update(connected=self._client.is_connected)
+        self._update(connected=self._client.is_connected)
 
         self._handle_distance_change(
             None, await self._client.read_gatt_char(CHAR_DISTANCE_UUID)
         )
         self._handle_rotation_change(
             None, await self._client.read_gatt_char(CHAR_ROTATION_UUID)
+        )
+        self._handle_width_change(
+            None, await self._client.read_gatt_char(CHAR_WIDTH_UUID)
         )
 
         await self._client.start_notify(
@@ -88,35 +106,25 @@ class API:
         await self._client.start_notify(
             CHAR_ROTATION_UUID, self._handle_rotation_change
         )
+        await self._client.start_notify(
+            CHAR_WIDTH_UUID, self._handle_width_change
+        )
 
     async def maintain_connection(self):
         """Maintain connection to device."""
-        _LOGGER.debug("Maintain connection to device %s", self._mac)
+        self._maintain_connection = True
         # TODO make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
         while True:
             try:
-                self._client = await self._get_client()
-                if self._client is None:
-                    # sleep for a while before trying to connect again
-                    await asyncio.sleep(5)
-                    continue
-
-                if not self._client.is_connected:
-                    _LOGGER.debug("Client connnected after _get_client")
-                    await self._client.connect()
-                else:
-                    _LOGGER.debug("Client ot connnected after _get_client")
-                    # sleep for a while before trying to connect again
-                    await asyncio.sleep(5)
-                    continue
-
-                if self._client.is_connected:
-                    self._connected_event.set()
-
                 _LOGGER.debug(
-                    "maintain connected to device %s", self._client.is_connected
+                    "Maintain connection to device %s connecting ...", self._mac
                 )
-
+                await self._client.connect(timeout=120)
+                self._connected_event.set()
+                _LOGGER.debug(
+                    "maintain connected to device connected: %s",
+                    self._client.is_connected,
+                )
                 await self._read_initial_data()
 
                 await self._disconnected_event.wait()
@@ -127,20 +135,41 @@ class API:
                 _LOGGER.debug(
                     "maintain device disconnected %s", self._client.is_connected
                 )
-                self.update(connected=self._client.is_connected)
+                self._update(connected=self._client.is_connected)
                 await asyncio.sleep(1)
             except Exception:
                 # TODO catch bleak.exc.BleakError: No backend with an available connection slot that can reach address D9:13:5D:AB:3B:37 was found
                 _LOGGER.exception("Exception while connecting/connected")
                 await asyncio.sleep(5)
 
+    async def _wait_for_connection(self):
+        if self._maintain_connection:
+            _LOGGER.debug("Wait for maintained connection")
+            await self._connected_event.wait()
+        else:
+            _LOGGER.debug("Wait for new connection, connecting...")
+            await self._client.connect(timeout=120)
+            self._connected_event.set()
+            await self._read_initial_data()
+
+    async def load_initial_data(self):
+        """Connect to MotionMount and load initial data."""
+        await self._wait_for_connection()
+        await self._read_initial_data()
+
     async def select_preset(self, preset_id: int):
         """Select a preset index to move the MotionMount to."""
-        await self._connected_event.wait()
+        await self._wait_for_connection()
         await self._client.write_gatt_char(
             CHAR_PRESET_UUID, bytes([preset_id]), response=True
         )
 
+    async def set_width(self, width: int):
+        """Select a preset index to move the MotionMount to."""
+        await self._wait_for_connection()
+        await self._client.write_gatt_char(
+            CHAR_WIDTH_UUID, bytes([width]), response=True
+        )
 
 class APIConnectionError(Exception):
     """Exception class for connection error."""

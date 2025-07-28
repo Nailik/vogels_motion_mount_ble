@@ -14,24 +14,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .api import API, APIConnectionError
-from .const import DOMAIN
+from .const import CONF_MAINTAIN_CONNECTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-# Data to be input by the user in the config flow.
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(
-            CONF_NAME, description={"suggested_value": "Vogel's Motion Mount"}
-        ): str,
-        vol.Optional(CONF_PIN): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-    }
-)
 
 
 def prefilledForm(name: str) -> vol.Schema:
@@ -40,6 +25,7 @@ def prefilledForm(name: str) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=name): str,
+            vol.Required(CONF_MAINTAIN_CONNECTION): bool,
             vol.Optional(CONF_PIN): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=9999, mode=selector.NumberSelectorMode.BOX
@@ -81,6 +67,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_NAME,
                             default=f"Vogel's Motion Mount ({user_input.get(CONF_HOST)})",
                         ): str,
+                        vol.Required(CONF_MAINTAIN_CONNECTION, default=user_input.get(CONF_MAINTAIN_CONNECTION)): bool,
                         vol.Optional(
                             CONF_PIN, default=user_input.get(CONF_PIN)
                         ): selector.NumberSelector(
@@ -98,10 +85,8 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Required(
-                        CONF_NAME,
-                        description={"suggested_value": "Vogel's Motion Mount"},
-                    ): str,
+                    vol.Required(CONF_NAME): str,
+                    vol.Required(CONF_MAINTAIN_CONNECTION): bool,
                     vol.Optional(CONF_PIN): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0, max=9999, mode=selector.NumberSelectorMode.BOX
@@ -130,6 +115,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_HOST: self.discovery_info.address,
                     CONF_NAME: user_input[CONF_NAME],
+                    CONF_MAINTAIN_CONNECTION: user_input[CONF_MAINTAIN_CONNECTION],
                     CONF_PIN: user_input.get(CONF_PIN),
                 }
             )
@@ -147,9 +133,8 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
-                        vol.Optional(
-                            CONF_PIN, default=user_input.get(CONF_PIN)
-                        ): selector.NumberSelector(
+                        vol.Required(CONF_MAINTAIN_CONNECTION, default=user_input.get(CONF_MAINTAIN_CONNECTION)): bool,
+                        vol.Optional(CONF_PIN, default=user_input.get(CONF_PIN)): selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0, max=9999, mode=selector.NumberSelectorMode.BOX
                             )
@@ -167,10 +152,8 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME,
-                        default=f"Vogel's Motion Mount ({self.discovery_info.address})",
-                    ): str,
+                    vol.Required(CONF_NAME,default=f"Vogel's Motion Mount ({self.discovery_info.address})",): str,
+                    vol.Required(CONF_MAINTAIN_CONNECTION): bool,
                     vol.Optional(CONF_PIN): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0, max=9999, mode=selector.NumberSelectorMode.BOX
@@ -188,7 +171,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         # Create an API instance and try to connect.
         api = API(mac, data.get(CONF_PIN), lambda *_, **__: None)
         try:
-            await api.testConnect()
+            await api.test_connection()
         except APIConnectionError as err:
             raise CannotConnect from err
 
