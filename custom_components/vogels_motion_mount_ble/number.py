@@ -1,4 +1,4 @@
-"""Sensor entities to define properties for Vogels Motion Mount BLE entities."""
+"""Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
 import logging
 
@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
+from homeassistant.components.number import NumberEntity, NumberMode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,54 +26,35 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    sensors = [DistanceSensor(coordinator), RotationSensor(coordinator)]
+    sensors = [TVWidthNumber(coordinator)]
 
     # Create the sensors.
     async_add_entities(sensors)
 
+class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
+    """Implementation of a number input for TV width."""
 
-class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
-    """Implementation of a sensor."""
-
-    _attr_device_class = SensorDeviceClass.DISTANCE
-    _attr_native_unit_of_measurement = "cm"  # TODO test this
+    _attr_native_unit_of_measurement = "cm"
+    _attr_mode = NumberMode.BOX
+    _attr_step = 1
 
     @property
     def name(self) -> str:
-        """Return the name of the sensor."""
-        return "distance"
+        """Return the name of the number entity."""
+        return "tvwidth"
 
     @property
     def unique_id(self) -> str:
         """Return unique id."""
-        return "distance"
+        return "tv_width"
 
     @property
     def native_value(self):
-        """Return the state of the entity."""
+        """Return the current value."""
         if not self.coordinator.data:
             return None
-        return self.coordinator.data.distance
+        return self.coordinator.data.width
 
-class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
-    """Implementation of a sensor."""
-
-    _attr_device_class = None  # TODO find a usefull class
-    _attr_native_unit_of_measurement = "°"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "rotation"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return "rotation"
-
-    @property
-    def native_value(self):
-        """Return the state of the entity."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.rotation
+    async def async_set_native_value(self, value: int) -> None:
+        """Set the value from the UI."""
+        await self.coordinator.api.set_width(value)

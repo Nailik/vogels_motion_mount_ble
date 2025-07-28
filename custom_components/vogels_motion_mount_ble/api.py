@@ -8,7 +8,12 @@ from bleak import BleakClient, BleakError, BleakScanner
 
 from homeassistant.core import Callable
 
-from .const import CHAR_DISTANCE_UUID, CHAR_PRESET_UUID, CHAR_ROTATION_UUID, CHAR_WIDTH_UUID
+from .const import (
+    CHAR_DISTANCE_UUID,
+    CHAR_PRESET_UUID,
+    CHAR_ROTATION_UUID,
+    CHAR_WIDTH_UUID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +90,7 @@ class API:
 
     def _handle_width_change(self, _, data):
         _LOGGER.debug("width change %s", data)
-        self._update(width=int.from_bytes(data, "little"))
+        self._update(width=data[0])
 
     async def _read_initial_data(self):
         self._update(connected=self._client.is_connected)

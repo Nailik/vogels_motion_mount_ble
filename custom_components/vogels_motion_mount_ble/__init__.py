@@ -16,7 +16,7 @@ from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.NUMBER]
 
 type VogelsMotionMountBleConfigEntry = ConfigEntry[RuntimeData]
 
