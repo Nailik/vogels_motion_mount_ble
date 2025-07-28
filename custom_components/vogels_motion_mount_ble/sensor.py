@@ -44,6 +44,11 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         return "distance"
 
     @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+        return "distance"
+
+    @property
     def native_value(self):
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -60,6 +65,11 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
+        return "rotation"
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
         return "rotation"
 
     @property

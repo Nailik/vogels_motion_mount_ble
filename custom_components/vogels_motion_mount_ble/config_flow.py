@@ -168,7 +168,8 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_NAME, default=self.discovery_info.advertisement.local_name
+                        CONF_NAME,
+                        default=f"Vogel's Motion Mount ({self.discovery_info.address})",
                     ): str,
                     vol.Optional(CONF_PIN): selector.NumberSelector(
                         selector.NumberSelectorConfig(

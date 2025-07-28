@@ -39,7 +39,7 @@ class ConnectionBinarySensor(VogelsMotionMountBleBaseEntity, BinarySensorEntity)
     @property
     def unique_id(self) -> str:
         """Return unique id."""
-        return f"{DOMAIN}-{self.coordinator.mac}-connected"
+        return "connection"
 
     @property
     def is_on(self):
