@@ -25,6 +25,8 @@ class VogelsMotionMountData:
     connected: bool = False
     distance: int | None = None
     rotation: int | None = None
+    current_distance: int | None = None
+    current_rotation: int | None = None
     width: int | None = None
 
 class API:
@@ -82,19 +84,30 @@ class API:
 
     def _handle_distance_change(self, _, data):
         _LOGGER.debug("distance change %s", data)
-        self._update(distance=int.from_bytes(data, "big"))
+        self._update(current_distance=int.from_bytes(data, "big"))
 
     def _handle_rotation_change(self, _, data):
         _LOGGER.debug("rotation change %s", data)
-        self._update(rotation=int.from_bytes(data, "big"))
+        self._update(current_rotation=int.from_bytes(data, "big"))
 
     def _handle_width_change(self, _, data):
         _LOGGER.debug("width change %s", data)
         self._update(width=data[0])
 
-    async def _read_initial_data(self):
-        self._update(connected=self._client.is_connected)
+    async def _setup_notifications(self):
+        _LOGGER.debug("_setup_notifications")
+        await self._client.start_notify(
+            CHAR_DISTANCE_UUID, self._handle_distance_change
+        )
+        await self._client.start_notify(
+            CHAR_ROTATION_UUID, self._handle_rotation_change
+        )
+        #await self._client.start_notify(
+         #   CHAR_WIDTH_UUID, self._handle_width_change
+        #)
 
+    async def _read_initial_data(self):
+        _LOGGER.debug("_read_initial_data")
         self._handle_distance_change(
             None, await self._client.read_gatt_char(CHAR_DISTANCE_UUID)
         )
@@ -104,15 +117,9 @@ class API:
         self._handle_width_change(
             None, await self._client.read_gatt_char(CHAR_WIDTH_UUID)
         )
-
-        await self._client.start_notify(
-            CHAR_DISTANCE_UUID, self._handle_distance_change
-        )
-        await self._client.start_notify(
-            CHAR_ROTATION_UUID, self._handle_rotation_change
-        )
-        await self._client.start_notify(
-            CHAR_WIDTH_UUID, self._handle_width_change
+        self._update(
+            rotation = self._data.current_rotation,
+            distance = self._data.current_distance
         )
 
     async def maintain_connection(self):
@@ -132,6 +139,7 @@ class API:
                     "maintain connected to device connected: %s, reading initial data",
                     self._client.is_connected,
                 )
+                await self._setup_notifications()
                 await self._read_initial_data()
 
                 await self._disconnected_event.wait()
@@ -154,16 +162,19 @@ class API:
         if self._maintain_connection:
             _LOGGER.debug("Wait for maintained connection")
             await self._connected_event.wait()
+        elif self._client.is_connected:
+            _LOGGER.debug("Already connected, no need to connect again.")
+            return
         else:
             _LOGGER.debug("Wait for new connection, connecting...")
             await self._client.connect(timeout=120)
             self._connected_event.set()
+            await self._setup_notifications()
             await self._read_initial_data()
 
     async def load_initial_data(self):
         """Connect to MotionMount and load initial data."""
         await self._wait_for_connection()
-        await self._read_initial_data()
 
     async def select_preset(self, preset_id: int):
         """Select a preset index to move the MotionMount to."""
@@ -190,7 +201,7 @@ class API:
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
         await self._client.write_gatt_char(
-            CHAR_ROTATION_UUID, rotation.to_bytes(2, byteorder='big'), response=True
+            CHAR_ROTATION_UUID, int(rotation).to_bytes(2, byteorder='big'), response=True
         )
 
 class APIConnectionError(Exception):
