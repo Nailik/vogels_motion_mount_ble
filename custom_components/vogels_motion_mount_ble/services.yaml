@@ -1,4 +1,4 @@
-select_preset_service:
+select_preset:
   name: Set Preset
   description: Sets the preset by ID
   fields:
@@ -17,4 +17,64 @@ select_preset_service:
         number:
           min: 0
           max: 7
+          mode: box
+set_distance:
+  name: Set Distance
+  description: Sets the distance form the wall
+  fields:
+    device_id:
+      name: Target Entity
+      description: The entity to move
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    distance:
+      name: Distance
+      description: The distance in percentage
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 100
+          mode: slider
+set_rotation:
+  name: Set Rotation of the TV
+  description: Sets the rotation of the TV
+  fields:
+    device_id:
+      name: Target Entity
+      description: The entity to rotate
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    rotation:
+      name: Rotation
+      description: The rotation in percentage
+      required: true
+      selector:
+        number:
+          min: -100
+          step: 1
+          max: 100
+          mode: slider
+set_tv_width:
+  name: Set TV Width
+  description: Sets the width of the TV
+  fields:
+    device_id:
+      name: Target Entity
+      description: The entity to set the width for.
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    tv_width:
+      name: Width
+      description: The width in cm
+      required: true
+      selector:
+        number:
           mode: box

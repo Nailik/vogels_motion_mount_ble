@@ -19,18 +19,10 @@ from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-
 async def _select_preset_service(call: ServiceCall) -> None:
-    """My first service."""
+    _LOGGER.debug("select_preset_service called with data: %s", call.data)
     device_registry = dr.async_get(call.hass)
     device = device_registry.async_get(call.data[HA_SERVICE_DEVICE_ID])
-
-    _LOGGER.info(
-        "Device %s is linked to config entries: %s",
-        call.data[HA_SERVICE_DEVICE_ID],
-        list(device.config_entries),
-    )
-
     entry_id = next(iter(device.config_entries))
     coordinator: VogelsMotionMountBleCoordinator = call.hass.data[DOMAIN].get(entry_id)
 

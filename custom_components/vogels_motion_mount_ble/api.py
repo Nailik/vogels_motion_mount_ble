@@ -82,11 +82,11 @@ class API:
 
     def _handle_distance_change(self, _, data):
         _LOGGER.debug("distance change %s", data)
-        self._update(distance=int.from_bytes(data, "little"))
+        self._update(distance=int.from_bytes(data, "big"))
 
     def _handle_rotation_change(self, _, data):
         _LOGGER.debug("rotation change %s", data)
-        self._update(rotation=int.from_bytes(data, "little"))
+        self._update(rotation=int.from_bytes(data, "big"))
 
     def _handle_width_change(self, _, data):
         _LOGGER.debug("width change %s", data)
@@ -126,20 +126,23 @@ class API:
                 )
                 await self._client.connect(timeout=120)
                 self._connected_event.set()
+                self._update(connected=self._client.is_connected)
+
                 _LOGGER.debug(
-                    "maintain connected to device connected: %s",
+                    "maintain connected to device connected: %s, reading initial data",
                     self._client.is_connected,
                 )
                 await self._read_initial_data()
 
                 await self._disconnected_event.wait()
-                # reset event
-                self._disconnected_event.clear()
-                self._connected_event.clear()
-
                 _LOGGER.debug(
                     "maintain device disconnected %s", self._client.is_connected
                 )
+                self._update(connected=self._client.is_connected)
+
+                # reset events
+                self._disconnected_event.clear()
+                self._connected_event.clear()
                 self._update(connected=self._client.is_connected)
                 await asyncio.sleep(1)
             except Exception:
@@ -174,6 +177,20 @@ class API:
         await self._wait_for_connection()
         await self._client.write_gatt_char(
             CHAR_WIDTH_UUID, bytes([width]), response=True
+        )
+
+    async def set_distance(self, distance: int):
+        """Select a preset index to move the MotionMount to."""
+        await self._wait_for_connection()
+        await self._client.write_gatt_char(
+            CHAR_DISTANCE_UUID, distance.to_bytes(2, byteorder='big'), response=True
+        )
+
+    async def set_rotation(self, rotation: int):
+        """Select a preset index to move the MotionMount to."""
+        await self._wait_for_connection()
+        await self._client.write_gatt_char(
+            CHAR_ROTATION_UUID, rotation.to_bytes(2, byteorder='big'), response=True
         )
 
 class APIConnectionError(Exception):
