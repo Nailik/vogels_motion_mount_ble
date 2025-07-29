@@ -26,8 +26,8 @@ class VogelsMotionMountData:
     connected: bool = False
     distance: int | None = None
     rotation: int | None = None
-    current_distance: int | None = None
-    current_rotation: int | None = None
+    requested_distance: int | None = None
+    requested_rotation: int | None = None
     width: int | None = None
     name: str | None = None
 
@@ -83,23 +83,35 @@ class API:
 
     def _handle_disconnect(self, _):
         _LOGGER.debug("handle Device disconnected!")
+        self._connected_event.clear()
         self._disconnected_event.set()
+        self._update(connected=self._client.is_connected)
+
+    async def _connect(self):
+        _LOGGER.debug("connecting... to %s", self._mac)
+        await self._client.connect(timeout=120)
+        self._disconnected_event.clear()
+        _LOGGER.debug("connected! to %s", self._mac)
+        self._update(connected=self._client.is_connected)
+        await self._setup_notifications()
+        await self._read_initial_data()
+        self._connected_event.set()
 
     def _handle_distance_change(self, _, data: bytearray):
         _LOGGER.debug("distance change %s", data)
-        self._update(current_distance=int.from_bytes(data, "big"))
+        self._update(distance=int.from_bytes(data, "big"))
 
     def _handle_rotation_change(self, _, data: bytearray):
         _LOGGER.debug("rotation change %s", data)
-        self._update(current_rotation=int.from_bytes(data, "big"))
+        self._update(rotation=int.from_bytes(data, "big"))
 
     def _handle_width_change(self, _, data: bytearray):
         _LOGGER.debug("width change %s", data)
         self._update(width=data[0])
 
     def _handle_name_change(self, _, data: bytearray):
-        _LOGGER.debug("name change %s", data.decode('utf-8'))
-        self._update(name=data.decode('utf-8'))
+        _LOGGER.debug("name change %s", data)
+        self._update(name=data.decode('utf-8').rstrip('\x00'))
 
     async def _setup_notifications(self):
         _LOGGER.debug("_setup_notifications")
@@ -131,16 +143,7 @@ class API:
         while not self._initial_data_loaded:
             try:
                 _LOGGER.debug("initial data connection to device %s connecting ...", self._mac)
-                await self._client.connect(timeout=120)
-                self._connected_event.set()
-                self._update(connected=self._client.is_connected)
-
-                _LOGGER.debug(
-                    "initial data connected to device connected: %s, reading initial data",
-                    self._client.is_connected,
-                )
-                await self._setup_notifications()
-                await self._read_initial_data()
+                await self._connect()
 
                 self._initial_data_loaded = True
             except Exception:
@@ -157,26 +160,15 @@ class API:
                 _LOGGER.debug(
                     "Maintain connection to device %s connecting ...", self._mac
                 )
-                await self._client.connect(timeout=120)
-                self._connected_event.set()
-                self._update(connected=self._client.is_connected)
-
-                _LOGGER.debug(
-                    "maintain connected to device connected: %s, reading initial data",
-                    self._client.is_connected,
-                )
-                await self._setup_notifications()
-                await self._read_initial_data()
+                await self._connect()
 
                 await self._disconnected_event.wait()
+
                 _LOGGER.debug(
                     "maintain device disconnected %s", self._client.is_connected
                 )
-                self._update(connected=self._client.is_connected)
 
                 # reset events
-                self._disconnected_event.clear()
-                self._connected_event.clear()
                 self._update(connected=self._client.is_connected)
                 await asyncio.sleep(1)
             except Exception:
@@ -193,10 +185,7 @@ class API:
             return
         else:
             _LOGGER.debug("Wait for new connection, connecting...")
-            await self._client.connect(timeout=120)
-            self._connected_event.set()
-            await self._setup_notifications()
-            await self._read_initial_data()
+            await self._connect()
 
     async def select_preset(self, preset_id: int):
         """Select a preset index to move the MotionMount to."""
@@ -218,19 +207,24 @@ class API:
         await self._client.write_gatt_char(
             CHAR_DISTANCE_UUID, int(distance).to_bytes(2, byteorder='big'), response=True
         )
+        #TODO how to know that it is finished?
 
     async def set_rotation(self, rotation: int):
         """Select a preset index to move the MotionMount to."""
+        self._update(requested_rotation=rotation)
         await self._wait_for_connection()
         await self._client.write_gatt_char(
             CHAR_ROTATION_UUID, int(rotation).to_bytes(2, byteorder='big'), response=True
         )
+        #TODO how to know that it is finished?
 
     async def set_name(self, name: str):
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
+        newname = bytearray(name.encode("utf-8"))[:20].ljust(20, b'\x00')
+        _LOGGER.debug("set_name %s", newname)
         await self._client.write_gatt_char(
-            CHAR_NAME_UUID, bytearray(name.encode("utf-8")), response=True
+            CHAR_NAME_UUID, newname, response=True
         )
         self._update(name=name)
 

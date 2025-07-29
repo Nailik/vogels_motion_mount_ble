@@ -83,16 +83,15 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    numbers = [DistanceSensor(coordinator), RotationSensor(coordinator), TVWidthNumber(coordinator)]
+    numbers = [DistanceNumber(coordinator), RotationNumber(coordinator), TVWidthNumber(coordinator)]
 
     # Create the sensors.
     async_add_entities(numbers)
 
-class DistanceSensor(VogelsMotionMountBleBaseEntity, NumberEntity):
+class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """Implementation of a sensor."""
 
     _attr_native_unit_of_measurement = "%"
-    _attr_device_class = SensorDeviceClass.DISTANCE
     _attr_mode = NumberMode.SLIDER
     _attr_min_value = 0
     _attr_max_value = 100
@@ -113,17 +112,18 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
+        if self.coordinator.data.requested_distance is not None:
+            return self.coordinator.data.requested_distance
         return self.coordinator.data.distance
 
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_distance(value)
 
-class RotationSensor(VogelsMotionMountBleBaseEntity, NumberEntity):
+class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """Implementation of a sensor."""
 
     _attr_native_unit_of_measurement = "%"
-    _attr_device_class = None
     _attr_mode = NumberMode.SLIDER
     _attr_min_value = -100
     _attr_max_value = 100
@@ -144,6 +144,8 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
+        if self.coordinator.data.requested_rotation is not None:
+            return self.coordinator.data.requested_rotation
         return self.coordinator.data.rotation
 
     async def async_set_native_value(self, value: int) -> None:

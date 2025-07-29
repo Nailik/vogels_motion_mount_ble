@@ -50,7 +50,9 @@ async def async_setup_entry(
 
 class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     """Implementation of a sensor."""
-#TODO max length
+
+    _attr_native_min = 1
+    _attr_native_max = 20
 
     @property
     def name(self) -> str:
@@ -69,6 +71,6 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
             return None
         return self.coordinator.data.name
 
-    async def async_set_native_value(self, value: str) -> None:
+    async def async_set_value(self, value: str) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_name(value)

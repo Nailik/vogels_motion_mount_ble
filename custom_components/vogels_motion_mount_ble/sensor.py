@@ -52,7 +52,7 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
-        return self.coordinator.data.current_distance
+        return self.coordinator.data.distance
 
 class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Implementation of a sensor."""
@@ -75,4 +75,4 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
-        return self.coordinator.data.current_rotation
+        return self.coordinator.data.rotation
