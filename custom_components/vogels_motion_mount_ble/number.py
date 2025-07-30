@@ -3,7 +3,6 @@
 import logging
 
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -83,7 +82,7 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    numbers = [DistanceNumber(coordinator), RotationNumber(coordinator), TVWidthNumber(coordinator)]
+    numbers = [DistanceNumber(coordinator), RotationNumber(coordinator), TVWidthNumber(coordinator)] + [PresetDistanceEntity(coordinator, preset_id) for preset_id in range(7)]  + [PresetRotationEntity(coordinator, preset_id) for preset_id in range(7)]
 
     # Create the sensors.
     async_add_entities(numbers)
@@ -180,3 +179,58 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_width(value)
+
+class PresetDistanceEntity(VogelsMotionMountBleBaseEntity, NumberEntity):
+    """Implementation of a number input for distance of a preset."""
+
+    def __init__(self, coordinator, preset_id: VogelsMotionMountBleCoordinator):
+        """Initialise entity."""
+        super().__init__(coordinator)
+        self._preset_id = preset_id
+
+    @property
+    def name(self) -> str:
+        """Return the name of the number entity."""
+        return f"Preset {self._preset_id} Distance"
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+        return f"preset_{self._preset_id}_distance"
+
+    @property
+    def native_value(self):
+        """Return the current value."""
+        if not self.coordinator.data:
+            return None
+        if not self.coordinator.data.presets or self._preset_id not in self.coordinator.data.presets:
+            return None
+        return self.coordinator.data.presets[self._preset_id].distance
+
+class PresetRotationEntity(VogelsMotionMountBleBaseEntity, NumberEntity):
+    """Implementation of a number input for distance of a preset."""
+
+    def __init__(self, coordinator, preset_id: VogelsMotionMountBleCoordinator):
+        """Initialise entity."""
+        super().__init__(coordinator)
+        self._preset_id = preset_id
+
+    @property
+    def name(self) -> str:
+        """Return the name of the number entity."""
+        return f"Preset {self._preset_id} Rotation"
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+        return f"preset_{self._preset_id}_rotation"
+
+    @property
+    def native_value(self):
+        """Return the current value."""
+        if not self.coordinator.data:
+            return None
+        if not self.coordinator.data.presets or self._preset_id not in self.coordinator.data.presets:
+            return None
+        return self.coordinator.data.presets[self._preset_id].rotation
+

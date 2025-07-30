@@ -46,7 +46,7 @@ async def async_setup_entry(
 
     # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
     async_add_entities(
-        [SelectPresetButton(coordinator, preset_id) for preset_id in range(8)]
+        [SelectPresetButton(coordinator, preset_id) for preset_id in range(7)]
     )
 
 
@@ -63,7 +63,11 @@ class SelectPresetButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"Select preset {self._preset_id}"
+        if not self.coordinator.data:
+            return f"Select preset {self._preset_id}"
+        if not self.coordinator.data.presets or self._preset_id not in self.coordinator.data.presets:
+            return f"Select preset {self._preset_id}"
+        return f"Select preset {self.coordinator.data.presets[self._preset_id].name}"
 
     @property
     def unique_id(self) -> str:

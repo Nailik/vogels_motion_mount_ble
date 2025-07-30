@@ -1,7 +1,7 @@
 """Bluetooth api to connect to Vogels MotionMount and send and recieve data."""
 
 import asyncio
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 import logging
 
 from bleak import BleakClient, BleakError, BleakScanner
@@ -10,14 +10,21 @@ from homeassistant.core import Callable
 
 from .const import (
     CHAR_DISTANCE_UUID,
+    CHAR_NAME_UUID,
     CHAR_PRESET_UUID,
+    CHAR_PRESET_UUIDS,
     CHAR_ROTATION_UUID,
     CHAR_WIDTH_UUID,
-    CHAR_NAME_UUID,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+@dataclass
+class VogelsMotionMountPreset:
+    """Holds the data of a preset."""
+    name: str
+    distance: int
+    rotation: int
 
 @dataclass
 class VogelsMotionMountData:
@@ -30,6 +37,9 @@ class VogelsMotionMountData:
     requested_rotation: int | None = None
     width: int | None = None
     name: str | None = None
+    presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)
+
+
 
 class API:
     """Bluetooth API."""
@@ -113,6 +123,17 @@ class API:
         _LOGGER.debug("name change %s", data)
         self._update(name=data.decode('utf-8').rstrip('\x00'))
 
+    def _handle_preset_change(self, preset_id: int, data: bytearray):
+        distance = int.from_bytes(data[1:3], "big")
+        rotation = int.from_bytes(data[3:5], "big")
+        name = data[5:].decode('utf-8').rstrip('\x00')
+        newpresets = dict(self._data.presets) # Ensure mutable copy
+        _LOGGER.debug("_handle_preset_change %s change to %s with name %s and distance %s and rotation %s",preset_id, data, name, distance, rotation)
+        newpresets[preset_id] = VogelsMotionMountPreset(name=name, distance=distance, rotation=rotation)
+        _LOGGER.debug("_handle_preset_change newpresets %s", newpresets)
+        self._update(presets=newpresets)
+        _LOGGER.debug("_handle_preset_change updated preset %s", self._data.presets)
+
     async def _setup_notifications(self):
         _LOGGER.debug("_setup_notifications")
         await self._client.start_notify(
@@ -136,6 +157,10 @@ class API:
         self._handle_name_change(
             None, await self._client.read_gatt_char(CHAR_NAME_UUID)
         )
+        for preset_id in range(7):
+            self._handle_preset_change(
+                preset_id, await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_id])
+            )
 
     async def load_initial_data(self):
         """Initial data connection to device."""
