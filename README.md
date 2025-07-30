@@ -4,9 +4,19 @@
 
 ## Status
 
-| Property | Description | Service | Supported |
+| Property | Description | Service | Supported | Note |
 |----------|-------------|---------|------------|
-| Name | Device Name (get, set) | set_name | ✅ |
+| Name | Device Name (get, set) | set_name | ✅ | |
+| Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes (get, set) |  | ❌ | |
+| Distance | Distance from Wall in Percentage (get, set) | set_distance | 🟡 | not awaiting result, not correctly formatted |
+| Rotation | Rotation left/right (get, set) | set_rotation | 🟡 | not awaiting result, not correctly formatted, eventually max values can be queried (depending on TV width) |
+| CEB BL Version | Version of CEB BL |  | ❌ |  |
+| Presets | Name, Distance, Rotation (get, set) |  | 🟡 | only reading data | 
+| Freeze position | Position to be used when TV is turned of (get, set) |  | ❌ |  |
+| Set Preset | Move TV to a preset (set) | set_preset | 🟡 | not awaiting result |
+| TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation (get, set) | set_width | 🟡 | not awaiting result |
+| Settings Pin | Pin to change the settings (get, set) | | ❌ |  |
+| Control Pin | Pin to change the controls (get, set) | | ❌ |  |
 
 # Bluetooth GATT Services and Characteristics
 
