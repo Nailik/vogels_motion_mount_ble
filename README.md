@@ -6,7 +6,7 @@
 
 | Property | Description | Service | Supported | Note |
 |----------|-------------|---------|------------|-|
-| Name | Device Name (get, set) | set_name | ✅ | |
+| Name | Device Name (get, set) | set_name | ✅ | Length 1-20 characters|
 | Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes (get, set) |  | ❌ | |
 | Distance | Distance from Wall in Percentage (get, set) | set_distance | 🟡 | not awaiting result, not correctly formatted |
 | Rotation | Rotation left/right (get, set) | set_rotation | 🟡 | not awaiting result, not correctly formatted, eventually max values can be queried (depending on TV width) |
