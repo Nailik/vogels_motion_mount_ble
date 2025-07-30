@@ -2,6 +2,12 @@
 
 ## Installation
 
+## Status
+
+| Property | Description | Service | Supported |
+|----------|-------------|---------|------------|
+| Name | Device Name (get, set) | set_name | ✅ |
+
 # Bluetooth GATT Services and Characteristics
 
 ---
