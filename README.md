@@ -5,7 +5,7 @@
 ## Status
 
 | Property | Description | Service | Supported | Note |
-|----------|-------------|---------|------------|
+|----------|-------------|---------|------------|-|
 | Name | Device Name (get, set) | set_name | ✅ | |
 | Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes (get, set) |  | ❌ | |
 | Distance | Distance from Wall in Percentage (get, set) | set_distance | 🟡 | not awaiting result, not correctly formatted |
