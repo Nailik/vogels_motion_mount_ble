@@ -6,12 +6,12 @@ from homeassistant.components.text import TextEntity
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from .preset_base import VogelsMotionMountBlePresetBaseEntity
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .const import DOMAIN, HA_SERVICE_DEVICE_ID, HA_SERVICE_NAME_ID, HA_SERVICE_SET_NAME
 from .coordinator import VogelsMotionMountBleCoordinator
+from .preset_base import VogelsMotionMountBlePresetBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 

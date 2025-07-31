@@ -42,7 +42,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     _input_data: dict[str, Any]
 
     def __init__(self):
-        """Setup data."""
+        """Set up data."""
         self.discovery_info: BluetoothServiceInfoBleak | None = None
 
     async def async_step_user(
@@ -178,7 +178,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     async def setup_entry(
         self, data: dict[str, Any]
     ) -> dict[str, str] | ConfigFlowResult:
-        """Setup the entry from user data."""
+        """Set up the entry from user data."""
         _LOGGER.debug("Setting up entry with data: %s", data)
         errors: dict[str, str] = {}
         try:

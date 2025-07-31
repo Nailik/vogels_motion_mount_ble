@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass
 class VogelsMotionMountPreset:
     """Holds the data of a preset."""
+
     id: int
     name: str
     distance: int
@@ -51,7 +52,7 @@ class API:
         pin: str | None,
         callback: Callable[[VogelsMotionMountData], None],
     ) -> None:
-        """Setup default data."""
+        """Set up the default data."""
         self._mac = mac
         self._pin = pin
         self._callback = callback
@@ -162,7 +163,7 @@ class API:
             )
 
     async def load_initial_data(self):
-        """Initial data connection to device."""
+        """Load the initial data from the device."""
         # TODO make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
         while not self._initial_data_loaded:
             try:

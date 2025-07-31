@@ -2,13 +2,8 @@
 
 import logging
 
-from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from .base import VogelsMotionMountBleBaseEntity
 from .api import VogelsMotionMountPreset
-from .const import DOMAIN
+from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)

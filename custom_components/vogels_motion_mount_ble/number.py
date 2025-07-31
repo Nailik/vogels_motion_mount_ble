@@ -9,7 +9,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
-from .preset_base import VogelsMotionMountBlePresetBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_DEVICE_ID,
@@ -21,6 +20,7 @@ from .const import (
     HA_SERVICE_TV_WIDTH_ID,
 )
 from .coordinator import VogelsMotionMountBleCoordinator
+from .preset_base import VogelsMotionMountBlePresetBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
