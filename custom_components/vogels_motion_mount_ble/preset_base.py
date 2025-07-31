@@ -7,6 +7,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .base import VogelsMotionMountBleBaseEntity
+from .api import VogelsMotionMountPreset
 from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
 
@@ -21,8 +22,6 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     interval or by forcing an update.
     """
 
-    coordinator: VogelsMotionMountBleCoordinator
-
     # True causes HA to name your entities with the device name and entity name.
     _attr_has_entity_name = True
 
@@ -34,6 +33,13 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     @property
     def _preset_name(self) -> str:
         """Return the name of the preset or it's index."""
-        if self.coordinator.data.presets and self._preset_index in self.coordinator.data.presets:
-            f"{self.coordinator.data.presets[self._preset_index].name}"
+        if self._preset:
+            return f"{self._preset.name}"
         return f"{self._preset_index}"
+
+    @property
+    def _preset(self) -> VogelsMotionMountPreset | None:
+        """Return the name of the preset or it's index."""
+        if self.coordinator.data and self.coordinator.data.presets and self._preset_index in self.coordinator.data.presets:
+            return self.coordinator.data.presets[self._preset_index]
+        return None

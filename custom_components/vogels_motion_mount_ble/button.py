@@ -50,6 +50,30 @@ async def async_setup_entry(
         [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
 
+class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
+    """Set up the Buttons."""
+
+    def __init__(
+        self, coordinator: VogelsMotionMountBleCoordinator
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(coordinator)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return "Select preset default"
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+        return "select_preset-default"
+
+    async def async_press(self):
+        """Return unique id."""
+        # Your action logic here
+        await self.coordinator.api.select_preset(0)
+
 
 class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     """Set up the Buttons."""
@@ -75,4 +99,4 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     async def async_press(self):
         """Return unique id."""
         # Your action logic here
-        await self.coordinator.api.select_preset(self._preset_index)
+        await self.coordinator.api.select_preset(self.coordinator.data.presets[self._preset_index].id)

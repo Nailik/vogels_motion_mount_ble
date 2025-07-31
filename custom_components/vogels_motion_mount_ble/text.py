@@ -6,13 +6,13 @@ from homeassistant.components.text import TextEntity
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from .preset_base import VogelsMotionMountBlePresetBaseEntity
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .const import DOMAIN, HA_SERVICE_DEVICE_ID, HA_SERVICE_NAME_ID, HA_SERVICE_SET_NAME
 from .coordinator import VogelsMotionMountBleCoordinator
 
-from .preset_base import VogelsMotionMountBlePresetBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 async def _set_name(call: ServiceCall) -> None:
@@ -82,14 +82,16 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     _attr_native_min = 1
     _attr_native_max = 20
 
-    def __init__(self, coordinator, preset_index: VogelsMotionMountBleCoordinator):
+    def __init__(self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int):
         """Initialise entity."""
         super().__init__(coordinator, preset_index)
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"Preset {self._preset_name} Name"
+        if self._preset:
+            return  f"Preset {self._preset_name} Name"
+        return  f"Preset {self._preset_index} Name"
 
     @property
     def unique_id(self) -> str:
@@ -99,10 +101,16 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if self.coordinator.data.presets and self._preset_index in self.coordinator.data.presets:
-            return self.coordinator.data.presets[self._preset_index].name
+        if self._preset:
+            return self._preset.name
         return None
 
-    async def async_set_value(self, value: str) -> None:
+    @property
+    def extra_state_attributes(self):
+        return {
+            "friendly_name": f"Preset {self._preset_name} Name",  # updates UI name
+        }
+
+    async def async_native_set_value(self, value: str) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_preset(preset_id = self._preset_index, name = value)

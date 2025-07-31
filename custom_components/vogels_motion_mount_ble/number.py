@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
+from .preset_base import VogelsMotionMountBlePresetBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_DEVICE_ID,
@@ -82,9 +83,13 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    numbers = [DistanceNumber(coordinator), RotationNumber(coordinator), TVWidthNumber(coordinator)]
-    + [PresetDistanceNumber(coordinator, preset_index) for preset_index in range(7)]
-    + [PresetRotationNumber(coordinator, preset_index) for preset_index in range(7)]
+    numbers = [
+        DistanceNumber(coordinator),
+        RotationNumber(coordinator),
+        TVWidthNumber(coordinator),
+        *[PresetDistanceNumber(coordinator, preset_index) for preset_index in range(7)],
+        *[PresetRotationNumber(coordinator, preset_index) for preset_index in range(7)],
+    ]
 
     # Create the sensors.
     async_add_entities(numbers)
@@ -126,9 +131,9 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     _attr_native_unit_of_measurement = "%"
     _attr_mode = NumberMode.SLIDER
-    _attr_min_value = -100
-    _attr_max_value = 100
-    _attr_step = 1
+    _attr_native_min_value = -100
+    _attr_native_max_value = 100
+    _attr_native_step = 1
 
     @property
     def name(self) -> str:
@@ -159,7 +164,7 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     _attr_native_unit_of_measurement = "cm"
     _attr_mode = NumberMode.BOX
-    _attr_step = 1
+    _attr_native_step = 1
 
     @property
     def name(self) -> str:
@@ -182,13 +187,12 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_width(value)
 
-class PresetDistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
+class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
 
-    def __init__(self, coordinator, preset_index: VogelsMotionMountBleCoordinator):
+    def __init__(self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int):
         """Initialise entity."""
-        super().__init__(coordinator)
-        self._preset_index = preset_index
+        super().__init__(coordinator, preset_index)
 
     @property
     def name(self) -> str:
@@ -203,21 +207,20 @@ class PresetDistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if self.coordinator.data.presets and self._preset_index in self.coordinator.data.presets:
-            return self.coordinator.data.presets[self._preset_index].distance
+        if self._preset:
+            return self._preset.distance
         return None
 
-    async def async_set_value(self, value: int) -> None:
+    async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_preset(preset_id = self._preset_index, distance = value)
 
-class PresetRotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
+class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
 
-    def __init__(self, coordinator, preset_index: VogelsMotionMountBleCoordinator):
+    def __init__(self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int):
         """Initialise entity."""
-        super().__init__(coordinator)
-        self._preset_index = preset_index
+        super().__init__(coordinator, preset_index)
 
     @property
     def name(self) -> str:
@@ -232,11 +235,11 @@ class PresetRotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if self.coordinator.data.presets and self._preset_index in self.coordinator.data.presets:
-            return self.coordinator.data.presets[self._preset_index].rotation
+        if self._preset:
+            return self._preset.rotation
         return None
 
-    async def async_set_value(self, value: int) -> None:
+    async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_preset(preset_id = self._preset_index, rotation = value)
 

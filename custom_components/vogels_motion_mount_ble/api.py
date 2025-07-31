@@ -125,7 +125,7 @@ class API:
         self._update(name=data.decode('utf-8').rstrip('\x00'))
 
     def _handle_preset_change(self, preset_index, data: bytearray):
-        preset_id = data[0]
+        preset_id = preset_index + 1 # Preset IDs are 1-based because 0 is the default preset
         distance = int.from_bytes(data[1:3], "big")
         rotation = int.from_bytes(data[3:5], "big")
         name = data[5:].decode('utf-8').rstrip('\x00')
@@ -211,11 +211,11 @@ class API:
             _LOGGER.debug("Wait for new connection, connecting...")
             await self._connect()
 
-    async def select_preset(self, preset_index: int):
+    async def select_preset(self, preset_id: int):
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
         await self._client.write_gatt_char(
-            CHAR_PRESET_UUID, bytes([self._data.presets[preset_index].id]), response=True
+            CHAR_PRESET_UUID, bytes([preset_id]), response=True
         )
 
     async def set_width(self, width: int):
