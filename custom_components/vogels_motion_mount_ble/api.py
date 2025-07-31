@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass
 class VogelsMotionMountPreset:
     """Holds the data of a preset."""
+    id: int
     name: str
     distance: int
     rotation: int
@@ -115,24 +116,22 @@ class API:
         _LOGGER.debug("rotation change %s", data)
         self._update(rotation=int.from_bytes(data, "big"))
 
-    def _handle_width_change(self, _, data: bytearray):
+    def _handle_width_change(self, data: bytearray):
         _LOGGER.debug("width change %s", data)
         self._update(width=data[0])
 
-    def _handle_name_change(self, _, data: bytearray):
+    def _handle_name_change(self, data: bytearray):
         _LOGGER.debug("name change %s", data)
         self._update(name=data.decode('utf-8').rstrip('\x00'))
 
-    def _handle_preset_change(self, preset_id: int, data: bytearray):
+    def _handle_preset_change(self, preset_index, data: bytearray):
+        preset_id = data[0]
         distance = int.from_bytes(data[1:3], "big")
         rotation = int.from_bytes(data[3:5], "big")
         name = data[5:].decode('utf-8').rstrip('\x00')
-        newpresets = dict(self._data.presets) # Ensure mutable copy
-        _LOGGER.debug("_handle_preset_change %s change to %s with name %s and distance %s and rotation %s",preset_id, data, name, distance, rotation)
-        newpresets[preset_id] = VogelsMotionMountPreset(name=name, distance=distance, rotation=rotation)
-        _LOGGER.debug("_handle_preset_change newpresets %s", newpresets)
-        self._update(presets=newpresets)
-        _LOGGER.debug("_handle_preset_change updated preset %s", self._data.presets)
+        new_presets = dict(self._data.presets)
+        new_presets[preset_index] = VogelsMotionMountPreset(id=preset_id, name=name, distance=distance, rotation=rotation)
+        self._update(presets=new_presets)
 
     async def _setup_notifications(self):
         _LOGGER.debug("_setup_notifications")
@@ -152,14 +151,14 @@ class API:
             None, await self._client.read_gatt_char(CHAR_ROTATION_UUID)
         )
         self._handle_width_change(
-            None, await self._client.read_gatt_char(CHAR_WIDTH_UUID)
+            await self._client.read_gatt_char(CHAR_WIDTH_UUID)
         )
         self._handle_name_change(
-            None, await self._client.read_gatt_char(CHAR_NAME_UUID)
+            await self._client.read_gatt_char(CHAR_NAME_UUID)
         )
-        for preset_id in range(7):
+        for preset_index in range(7):
             self._handle_preset_change(
-                preset_id, await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_id])
+                preset_index, await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index])
             )
 
     async def load_initial_data(self):
@@ -212,11 +211,11 @@ class API:
             _LOGGER.debug("Wait for new connection, connecting...")
             await self._connect()
 
-    async def select_preset(self, preset_id: int):
+    async def select_preset(self, preset_index: int):
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
         await self._client.write_gatt_char(
-            CHAR_PRESET_UUID, bytes([preset_id]), response=True
+            CHAR_PRESET_UUID, bytes([self._data.presets[preset_index].id]), response=True
         )
 
     async def set_width(self, width: int):
@@ -247,11 +246,25 @@ class API:
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
         newname = bytearray(name.encode("utf-8"))[:20].ljust(20, b'\x00')
-        _LOGGER.debug("set_name %s", newname)
         await self._client.write_gatt_char(
             CHAR_NAME_UUID, newname, response=True
         )
         self._update(name=name)
+
+    async def set_preset(self, preset_index: int, distance: int | None = None, rotation: int | None = None, name: str | None = None):
+        """Select a preset index to move the MotionMount to."""
+        await self._wait_for_connection()
+        preset = self._data.presets[preset_index]
+        distance_bytes = (distance if distance is not None else preset.distance).to_bytes(2, byteorder="big")
+        rotation_bytes = (rotation if rotation is not None else preset.rotation).to_bytes(2, byteorder="big")
+        name_bytes = (name if name is not None else preset.name).encode("utf-8")
+        data=bytes([preset.preset_id]) + distance_bytes + rotation_bytes + name_bytes
+        newpresets = dict(self._data.presets)
+        newpresets[preset_index] = replace(preset, name=name, distance=distance, rotation=rotation)
+        await self._client.write_gatt_char(
+            CHAR_PRESET_UUIDS[preset_index], data, response=True
+        )
+        self._update(presets=newpresets)
 
 class APIConnectionError(Exception):
     """Exception class for connection error."""

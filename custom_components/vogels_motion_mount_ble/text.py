@@ -12,6 +12,7 @@ from .base import VogelsMotionMountBleBaseEntity
 from .const import DOMAIN, HA_SERVICE_DEVICE_ID, HA_SERVICE_NAME_ID, HA_SERVICE_SET_NAME
 from .coordinator import VogelsMotionMountBleCoordinator
 
+from .preset_base import VogelsMotionMountBlePresetBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 async def _set_name(call: ServiceCall) -> None:
@@ -43,7 +44,7 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    numbers = [NameText(coordinator)]  + [PresetNameText(coordinator, preset_id) for preset_id in range(7)]
+    numbers = [NameText(coordinator)]  + [PresetNameText(coordinator, preset_index) for preset_index in range(7)]
 
     # Create the sensors.
     async_add_entities(numbers)
@@ -75,32 +76,33 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_name(value)
 
-class PresetNameText(VogelsMotionMountBleBaseEntity, TextEntity):
+class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     """Implementation of a sensor."""
 
     _attr_native_min = 1
     _attr_native_max = 20
 
-    def __init__(self, coordinator, preset_id: VogelsMotionMountBleCoordinator):
+    def __init__(self, coordinator, preset_index: VogelsMotionMountBleCoordinator):
         """Initialise entity."""
-        super().__init__(coordinator)
-        self._preset_id = preset_id
+        super().__init__(coordinator, preset_index)
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"Preset {self._preset_id} Name"
+        return f"Preset {self._preset_name} Name"
 
     @property
     def unique_id(self) -> str:
         """Return unique id."""
-        return f"preset_{self._preset_id}_name"
+        return f"preset_{self._preset_index}_name"
 
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
-            return None
-        if not self.coordinator.data.presets or self._preset_id not in self.coordinator.data.presets:
-            return None
-        return self.coordinator.data.presets[self._preset_id].name
+        if self.coordinator.data.presets and self._preset_index in self.coordinator.data.presets:
+            return self.coordinator.data.presets[self._preset_index].name
+        return None
+
+    async def async_set_value(self, value: str) -> None:
+        """Set the value from the UI."""
+        await self.coordinator.api.set_preset(preset_id = self._preset_index, name = value)

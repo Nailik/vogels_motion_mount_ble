@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
+from .preset_base import VogelsMotionMountBlePresetBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_DEVICE_ID,
@@ -46,37 +47,32 @@ async def async_setup_entry(
 
     # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
     async_add_entities(
-        [SelectPresetButton(coordinator, preset_id) for preset_id in range(7)]
+        [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
 
 
-class SelectPresetButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
+class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     """Set up the Buttons."""
 
     def __init__(
-        self, coordinator: VogelsMotionMountBleCoordinator, preset_id: int
+        self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
         """Initialize coordinator."""
-        super().__init__(coordinator)
-        self._preset_id = preset_id
+        super().__init__(coordinator, preset_index)
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        if not self.coordinator.data:
-            return f"Select preset {self._preset_id}"
-        if not self.coordinator.data.presets or self._preset_id not in self.coordinator.data.presets:
-            return f"Select preset {self._preset_id}"
-        return f"Select preset {self.coordinator.data.presets[self._preset_id].name}"
+        return f"Select preset {self._preset_name}"
 
     @property
     def unique_id(self) -> str:
         """Return unique id."""
         # All entities must have a unique id.  Think carefully what you want this to be as
         # changing it later will cause HA to create new entities.
-        return f"{DOMAIN}-{self.coordinator.mac}-action-{self._preset_id}"
+        return f"select_preset-{self._preset_index}"
 
     async def async_press(self):
         """Return unique id."""
         # Your action logic here
-        await self.coordinator.api.select_preset(self._preset_id)
+        await self.coordinator.api.select_preset(self._preset_index)
