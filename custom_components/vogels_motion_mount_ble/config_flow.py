@@ -8,8 +8,14 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
@@ -19,19 +25,25 @@ from .const import CONF_MAINTAIN_CONNECTION, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def prefilledForm(name: str) -> vol.Schema:
+def prefilledForm(
+    host: str | None = None,
+    name: str | None = None,
+    maintainConnection: bool | None = None,
+    pin: int | None = None,
+) -> vol.Schema:
     """Return a form schema with prefilled values for host and name."""
     # Return a schema where CONF_HOST is shown but not editable (using selector.TextSelector with disabled=True)
     return vol.Schema(
         {
+            vol.Required(CONF_HOST, default=host): str,
             vol.Required(CONF_NAME, default=name): str,
-            vol.Required(CONF_MAINTAIN_CONNECTION): bool,
-            vol.Optional(CONF_PIN): selector.NumberSelector(
+            vol.Required(CONF_MAINTAIN_CONNECTION, default=maintainConnection): bool,
+            vol.Optional(CONF_PIN, default=pin): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, max=9999, mode=selector.NumberSelectorMode.BOX
                 )
             ),
-        }
+        },
     )
 
 
@@ -39,11 +51,18 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for VogelsMotionMount Integration."""
 
     VERSION = 1
-    _input_data: dict[str, Any]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set up data."""
         self.discovery_info: BluetoothServiceInfoBleak | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> VogelsMotionMountOptionsFlowHandler:
+        """Create the options flow."""
+        return VogelsMotionMountOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -60,40 +79,18 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-                        vol.Required(
-                            CONF_NAME,
-                            default=f"Vogel's Motion Mount ({user_input.get(CONF_HOST)})",
-                        ): str,
-                        vol.Required(CONF_MAINTAIN_CONNECTION, default=user_input.get(CONF_MAINTAIN_CONNECTION)): bool,
-                        vol.Optional(
-                            CONF_PIN, default=user_input.get(CONF_PIN)
-                        ): selector.NumberSelector(
-                            selector.NumberSelectorConfig(
-                                min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                            )
-                        ),
-                    }
+                data_schema=prefilledForm(
+                    name=f"Vogel's Motion Mount ({user_input.get(CONF_HOST)})",
+                    host=user_input.get(CONF_HOST),
+                    maintainConnection=user_input.get(CONF_MAINTAIN_CONNECTION),
+                    pin=user_input.get(CONF_PIN),
+                    errors=errors,
                 ),
-                errors=errors,
             )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_NAME): str,
-                    vol.Required(CONF_MAINTAIN_CONNECTION): bool,
-                    vol.Optional(CONF_PIN): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                        )
-                    ),
-                }
-            ),
+            data_schema=prefilledForm(),
             errors=errors,
         )
 
@@ -130,16 +127,12 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="confirm",
                 errors=errors,
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
-                        vol.Required(CONF_MAINTAIN_CONNECTION, default=user_input.get(CONF_MAINTAIN_CONNECTION)): bool,
-                        vol.Optional(CONF_PIN, default=user_input.get(CONF_PIN)): selector.NumberSelector(
-                            selector.NumberSelectorConfig(
-                                min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                            )
-                        ),
-                    }
+                data_schema=prefilledForm(
+                    name=user_input[CONF_NAME],
+                    host=user_input.get(CONF_HOST),
+                    maintainConnection=user_input.get(CONF_MAINTAIN_CONNECTION),
+                    pin=user_input.get(CONF_PIN),
+                    errors=errors,
                 ),
             )
 
@@ -150,16 +143,12 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME,default=f"Vogel's Motion Mount ({self.discovery_info.address})",): str,
-                    vol.Required(CONF_MAINTAIN_CONNECTION): bool,
-                    vol.Optional(CONF_PIN): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                        )
-                    ),
-                }
+            data_schema=prefilledForm(
+                name=f"Vogel's Motion Mount ({self.discovery_info.address})",
+                host=self.discovery_info.address,
+                maintainConnection=user_input.get(CONF_MAINTAIN_CONNECTION),
+                pin=user_input.get(CONF_PIN),
+                errors=errors,
             ),
         )
 
@@ -198,6 +187,35 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         return errors
+
+
+class VogelsMotionMountOptionsFlowHandler(OptionsFlow):
+    """Update the options."""
+
+    def __init__(self, config_entry):
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        _LOGGER.debug(
+            "VogelsMotionMountOptionsFlowHandler async_show_form: %s user_input %s",
+            self.config_entry.data,
+            user_input,
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=prefilledForm(
+                host=self.config_entry.data.get(CONF_HOST),
+                name=self.config_entry.data.get(CONF_NAME),
+                maintainConnection=self.config_entry.data.get(CONF_MAINTAIN_CONNECTION),
+                pin=self.config_entry.data.get(CONF_PIN),
+            ),
+        )
 
 
 class CannotConnect(HomeAssistantError):

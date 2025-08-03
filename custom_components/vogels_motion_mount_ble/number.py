@@ -24,6 +24,7 @@ from .preset_base import VogelsMotionMountBlePresetBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def _set_distance_service(call: ServiceCall) -> None:
     _LOGGER.debug("set_distance_service called with data: %s", call.data)
     device_registry = dr.async_get(call.hass)
@@ -33,6 +34,7 @@ async def _set_distance_service(call: ServiceCall) -> None:
 
     await coordinator.api.set_distance(call.data[HA_SERVICE_DISTANCE_ID])
 
+
 async def _set_rotation_service(call: ServiceCall) -> None:
     _LOGGER.debug("set_rotation_service called with data: %s", call.data)
     device_registry = dr.async_get(call.hass)
@@ -41,6 +43,7 @@ async def _set_rotation_service(call: ServiceCall) -> None:
     coordinator: VogelsMotionMountBleCoordinator = call.hass.data[DOMAIN].get(entry_id)
 
     await coordinator.api.set_rotation(call.data[HA_SERVICE_ROTATION_ID])
+
 
 async def _set_tv_width_service(call: ServiceCall) -> None:
     _LOGGER.debug("set_tv_width_service called with data: %s", call.data)
@@ -60,7 +63,6 @@ async def async_setup_entry(
     """Set up the Sensors."""
     # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
-
 
     hass.services.async_register(
         DOMAIN,
@@ -94,6 +96,7 @@ async def async_setup_entry(
     # Create the sensors.
     async_add_entities(numbers)
 
+
 class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """Implementation of a sensor."""
 
@@ -125,6 +128,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_distance(value)
+
 
 class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """Implementation of a sensor."""
@@ -187,6 +191,7 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_width(value)
 
+
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
 
@@ -213,7 +218,10 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_preset(preset_id = self._preset_index, distance = value)
+        await self.coordinator.api.set_preset(
+            preset_id=self._preset_index, distance=value
+        )
+
 
 class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
@@ -241,5 +249,6 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_preset(preset_id = self._preset_index, rotation = value)
-
+        await self.coordinator.api.set_preset(
+            preset_id=self._preset_index, rotation=value
+        )

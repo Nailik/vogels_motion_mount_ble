@@ -19,6 +19,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @dataclass
 class VogelsMotionMountPreset:
     """Holds the data of a preset."""
@@ -27,6 +28,7 @@ class VogelsMotionMountPreset:
     name: str
     distance: int
     rotation: int
+
 
 @dataclass
 class VogelsMotionMountData:
@@ -40,7 +42,6 @@ class VogelsMotionMountData:
     width: int | None = None
     name: str | None = None
     presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)
-
 
 
 class API:
@@ -123,15 +124,19 @@ class API:
 
     def _handle_name_change(self, data: bytearray):
         _LOGGER.debug("name change %s", data)
-        self._update(name=data.decode('utf-8').rstrip('\x00'))
+        self._update(name=data.decode("utf-8").rstrip("\x00"))
 
     def _handle_preset_change(self, preset_index, data: bytearray):
-        preset_id = preset_index + 1 # Preset IDs are 1-based because 0 is the default preset
+        preset_id = preset_index + 1
+        # Preset IDs are 1-based because 0 is the default preset
+        _LOGGER.debug("_handle_preset_change for id %s data %s", preset_id, data)
         distance = int.from_bytes(data[1:3], "big")
         rotation = int.from_bytes(data[3:5], "big")
-        name = data[5:].decode('utf-8').rstrip('\x00')
+        name = data[5:].decode("utf-8").rstrip("\x00")
         new_presets = dict(self._data.presets)
-        new_presets[preset_index] = VogelsMotionMountPreset(id=preset_id, name=name, distance=distance, rotation=rotation)
+        new_presets[preset_index] = VogelsMotionMountPreset(
+            id=preset_id, name=name, distance=distance, rotation=rotation
+        )
         self._update(presets=new_presets)
 
     async def _setup_notifications(self):
@@ -151,15 +156,12 @@ class API:
         self._handle_rotation_change(
             None, await self._client.read_gatt_char(CHAR_ROTATION_UUID)
         )
-        self._handle_width_change(
-            await self._client.read_gatt_char(CHAR_WIDTH_UUID)
-        )
-        self._handle_name_change(
-            await self._client.read_gatt_char(CHAR_NAME_UUID)
-        )
+        self._handle_width_change(await self._client.read_gatt_char(CHAR_WIDTH_UUID))
+        self._handle_name_change(await self._client.read_gatt_char(CHAR_NAME_UUID))
         for preset_index in range(7):
             self._handle_preset_change(
-                preset_index, await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index])
+                preset_index,
+                await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index]),
             )
 
     async def load_initial_data(self):
@@ -167,7 +169,9 @@ class API:
         # TODO make it optional if the connection should be maintained or connect on command (when required to send command) or poll time
         while not self._initial_data_loaded:
             try:
-                _LOGGER.debug("initial data connection to device %s connecting ...", self._mac)
+                _LOGGER.debug(
+                    "initial data connection to device %s connecting ...", self._mac
+                )
                 await self._connect()
 
                 self._initial_data_loaded = True
@@ -230,42 +234,57 @@ class API:
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
         await self._client.write_gatt_char(
-            CHAR_DISTANCE_UUID, int(distance).to_bytes(2, byteorder='big'), response=True
+            CHAR_DISTANCE_UUID,
+            int(distance).to_bytes(2, byteorder="big"),
+            response=True,
         )
-        #TODO how to know that it is finished?
+        # TODO how to know that it is finished?
 
     async def set_rotation(self, rotation: int):
         """Select a preset index to move the MotionMount to."""
         self._update(requested_rotation=rotation)
         await self._wait_for_connection()
         await self._client.write_gatt_char(
-            CHAR_ROTATION_UUID, int(rotation).to_bytes(2, byteorder='big'), response=True
+            CHAR_ROTATION_UUID,
+            int(rotation).to_bytes(2, byteorder="big"),
+            response=True,
         )
-        #TODO how to know that it is finished?
+        # TODO how to know that it is finished?
 
     async def set_name(self, name: str):
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
-        newname = bytearray(name.encode("utf-8"))[:20].ljust(20, b'\x00')
-        await self._client.write_gatt_char(
-            CHAR_NAME_UUID, newname, response=True
-        )
+        newname = bytearray(name.encode("utf-8"))[:20].ljust(20, b"\x00")
+        await self._client.write_gatt_char(CHAR_NAME_UUID, newname, response=True)
         self._update(name=name)
 
-    async def set_preset(self, preset_index: int, distance: int | None = None, rotation: int | None = None, name: str | None = None):
+    async def set_preset(
+        self,
+        preset_index: int,
+        distance: int | None = None,
+        rotation: int | None = None,
+        name: str | None = None,
+    ):
         """Select a preset index to move the MotionMount to."""
         await self._wait_for_connection()
         preset = self._data.presets[preset_index]
-        distance_bytes = (distance if distance is not None else preset.distance).to_bytes(2, byteorder="big")
-        rotation_bytes = (rotation if rotation is not None else preset.rotation).to_bytes(2, byteorder="big")
+        distance_bytes = (
+            distance if distance is not None else preset.distance
+        ).to_bytes(2, byteorder="big")
+        rotation_bytes = (
+            rotation if rotation is not None else preset.rotation
+        ).to_bytes(2, byteorder="big")
         name_bytes = (name if name is not None else preset.name).encode("utf-8")
-        data=bytes([preset.preset_id]) + distance_bytes + rotation_bytes + name_bytes
+        data = bytes([preset.preset_id]) + distance_bytes + rotation_bytes + name_bytes
         newpresets = dict(self._data.presets)
-        newpresets[preset_index] = replace(preset, name=name, distance=distance, rotation=rotation)
+        newpresets[preset_index] = replace(
+            preset, name=name, distance=distance, rotation=rotation
+        )
         await self._client.write_gatt_char(
             CHAR_PRESET_UUIDS[preset_index], data, response=True
         )
         self._update(presets=newpresets)
+
 
 class APIConnectionError(Exception):
     """Exception class for connection error."""
