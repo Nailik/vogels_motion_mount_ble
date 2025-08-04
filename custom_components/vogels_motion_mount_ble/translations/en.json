@@ -19,10 +19,22 @@
     }
   },
   "options": {
-    "conf_mac": "MAC",
-    "conf_name": "Name",
-    "conf_maintain_connection": "Maintain connection",
-    "conf_settings_pin": "Settings PIN",
-    "conf_control_pin": "Control PIN"
+    "error": {
+      "error_cannot_connect": "Found device but unable to connect to the device.",
+      "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
+      "error_unknown": "An unknown error occurred while trying to connect to the device."
+    },
+    "step": {
+      "init": {
+        "title": "Configure Options",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Device name",
+          "conf_maintain_connection": "Maintain connection",
+          "conf_settings_pin": "Settings PIN",
+          "conf_control_pin": "Control PIN"
+        }
+      }
+    }
   }
 }
