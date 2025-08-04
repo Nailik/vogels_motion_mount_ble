@@ -17,6 +17,9 @@ from .const import (
     CHAR_PRESET_UUIDS,
     CHAR_ROTATION_UUID,
     CHAR_WIDTH_UUID,
+    CHAR_AUTOMOVE_UUID,
+    CHAR_AUTOMOVE_ON_OPTIONS,
+    CHAR_AUTOMOVE_OFF_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +47,8 @@ class VogelsMotionMountData:
     width: int | None = None
     name: str | None = None
     presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)
+    automove_on: bool | None = None
+    automove_id: int | None = None
 
 
 class API:
@@ -147,17 +152,36 @@ class API:
         name = data[5:].decode("utf-8").rstrip("\x00")
         new_presets = dict(self._data.presets)
         new_presets[preset_index] = VogelsMotionMountPreset(
-            id=preset_id, name=name, distance=distance, rotation=rotation
+            id=preset_id,
+            name=name,
+            distance=distance,
+            rotation=rotation,
         )
         self._update(presets=new_presets)
+
+    def _handle_automove_change(self, data: bytearray):
+        automove_id = int.from_bytes(data, "big")
+        _LOGGER.debug("automove change %s", automove_id)
+        if automove_id in CHAR_AUTOMOVE_ON_OPTIONS:
+            self._update(
+                automove_on=True,
+                automove_id=CHAR_AUTOMOVE_ON_OPTIONS.index(automove_id),
+            )
+        else:
+            self._update(
+                automove_on=False,
+                automove_id=CHAR_AUTOMOVE_OFF_OPTIONS.index(automove_id),
+            )
 
     async def _setup_notifications(self):
         _LOGGER.debug("_setup_notifications")
         await self._client.start_notify(
-            CHAR_DISTANCE_UUID, self._handle_distance_change
+            char_specifier=CHAR_DISTANCE_UUID,
+            callback=self._handle_distance_change,
         )
         await self._client.start_notify(
-            CHAR_ROTATION_UUID, self._handle_rotation_change
+            char_specifier=CHAR_ROTATION_UUID,
+            callback=self._handle_rotation_change,
         )
 
     async def _read_initial_data(self):
@@ -175,6 +199,9 @@ class API:
                 preset_index,
                 await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index]),
             )
+        self._handle_automove_change(
+            await self._client.read_gatt_char(CHAR_AUTOMOVE_UUID)
+        )
 
     async def load_initial_data(self):
         """Load the initial data from the device."""
@@ -270,6 +297,32 @@ class API:
         await self._client.write_gatt_char(CHAR_NAME_UUID, newname, response=True)
         self._update(name=name)
 
+    async def set_auto_move(self, id: int | None):
+        """Select a preset index to move the MotionMount to."""
+        data: int
+        on: bool
+        new_id: int
+        if id:
+            data = CHAR_AUTOMOVE_ON_OPTIONS[id]
+            on = True
+            new_id = id
+        else:
+            data = (
+                CHAR_AUTOMOVE_OFF_OPTIONS[self._data.automove_id]
+                if self._data.automove_id
+                else 0
+            )
+            on = False
+            new_id = self._data.automove_id
+
+        await self._client.write_gatt_char(
+            CHAR_AUTOMOVE_UUID, int(data).to_bytes(2, byteorder="big")
+        )
+        self._update(
+            automove_on=on,
+            automove_id=new_id,
+        )
+
     async def set_preset(
         self,
         preset_index: int,
@@ -287,7 +340,7 @@ class API:
             rotation if rotation is not None else preset.rotation
         ).to_bytes(2, byteorder="big")
         name_bytes = (name if name is not None else preset.name).encode("utf-8")
-        data = bytes([preset.preset_id]) + distance_bytes + rotation_bytes + name_bytes
+        data = bytes([preset.id]) + distance_bytes + rotation_bytes + name_bytes
         newpresets = dict(self._data.presets)
         newpresets[preset_index] = replace(
             preset, name=name, distance=distance, rotation=rotation
