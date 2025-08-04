@@ -4,9 +4,11 @@ import asyncio
 from dataclasses import dataclass, field, replace
 import logging
 
-from bleak import BleakClient, BleakError, BleakScanner
+from bleak import BleakClient, BleakScanner
+from bleak.exc import BleakDeviceNotFoundError, BleakError
 
 from homeassistant.core import Callable
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CHAR_DISTANCE_UUID,
@@ -50,12 +52,14 @@ class API:
     def __init__(
         self,
         mac: str,
-        pin: str | None,
+        settings_pin: str | None,
+        control_pin: str | None,
         callback: Callable[[VogelsMotionMountData], None],
     ) -> None:
         """Set up the default data."""
         self._mac = mac
-        self._pin = pin
+        self._settings_pin = settings_pin
+        self._control_pin = control_pin
         self._callback = callback
         self._data = VogelsMotionMountData(connected=False)
         self._client: BleakClient = BleakClient(
@@ -68,9 +72,17 @@ class API:
 
     async def test_connection(self):
         """Test connection to the BLE device once using BleakClient."""
+        _LOGGER.debug("start test connection")
+        device = await BleakScanner.find_device_by_address(self._mac, timeout=120)
+        if not device:
+            _LOGGER.error("Device not found with name %s", self._mac)
+            raise APIConnectionDeviceNotFoundError("Device not found.")
+
         try:
-            _LOGGER.debug("start test connection")
-            self._client.connect(timeout=120)
+            await BleakClient(device).connect(timeout=120)
+        except BleakDeviceNotFoundError as err:
+            _LOGGER.error("Failed to connect to device, not found: %s", err)
+            raise APIConnectionDeviceNotFoundError("Device not found.") from err
         except Exception as err:
             _LOGGER.error("Failed to connect to device: %s", err)
             raise APIConnectionError("Error connecting to api.") from err
@@ -286,5 +298,9 @@ class API:
         self._update(presets=newpresets)
 
 
-class APIConnectionError(Exception):
+class APIConnectionError(HomeAssistantError):
     """Exception class for connection error."""
+
+
+class APIConnectionDeviceNotFoundError(HomeAssistantError):
+    """Exception class for connection error when device was not found."""

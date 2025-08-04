@@ -2,6 +2,13 @@
 
 DOMAIN = "vogels_motion_mount_ble"
 
+CONF_MAC = "conf_mac"
+CONF_NAME = "conf_name"
+CONF_MAINTAIN_CONNECTION = "conf_maintain_connection"
+CONF_SETTINGS_PIN = "conf_settings_pin"
+CONF_CONTROL_PIN = "conf_control_pin"
+CONF_ERROR = "base"
+
 SERVICE_UUID = "3e6fe65d-ed78-11e4-895e-00026fd5c52c"
 
 CHAR_NAME_UUID = "c005fa37-0651-4800-b000-000000000000"
@@ -33,5 +40,3 @@ HA_SERVICE_ROTATION_ID = "rotation"
 HA_SERVICE_TV_WIDTH_ID = "tv_width"
 HA_SERVICE_SELECT_PRESET_ID = "preset_id"
 HA_SERVICE_NAME_ID = "name"
-
-CONF_MAINTAIN_CONNECTION = "maintain_connection"

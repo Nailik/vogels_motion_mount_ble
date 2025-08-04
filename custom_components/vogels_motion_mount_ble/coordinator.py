@@ -3,12 +3,17 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API, VogelsMotionMountData
-from .const import CONF_MAINTAIN_CONNECTION
+from .const import (
+    CONF_CONTROL_PIN,
+    CONF_MAC,
+    CONF_MAINTAIN_CONNECTION,
+    CONF_NAME,
+    CONF_SETTINGS_PIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,10 +26,11 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
         # Set variables from values entered in config flow setup
-        self.mac = config_entry.data[CONF_HOST]
+        self.mac = config_entry.data[CONF_MAC]
         self._maintain_connection = config_entry.data[CONF_MAINTAIN_CONNECTION]
         self._name = config_entry.data[CONF_NAME]
-        self._pin = config_entry.data.get(CONF_PIN)
+        self._settings_pin = config_entry.data.get(CONF_SETTINGS_PIN)
+        self._control_pin = config_entry.data.get(CONF_CONTROL_PIN)
         self._loaded = False
 
         # Initialise DataUpdateCoordinator (that's the device name shown to the user)
@@ -37,7 +43,10 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
 
         # Initialise your api here
         self.api = API(
-            mac=self.mac, pin=self._pin, callback=self.async_set_updated_data
+            mac=self.mac,
+            settings_pin=self._settings_pin,
+            control_pin=self._control_pin,
+            callback=self.async_set_updated_data,
         )
 
         if self._maintain_connection:
