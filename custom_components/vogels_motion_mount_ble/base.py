@@ -23,11 +23,11 @@ class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
     coordinator: VogelsMotionMountBleCoordinator
 
     # True causes HA to name your entities with the device name and entity name.
-    _attr_has_entity_name = True
 
     def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
         """Initialise entity."""
         super().__init__(coordinator)
+        self._attr_has_entity_name = True
 
     @property
     def device_info(self) -> DeviceInfo:

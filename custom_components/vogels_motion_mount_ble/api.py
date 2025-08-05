@@ -11,15 +11,15 @@ from homeassistant.core import Callable
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
+    CHAR_AUTOMOVE_OFF_OPTIONS,
+    CHAR_AUTOMOVE_ON_OPTIONS,
+    CHAR_AUTOMOVE_UUID,
     CHAR_DISTANCE_UUID,
     CHAR_NAME_UUID,
     CHAR_PRESET_UUID,
     CHAR_PRESET_UUIDS,
     CHAR_ROTATION_UUID,
     CHAR_WIDTH_UUID,
-    CHAR_AUTOMOVE_UUID,
-    CHAR_AUTOMOVE_ON_OPTIONS,
-    CHAR_AUTOMOVE_OFF_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -315,6 +315,7 @@ class API:
             on = False
             new_id = self._data.automove_id
 
+        await self._wait_for_connection()
         await self._client.write_gatt_char(
             CHAR_AUTOMOVE_UUID, int(data).to_bytes(2, byteorder="big")
         )

@@ -40,7 +40,7 @@
   "entity": {
     "select": {
       "set_automove": {
-        "options": {
+        "state": {
           "off": "Off",
           "hdmi_1": "HDMI 1",
           "hdmi_2": "HDMI 2",
