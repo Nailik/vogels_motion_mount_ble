@@ -297,8 +297,8 @@ class API:
         await self._client.write_gatt_char(CHAR_NAME_UUID, newname, response=True)
         self._update(name=name)
 
-    async def set_auto_move(self, id: int | None):
-        """Select a preset index to move the MotionMount to."""
+    async def set_automove(self, id: int | None):
+        """Select a automove option where None is off."""
         data: int
         on: bool
         new_id: int

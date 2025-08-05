@@ -1,23 +1,38 @@
-select_preset:
-  name: Set Preset
-  description: Sets the preset by ID
+set_automove:
   fields:
     device_id:
-      name: Target Entity
-      description: The entity to apply the preset to.
       required: true
       selector:
         device:
           integration: vogels_motion_mount_ble
+    automove_id:
+      required: true
+      selector:
+        select:
+          translation_key: "set_automove"
+          options: ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
+select_preset:
+  name: Set Preset
+  description: Sets the preset by ID
+  target:
+    device:
+     integration: vogels_motion_mount_ble
+  fields:
     preset_id:
       name: Preset ID
       description: The numeric ID of the preset
       required: true
       selector:
-        number:
-          min: 0
-          max: 7
-          mode: box
+        select:
+          options:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
 set_distance:
   name: Set Distance
   description: Sets the distance form the wall

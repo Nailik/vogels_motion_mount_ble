@@ -33,12 +33,15 @@ CHAR_AUTOMOVE_OFF_OPTIONS = [1, 5, 9, 13, 17]
 CHAR_AUTOMOVE_ON_OPTIONS = [0, 4, 8, 12, 16]
 
 HA_SERVICE_DEVICE_ID = "device_id"
+
+HA_SERVICE_SELECT_AUTOMOVE = "set_automove"
 HA_SERVICE_SELECT_PRESET = "select_preset"
 HA_SERVICE_SET_DISTANCE = "set_distance"
 HA_SERVICE_SET_ROTATION = "set_rotation"
 HA_SERVICE_SET_TV_WIDTH = "set_tv_width"
 HA_SERVICE_SET_NAME = "set_name"
 
+HA_SERVICE_AUTOMOVE_ID = "automove_id"
 HA_SERVICE_DISTANCE_ID = "distance"
 HA_SERVICE_ROTATION_ID = "rotation"
 HA_SERVICE_TV_WIDTH_ID = "tv_width"
