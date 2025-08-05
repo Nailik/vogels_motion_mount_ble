@@ -1,3 +1,18 @@
+set_name:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    name:
+      required: true
+      selector:
+        text:
+          multiline: false
+          min_length: 1
+          max_length: 20
+          mode: text
 set_automove:
   fields:
     device_id:
@@ -93,20 +108,3 @@ set_tv_width:
       selector:
         number:
           mode: box
-set_name:
-  name: Set Name
-  fields:
-    device_id:
-      name: Target Entity
-      required: true
-      selector:
-        device:
-          integration: vogels_motion_mount_ble
-    name:
-      name: name
-      required: true
-      text:
-        multiline: false
-        min_length: 1
-        max_length: 20
-        mode: text

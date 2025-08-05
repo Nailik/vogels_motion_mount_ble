@@ -78,6 +78,20 @@
         }
       }
     },
+    "set_name": {
+      "name": "Set Name",
+      "description": "Set Name of device.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Text with max 20 characters."
+        }
+      }
+    },
     "set_mode": {
       "name": "Set Mode",
       "description": "Set the operating mode.",
