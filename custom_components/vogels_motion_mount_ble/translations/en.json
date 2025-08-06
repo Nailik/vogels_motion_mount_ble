@@ -39,8 +39,9 @@
   },
   "entity": {
     "select": {
-      "set_automove": {
-        "state": {
+      "auto_move": {
+        "name": "Automove setting",
+        "options": {
           "off": "Off",
           "hdmi_1": "HDMI 1",
           "hdmi_2": "HDMI 2",
@@ -62,6 +63,11 @@
       },
       "mcp_fw_version": {
         "name": "MCP BL Version"
+      }
+    },
+    "text": {
+      "name": {
+        "name": "Name"
       }
     }
   },

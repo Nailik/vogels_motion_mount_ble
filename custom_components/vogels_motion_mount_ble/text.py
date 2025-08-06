@@ -47,8 +47,8 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
 
     def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
         """Initialise entity."""
-        self._attr_name = "Name"
         self._attr_unique_id = "name"
+        self._attr_translation_key = "name"
         self._attr_native_min = 1
         self._attr_native_max = 20
         super().__init__(coordinator)

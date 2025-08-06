@@ -43,7 +43,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
         """Initialise entity."""
         self._attr_unique_id = "auto_move"
-        self._attr_translation_key = HA_SERVICE_SELECT_AUTOMOVE
+        self._attr_translation_key = "auto_move"
         self._attr_options = ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
         super().__init__(coordinator)
 
