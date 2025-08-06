@@ -4,10 +4,11 @@ import asyncio
 from dataclasses import dataclass, field, replace
 import logging
 
-from bleak import BleakClient, BleakScanner
+from bleak import BleakClient
 from bleak.exc import BleakDeviceNotFoundError, BleakError
 
-from homeassistant.core import Callable
+from homeassistant.components import bluetooth
+from homeassistant.core import Callable, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -19,6 +20,8 @@ from .const import (
     CHAR_PRESET_UUID,
     CHAR_PRESET_UUIDS,
     CHAR_ROTATION_UUID,
+    CHAR_VERSIONS_CEB_UUID,
+    CHAR_VERSIONS_MCP_UUID,
     CHAR_WIDTH_UUID,
 )
 
@@ -34,7 +37,6 @@ class VogelsMotionMountPreset:
     distance: int
     rotation: int
 
-
 @dataclass
 class VogelsMotionMountData:
     """Holds the data of the device."""
@@ -49,6 +51,10 @@ class VogelsMotionMountData:
     presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)
     automove_on: bool | None = None
     automove_id: int | None = None
+    ceb_bl_version: str | None = None
+    mcp_hw_version: str | None = None
+    mcp_bl_version: str | None = None
+    mcp_fw_version: str | None = None
 
 
 class API:
@@ -56,12 +62,14 @@ class API:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         mac: str,
         settings_pin: str | None,
         control_pin: str | None,
         callback: Callable[[VogelsMotionMountData], None],
     ) -> None:
         """Set up the default data."""
+        self._hass = hass
         self._mac = mac
         self._settings_pin = settings_pin
         self._control_pin = control_pin
@@ -78,7 +86,7 @@ class API:
     async def test_connection(self):
         """Test connection to the BLE device once using BleakClient."""
         _LOGGER.debug("start test connection")
-        device = await BleakScanner.find_device_by_address(self._mac, timeout=120)
+        device = await bluetooth.async_get_scanner(self._hass).discover(self._mac, timeout=120)
         if not device:
             _LOGGER.error("Device not found with name %s", self._mac)
             raise APIConnectionDeviceNotFoundError("Device not found.")
@@ -97,7 +105,7 @@ class API:
         total_wait = 0
         while total_wait < timeout:
             try:
-                await BleakScanner.discover(timeout=1)
+                await bluetooth.async_get_scanner(self._hass).discover(timeout=1)
                 _LOGGER.debug("Bakend Ready!")
             except BleakError as e:
                 _LOGGER.debug("BLE backend not ready yet %s!", e)
@@ -173,6 +181,22 @@ class API:
                 automove_id=CHAR_AUTOMOVE_OFF_OPTIONS.index(automove_id),
             )
 
+    def _handle_version_ceb_change(self, data):
+        #data is split across 2 different data sets
+        _LOGGER.debug("_handle_version_ceb_change data %s", data)
+        self._update(
+            ceb_bl_version = '.'.join(str(b) for b in data),
+        )
+
+    def _handle_version_mcp_change(self, data):
+        #data is split across 2 different data sets
+        _LOGGER.debug("_handle_version_mcp_change data %s", data)
+        self._update(
+            mcp_hw_version = '.'.join(str(b) for b in data[:3]),
+            mcp_bl_version = '.'.join(str(b) for b in data[3:5]),
+            mcp_fw_version = '.'.join(str(b) for b in data[5:7])
+        )
+
     async def _setup_notifications(self):
         _LOGGER.debug("_setup_notifications")
         await self._client.start_notify(
@@ -201,6 +225,12 @@ class API:
             )
         self._handle_automove_change(
             await self._client.read_gatt_char(CHAR_AUTOMOVE_UUID)
+        )
+        self._handle_version_ceb_change(
+            await self._client.read_gatt_char(CHAR_VERSIONS_CEB_UUID)
+        )
+        self._handle_version_mcp_change(
+            await self._client.read_gatt_char(CHAR_VERSIONS_MCP_UUID)
         )
 
     async def load_initial_data(self):

@@ -49,6 +49,20 @@
           "hdmi_5": "HDMI 5"
         }
       }
+    },
+    "sensor": {
+      "ceb_bl_version": {
+        "name": "CEB BL Version"
+      },
+      "mcp_hw_version": {
+        "name": "MCP BL Version"
+      },
+      "mcp_bl_version": {
+        "name": "MCP BL Version"
+      },
+      "mcp_fw_version": {
+        "name": "MCP BL Version"
+      }
     }
   },
   "selector": {

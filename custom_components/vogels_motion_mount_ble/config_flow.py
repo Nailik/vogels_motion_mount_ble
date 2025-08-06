@@ -11,10 +11,10 @@ from voluptuous.schema_builder import UNDEFINED
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryBaseFlow,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    ConfigEntryBaseFlow,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
@@ -107,6 +107,7 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         errors: dict[str, str] = {}
         try:
             await API(
+                hass=self.hass,
                 mac=user_input[CONF_MAC],
                 settings_pin=user_input.get(CONF_SETTINGS_PIN),
                 control_pin=user_input.get(CONF_CONTROL_PIN),

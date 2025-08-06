@@ -43,6 +43,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
 
         # Initialise your api here
         self.api = API(
+            hass=hass,
             mac=self.mac,
             settings_pin=self._settings_pin,
             control_pin=self._control_pin,
