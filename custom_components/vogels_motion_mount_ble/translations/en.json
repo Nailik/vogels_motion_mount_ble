@@ -41,6 +41,14 @@
     "select": {
       "auto_move": {
         "name": "Automove setting",
+        "state": {
+          "off": "Off",
+          "hdmi_1": "HDMI 1",
+          "hdmi_2": "HDMI 2",
+          "hdmi_3": "HDMI 3",
+          "hdmi_4": "HDMI 4",
+          "hdmi_5": "HDMI 5"
+        },
         "options": {
           "off": "Off",
           "hdmi_1": "HDMI 1",

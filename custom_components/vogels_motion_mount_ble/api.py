@@ -86,7 +86,7 @@ class API:
     async def test_connection(self):
         """Test connection to the BLE device once using BleakClient."""
         _LOGGER.debug("start test connection")
-        device = await bluetooth.async_get_scanner(self._hass).discover(self._mac, timeout=120)
+        device = await bluetooth.async_get_scanner(self._hass).find_device_by_address(self._mac, timeout=120)
         if not device:
             _LOGGER.error("Device not found with name %s", self._mac)
             raise APIConnectionDeviceNotFoundError("Device not found.")
