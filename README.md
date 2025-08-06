@@ -10,8 +10,8 @@
 | Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes (get, set) | set_automove | ✅ | "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5" |
 | Distance | Distance from Wall in Percentage (get, set) | set_distance | 🟡 | not awaiting result, not correctly formatted |
 | Rotation | Rotation left/right (get, set) | set_rotation | 🟡 | not awaiting result, not correctly formatted, eventually max values can be queried (depending on TV width) |
-| CEB BL, FW Version | Version of CEB |  | ❌ |  |
-| MCP BL, FW Version | Version of MCP |  | ❌ |  |
+| CEB BL, FW Version | Version of CEB |  | ✅ |  |
+| MCP BL, FW Version | Version of MCP |  | ✅ |  |
 | Presets | Name, Distance, Rotation (get, set) |  | 🟡 | only reading data | 
 | Freeze position | Position to be used when TV is turned of (get, set) |  | ❌ |  |
 | Set Preset | Move TV to a preset (set) | set_preset | 🟡 | not awaiting result |
