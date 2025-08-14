@@ -24,7 +24,6 @@ from .const import (
     CONF_CONTROL_PIN,
     CONF_ERROR,
     CONF_MAC,
-    CONF_MAINTAIN_CONNECTION,
     CONF_NAME,
     CONF_SETTINGS_PIN,
     DOMAIN,
@@ -47,7 +46,6 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         # Setup Values
         mac = UNDEFINED
         name = UNDEFINED
-        maintain_connection = False
         settings_pin = UNDEFINED
         control_pin = UNDEFINED
 
@@ -55,7 +53,6 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         if data is not None:
             mac = data.get(CONF_MAC, UNDEFINED)
             name = data.get(CONF_NAME, f"Vogel's MotionMount ({mac})")
-            maintain_connection = data.get(CONF_MAINTAIN_CONNECTION, False)
             settings_pin = data.get(CONF_SETTINGS_PIN, UNDEFINED)
             control_pin = data.get(CONF_CONTROL_PIN, UNDEFINED)
 
@@ -80,9 +77,6 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
                         multiline=False,
                     )
                 ),
-                vol.Required(
-                    CONF_MAINTAIN_CONNECTION, default=maintain_connection
-                ): selector.BooleanSelector(),
                 vol.Optional(
                     CONF_SETTINGS_PIN, default=settings_pin
                 ): selector.NumberSelector(

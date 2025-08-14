@@ -2,18 +2,13 @@
 
 import logging
 
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API, VogelsMotionMountData
-from .const import (
-    CONF_CONTROL_PIN,
-    CONF_MAC,
-    CONF_MAINTAIN_CONNECTION,
-    CONF_NAME,
-    CONF_SETTINGS_PIN,
-)
+from .const import CONF_CONTROL_PIN, CONF_MAC, CONF_NAME, CONF_SETTINGS_PIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +22,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         """Initialize coordinator."""
         # Set variables from values entered in config flow setup
         self.mac = config_entry.data[CONF_MAC]
-        self._maintain_connection = config_entry.data[CONF_MAINTAIN_CONNECTION]
         self._name = config_entry.data[CONF_NAME]
         self._settings_pin = config_entry.data.get(CONF_SETTINGS_PIN)
         self._control_pin = config_entry.data.get(CONF_CONTROL_PIN)
@@ -50,11 +44,4 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             callback=self.async_set_updated_data,
         )
 
-        if self._maintain_connection:
-            # If maintain_connection is set, start the connection task
-            _LOGGER.debug("Starting maintain connection task")
-            self.hass.loop.create_task(self.api.maintain_connection())
-        else:
-            # TODO load initial data
-            _LOGGER.debug("Starting maintain connection off")
-            self.hass.loop.create_task(self.api.load_initial_data())
+        hass.async_create_task(self.api.load_initial_data())

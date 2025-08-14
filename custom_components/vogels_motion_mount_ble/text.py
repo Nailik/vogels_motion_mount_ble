@@ -94,6 +94,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
             return self._preset.name
         return None
 
-    async def async_native_set_value(self, value: str) -> None:
+    async def async_set_value(self, value: str) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_preset(preset_id=self._preset_index, name=value)
+        await self.coordinator.api.set_preset(preset_index=self._preset_index, name=value)

@@ -11,7 +11,6 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_maintain_connection": "Maintain connection",
           "conf_settings_pin": "Settings PIN",
           "conf_control_pin": "Control PIN"
         }
@@ -30,7 +29,6 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_maintain_connection": "Maintain connection",
           "conf_settings_pin": "Settings PIN",
           "conf_control_pin": "Control PIN"
         }

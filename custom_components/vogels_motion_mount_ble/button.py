@@ -15,8 +15,10 @@ from .utils import get_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def _select_preset_service(call: ServiceCall) -> None:
     get_coordinator(call).api.select_preset(call.data[HA_SERVICE_SELECT_PRESET_ID])
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -34,15 +36,29 @@ async def async_setup_entry(
 
     # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
     async_add_entities(
-        [SelectPresetDefaultButton(coordinator)] + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
+        [RefreshDataButton(coordinator), SelectPresetDefaultButton(coordinator)]
+        + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
+
+
+class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
+    """Set up the Button in order to refresh data."""
+
+    def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
+        """Initialize entry."""
+        self._attr_name = "Refresh Data"
+        self._attr_unique_id = "refresh_data"
+        super().__init__(coordinator)
+
+    async def async_press(self):
+        """Execute data refresh."""
+        await self.coordinator.api.refreshData()
+
 
 class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     """Set up the Buttons."""
 
-    def __init__(
-        self, coordinator: VogelsMotionMountBleCoordinator
-    ) -> None:
+    def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
         """Initialize coordinator."""
         super().__init__(coordinator)
 
@@ -85,4 +101,6 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     async def async_press(self):
         """Return unique id."""
         # Your action logic here
-        await self.coordinator.api.select_preset(self.coordinator.data.presets[self._preset_index].id)
+        await self.coordinator.api.select_preset(
+            self.coordinator.data.presets[self._preset_index].id
+        )

@@ -4,7 +4,6 @@ DOMAIN = "vogels_motion_mount_ble"
 
 CONF_MAC = "conf_mac"
 CONF_NAME = "conf_name"
-CONF_MAINTAIN_CONNECTION = "conf_maintain_connection"
 CONF_SETTINGS_PIN = "conf_settings_pin"
 CONF_CONTROL_PIN = "conf_control_pin"
 CONF_ERROR = "base"

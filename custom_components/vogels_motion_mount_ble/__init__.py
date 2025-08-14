@@ -50,7 +50,6 @@ async def async_setup_entry(
 
     config_entry.add_update_listener(update_listener)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     return True
 
 
@@ -61,6 +60,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Delete device if selected from UI."""
     # TODO: Implement your logic to remove the device.
+    # bluetooth.async_rediscover_address(hass, "44:44:33:11:23:42")
     return True
 
 
