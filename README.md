@@ -7,8 +7,6 @@
 | Property | Description | Service | Supported | Note |
 |----------|-------------|---------|------------|-|
 | Name | Device Name | set_name | ✅ | Length 1-20 characters |
-| Distance | Distance from Wall in Percentage | set_distance | ✅ |  |
-| Rotation | Rotation left/right (get, set) | set_rotation | ✅ |  |
 | CEB BL, FW Version | Version of CEB |  | ✅ |  |
 | MCP BL, FW Version | Version of MCP |  | ✅ |  |
 | Presets | Name | set_preset_name | ✅ | Length 1-20 characters (max length to be verified) | 
@@ -22,6 +20,8 @@
 | TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ |  |
 | Settings Pin | Pin to change the settings | | ❌ |  |
 | Control Pin | Pin to change the controls | | ❌ |  |
+| Distance | Distance from Wall in Percentage | set_distance | ✅ |  |
+| Rotation | Rotation left/right (get, set) | set_rotation | ✅ |  |
 
 # Bluetooth GATT Services and Characteristics
 
