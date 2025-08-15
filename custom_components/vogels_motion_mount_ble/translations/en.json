@@ -36,6 +36,22 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "connection": {
+        "name": "Connection"
+      }
+    },
+    "button": {
+      "refresh_data": {
+        "name": "Refresh Data"
+      },
+      "selec_preset_default": {
+        "name": "Select default preset"
+      },
+      "selec_preset_custom": {
+        "name": "Select preset {index}"
+      }
+    },
     "select": {
       "auto_move": {
         "name": "Automove setting",

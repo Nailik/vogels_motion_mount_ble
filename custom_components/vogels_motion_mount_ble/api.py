@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # region Public data classes
 
+
 @dataclass
 class VogelsMotionMountPreset:
     """Holds the data of a preset."""
@@ -146,7 +147,7 @@ class API:
             self._client.write_gatt_char,
             CHAR_PRESET_UUID,
             bytes([preset_id]),
-            response=True
+            response=True,
         )
 
     async def set_distance(self, distance: int):
@@ -176,10 +177,7 @@ class API:
         previous_width = self._data.width
 
         await self._connect(
-            self._client.write_gatt_char,
-            CHAR_WIDTH_UUID,
-            bytes([width]),
-            response=True
+            self._client.write_gatt_char, CHAR_WIDTH_UUID, bytes([width]), response=True
         )
         self._update(width=width)
 
@@ -233,17 +231,16 @@ class API:
         """Select a preset index to move the MotionMount to."""
         preset = self._data.presets[preset_index]
 
-        new_preset_id=preset.id
+        new_preset_id = preset.id
         new_name = name if name is not None else preset.name
         new_distance = distance if distance is not None else preset.distance
         new_rotation = rotation if rotation is not None else preset.rotation
 
-        #TODO max length for name
+        # TODO max length for name
         name_bytes = (new_name).encode("utf-8")
         id_bytes = bytes([new_preset_id])
         distance_bytes = int(new_distance).to_bytes(2, byteorder="big")
         rotation_bytes = int(new_rotation).to_bytes(2, byteorder="big")
-
 
         data = id_bytes + distance_bytes + rotation_bytes + name_bytes
         newpresets = dict(self._data.presets)
@@ -268,9 +265,7 @@ class API:
     # region Private functions
 
     async def _connect(
-        self,
-        connected: Callable[[], Awaitable[None]] = None,
-        *args, **kwargs
+        self, connected: Callable[[], Awaitable[None]] = None, *args, **kwargs
     ):
         """Connect and load initial data, skips and loads data if already connected."""
 

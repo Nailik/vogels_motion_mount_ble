@@ -21,7 +21,7 @@ async def async_setup_entry(
     config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Binary Sensors."""
+    """Set up the connection Sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([ConnectionBinarySensor(coordinator)])
 
@@ -30,20 +30,12 @@ class ConnectionBinarySensor(VogelsMotionMountBleBaseEntity, BinarySensorEntity)
     """Sensor to indicate if the Vogels Motion Mount is connected."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "connection"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return "connection"
+    _attr_unique_id = "connection"
+    _attr_translation_key = _attr_unique_id
 
     @property
     def is_on(self):
-        """Return if the binary sensor is on."""
+        """Return if the MotionMount is currently connected."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.connected

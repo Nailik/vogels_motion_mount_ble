@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
     """Vogels Motion Mount BLE coordinator."""
 
-    data: VogelsMotionMountData
+    data: VogelsMotionMountData = VogelsMotionMountData()
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
@@ -44,4 +44,4 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             callback=self.async_set_updated_data,
         )
 
-        hass.async_create_task(self.api.load_initial_data())
+        hass.loop.create_task(self.api.load_initial_data())

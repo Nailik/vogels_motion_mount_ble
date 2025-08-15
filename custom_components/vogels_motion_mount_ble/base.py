@@ -13,28 +13,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
-    """Base Entity Class.
-
-    This inherits a CoordinatorEntity class to register your entites to be updated
-    by your DataUpdateCoordinator when async_update_data is called, either on the scheduled
-    interval or by forcing an update.
-    """
+    """Base Entity Class."""
 
     coordinator: VogelsMotionMountBleCoordinator
-
-    # True causes HA to name your entities with the device name and entity name.
-
-    def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
-        """Initialise entity."""
-        super().__init__(coordinator)
-        self._attr_has_entity_name = True
+    _attr_has_entity_name = True
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
             name=self.coordinator.name,
-            manufacturer="Vogelsr",
+            manufacturer="Vogels",
             model="Motion Mount",
             identifiers={(DOMAIN, self.coordinator.mac)},
         )

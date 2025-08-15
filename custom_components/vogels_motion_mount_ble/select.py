@@ -27,13 +27,11 @@ async def async_setup_entry(
 ):
     """Set up the Selectors."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
-    # register services
     hass.services.async_register(
         DOMAIN,
         HA_SERVICE_SELECT_AUTOMOVE,
         _set_automove_service,
     )
-    # register entities
     async_add_entities([AutomoveSelect(coordinator)])
 
 

@@ -41,6 +41,7 @@ HA_SERVICE_SET_DISTANCE = "set_distance"
 HA_SERVICE_SET_ROTATION = "set_rotation"
 HA_SERVICE_SET_TV_WIDTH = "set_tv_width"
 HA_SERVICE_SET_NAME = "set_name"
+HA_SERVICE_REFRESH_DATA = "referesh_data"
 
 HA_SERVICE_AUTOMOVE_ID = "automove_id"
 HA_SERVICE_DISTANCE_ID = "distance"
