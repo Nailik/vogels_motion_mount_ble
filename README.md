@@ -14,7 +14,7 @@
 | Presets | Rotation | set_preset_rotation | ✅ |  | 
 | Presets | Delete | delete_preset | ❌ | deletes a preset | 
 | Presets | Add | add_preset | ❌ | adds a new preset | 
-| Set Preset | Move TV to a preset | set_preset | ✅ |  |
+| Select Preset | Move TV to a preset | select_preset | ✅ |  |
 | Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes | set_automove | ✅ | "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5" |
 | Freeze preset | Preset to be used when TV is turned of | set_freeze_preset | ❌ |  |
 | TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ |  |
