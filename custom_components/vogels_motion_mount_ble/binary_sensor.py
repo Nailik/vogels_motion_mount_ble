@@ -1,7 +1,5 @@
 """Binary sensor entities to define properties for Vogels Motion Mount BLE entities."""
 
-import logging
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -12,8 +10,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

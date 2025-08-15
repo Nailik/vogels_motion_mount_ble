@@ -52,6 +52,23 @@
         "name": "Select preset {index}"
       }
     },
+    "number": {
+      "distance": {
+        "name": "Distance"
+      },
+      "rotation": {
+        "name": "Rotation"
+      },
+      "tv_width": {
+        "name": "TV width"
+      },
+      "preset_distance_custom": {
+        "name": "Preset {index} distance"
+      },
+      "preset_rotation_custom": {
+        "name": "Preset {index} rotation"
+      }
+    },
     "select": {
       "auto_move": {
         "name": "Automove setting",
@@ -74,6 +91,12 @@
       }
     },
     "sensor": {
+      "current_distance": {
+        "name": "Distance"
+      },
+      "current_rotation": {
+        "name": "Rotation"
+      },
       "ceb_bl_version": {
         "name": "CEB BL Version"
       },
@@ -90,6 +113,9 @@
     "text": {
       "name": {
         "name": "Name"
+      },
+      "preset_name_custom": {
+        "name": "Preset {index} name"
       }
     }
   },

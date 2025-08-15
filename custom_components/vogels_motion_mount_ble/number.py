@@ -4,14 +4,12 @@ import logging
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .const import (
     DOMAIN,
-    HA_SERVICE_DEVICE_ID,
     HA_SERVICE_DISTANCE_ID,
     HA_SERVICE_ROTATION_ID,
     HA_SERVICE_SET_DISTANCE,
@@ -21,47 +19,31 @@ from .const import (
 )
 from .coordinator import VogelsMotionMountBleCoordinator
 from .preset_base import VogelsMotionMountBlePresetBaseEntity
+from .utils import get_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def _set_distance_service(call: ServiceCall) -> None:
-    _LOGGER.debug("set_distance_service called with data: %s", call.data)
-    device_registry = dr.async_get(call.hass)
-    device = device_registry.async_get(call.data[HA_SERVICE_DEVICE_ID])
-    entry_id = next(iter(device.config_entries))
-    coordinator: VogelsMotionMountBleCoordinator = call.hass.data[DOMAIN].get(entry_id)
-
-    await coordinator.api.set_distance(call.data[HA_SERVICE_DISTANCE_ID])
+    _LOGGER.debug("_set_distance_service called with data: %s", call.data)
+    await get_coordinator(call).api.set_distance(call.data[HA_SERVICE_DISTANCE_ID])
 
 
 async def _set_rotation_service(call: ServiceCall) -> None:
-    _LOGGER.debug("set_rotation_service called with data: %s", call.data)
-    device_registry = dr.async_get(call.hass)
-    device = device_registry.async_get(call.data[HA_SERVICE_DEVICE_ID])
-    entry_id = next(iter(device.config_entries))
-    coordinator: VogelsMotionMountBleCoordinator = call.hass.data[DOMAIN].get(entry_id)
-
-    await coordinator.api.set_rotation(call.data[HA_SERVICE_ROTATION_ID])
+    _LOGGER.debug("_set_rotation_service called with data: %s", call.data)
+    await get_coordinator(call).api.set_rotation(call.data[HA_SERVICE_ROTATION_ID])
 
 
 async def _set_tv_width_service(call: ServiceCall) -> None:
     _LOGGER.debug("set_tv_width_service called with data: %s", call.data)
-    device_registry = dr.async_get(call.hass)
-    device = device_registry.async_get(call.data[HA_SERVICE_DEVICE_ID])
-    entry_id = next(iter(device.config_entries))
-    coordinator: VogelsMotionMountBleCoordinator = call.hass.data[DOMAIN].get(entry_id)
-
-    await coordinator.api.set_width(call.data[HA_SERVICE_TV_WIDTH_ID])
-
+    await get_coordinator(call).api.set_width(call.data[HA_SERVICE_TV_WIDTH_ID])
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Sensors."""
-    # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
+    """Set up the Numbers for distance, rotation, tv width and preset (distance, rotation)."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
 
     hass.services.async_register(
@@ -98,23 +80,15 @@ async def async_setup_entry(
 
 
 class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
-    """Implementation of a sensor."""
+    """Implementation of the NumberEntity to set the distance."""
 
+    _attr_unique_id = "distance"
+    _attr_translation_key = _attr_unique_id
     _attr_native_unit_of_measurement = "%"
     _attr_mode = NumberMode.SLIDER
     _attr_min_value = 0
     _attr_max_value = 100
     _attr_step = 1
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "distance"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return "distance"
 
     @property
     def native_value(self):
@@ -131,23 +105,14 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
 
 class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
-    """Implementation of a sensor."""
+    """Implementation of the NumberEntity to set the rotation."""
 
-    _attr_native_unit_of_measurement = "%"
+    _attr_unique_id = "rotation"
+    _attr_translation_key = _attr_unique_id
     _attr_mode = NumberMode.SLIDER
     _attr_native_min_value = -100
     _attr_native_max_value = 100
     _attr_native_step = 1
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "rotation"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return "rotation"
 
     @property
     def native_value(self):
@@ -166,19 +131,11 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """Implementation of a number input for TV width."""
 
+    _attr_unique_id = "tv_width"
+    _attr_translation_key = _attr_unique_id
     _attr_native_unit_of_measurement = "cm"
     _attr_mode = NumberMode.BOX
     _attr_native_step = 1
-
-    @property
-    def name(self) -> str:
-        """Return the name of the number entity."""
-        return "tvwidth"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return "tv_width"
 
     @property
     def native_value(self):
@@ -195,19 +152,13 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
 
-    def __init__(self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int):
-        """Initialise entity."""
+    def __init__(
+        self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
+    ) -> None:
+        """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the number entity."""
-        return f"Preset {self._preset_name} Distance"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return f"preset_{self._preset_index}_distance"
+        self._attr_unique_id = f"preset_{preset_index}_distance"
+        self._attr_translation_key = "preset_distance_custom"
 
     @property
     def native_value(self):
@@ -226,19 +177,13 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
 class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
 
-    def __init__(self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int):
-        """Initialise entity."""
+    def __init__(
+        self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
+    ) -> None:
+        """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the number entity."""
-        return f"Preset {self._preset_name} Rotation"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return f"preset_{self._preset_index}_rotation"
+        self._attr_unique_id = f"preset_{preset_index}_rotation"
+        self._attr_translation_key = "preset_rotation_custom"
 
     @property
     def native_value(self):

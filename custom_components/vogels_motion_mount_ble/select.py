@@ -19,13 +19,12 @@ async def _set_automove_service(call: ServiceCall) -> None:
     _LOGGER.debug("_set_automove_service called with data: %s", call.data)
     await get_coordinator(call).api.set_automove(call.data[HA_SERVICE_AUTOMOVE_ID])
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Selectors."""
+    """Set up the Selectors for automove."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
     hass.services.async_register(
         DOMAIN,
@@ -38,12 +37,9 @@ async def async_setup_entry(
 class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     """Implementation of the Automove Selector."""
 
-    def __init__(self, coordinator: VogelsMotionMountBleCoordinator) -> None:
-        """Initialise entity."""
-        self._attr_unique_id = "auto_move"
-        self._attr_translation_key = "auto_move"
-        self._attr_options = ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
-        super().__init__(coordinator)
+    _attr_unique_id = "auto_move"
+    _attr_translation_key = _attr_unique_id
+    _attr_options = ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
 
     @property
     def current_option(self):

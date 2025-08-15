@@ -174,8 +174,6 @@ class API:
 
     async def set_width(self, width: int):
         """Select a preset index to move the MotionMount to."""
-        previous_width = self._data.width
-
         await self._connect(
             self._client.write_gatt_char, CHAR_WIDTH_UUID, bytes([width]), response=True
         )
@@ -342,11 +340,11 @@ class API:
 
     def _handle_distance_change(self, _, data: bytearray):
         _LOGGER.debug("Consume distance change %s", data)
-        self._update(distance=int.from_bytes(data, "little"))
+        self._update(distance=int.from_bytes(data, "big"))
 
     def _handle_rotation_change(self, _, data: bytearray):
         _LOGGER.debug("Consume rotation change %s", data)
-        self._update(rotation=int.from_bytes(data, "little"))
+        self._update(rotation=int.from_bytes(data, "big"))
 
     def _handle_width_change(self, data: bytearray):
         _LOGGER.debug("Consume width change %s", data)
