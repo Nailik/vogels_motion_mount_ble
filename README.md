@@ -7,21 +7,21 @@
 | Property | Description | Service | Supported | Note |
 |----------|-------------|---------|------------|-|
 | Name | Device Name | set_name | ✅ | Length 1-20 characters |
-| CEB BL, FW Version | Version of CEB |  | ✅ |  |
-| MCP BL, FW Version | Version of MCP |  | ✅ |  |
+| Distance | Distance from Wall in Percentage | set_distance | ✅ |  |
+| Rotation | Rotation left/right (get, set) | set_rotation | ✅ |  |
 | Presets | Name | set_preset_name | ✅ | Length 1-20 characters (max length to be verified) | 
 | Presets | Distance | set_preset_distance | ✅ |  | 
 | Presets | Rotation | set_preset_rotation | ✅ |  | 
 | Presets | Delete | delete_preset | ❌ | deletes a preset | 
 | Presets | Add | add_preset | ❌ | adds a new preset | 
+| Set Preset | Move TV to a preset | set_preset | ✅ |  |
 | Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes | set_automove | ✅ | "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5" |
 | Freeze preset | Preset to be used when TV is turned of | set_freeze_preset | ❌ |  |
-| Set Preset | Move TV to a preset | set_preset | ✅ |  |
 | TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ |  |
 | Settings Pin | Pin to change the settings | | ❌ |  |
 | Control Pin | Pin to change the controls | | ❌ |  |
-| Distance | Distance from Wall in Percentage | set_distance | ✅ |  |
-| Rotation | Rotation left/right (get, set) | set_rotation | ✅ |  |
+| CEB BL, FW Version | Version of CEB |  | ✅ |  |
+| MCP BL, FW Version | Version of MCP |  | ✅ |  |
 
 # Bluetooth GATT Services and Characteristics
 
