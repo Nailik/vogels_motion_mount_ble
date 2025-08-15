@@ -6,18 +6,22 @@
 
 | Property | Description | Service | Supported | Note |
 |----------|-------------|---------|------------|-|
-| Name | Device Name (get, set) | set_name | ✅ | Length 1-20 characters|
-| Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes (get, set) | set_automove | ✅ | "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5" |
-| Distance | Distance from Wall in Percentage (get, set) | set_distance | 🟡 | not awaiting result, not correctly formatted |
-| Rotation | Rotation left/right (get, set) | set_rotation | 🟡 | not awaiting result, not correctly formatted, eventually max values can be queried (depending on TV width) |
+| Name | Device Name | set_name | ✅ | Length 1-20 characters |
+| Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes | set_automove | ✅ | "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5" |
+| Distance | Distance from Wall in Percentage | set_distance | ✅ |  |
+| Rotation | Rotation left/right (get, set) | set_rotation | ✅ |  |
 | CEB BL, FW Version | Version of CEB |  | ✅ |  |
 | MCP BL, FW Version | Version of MCP |  | ✅ |  |
-| Presets | Name, Distance, Rotation (get, set) |  | 🟡 | only reading data | 
-| Freeze position | Position to be used when TV is turned of (get, set) |  | ❌ |  |
-| Set Preset | Move TV to a preset (set) | set_preset | 🟡 | not awaiting result |
-| TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation (get, set) | set_width | 🟡 | not awaiting result |
-| Settings Pin | Pin to change the settings (get, set) | | ❌ |  |
-| Control Pin | Pin to change the controls (get, set) | | ❌ |  |
+| Presets | Name | set_preset_name | ✅ | Length 1-20 characters (max length to be verified) | 
+| Presets | Distance | set_preset_distance | ✅ |  | 
+| Presets | Rotation | set_preset_rotation | ✅ |  | 
+| Presets | Delete | delete_preset | ❌ | deletes a preset | 
+| Presets | Add | add_preset | ❌ | adds a new preset | 
+| Freeze preset | Preset to be used when TV is turned of | set_freeze_preset | ❌ |  |
+| Set Preset | Move TV to a preset | set_preset | ✅ |  |
+| TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ |  |
+| Settings Pin | Pin to change the settings | | ❌ |  |
+| Control Pin | Pin to change the controls | | ❌ |  |
 
 # Bluetooth GATT Services and Characteristics
 
