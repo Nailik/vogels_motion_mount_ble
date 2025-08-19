@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable
 from dataclasses import dataclass, field, replace
 import logging
-
+from enum import Enum
 from bleak import BleakClient, BLEDevice
 from bleak.exc import BleakDeviceNotFoundError
 
@@ -17,6 +17,7 @@ from .const import (
     CHAR_AUTOMOVE_ON_OPTIONS,
     CHAR_AUTOMOVE_UUID,
     CHAR_DISTANCE_UUID,
+    CHAR_FREEZE_UUID,
     CHAR_NAME_UUID,
     CHAR_PRESET_UUID,
     CHAR_PRESET_UUIDS,
@@ -24,6 +25,8 @@ from .const import (
     CHAR_VERSIONS_CEB_UUID,
     CHAR_VERSIONS_MCP_UUID,
     CHAR_WIDTH_UUID,
+    CHAR_PIN_CHECK_UUID,
+    CHAR_AUTHENTICATE_UUID,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +56,7 @@ class VogelsMotionMountData:
     width: int | None = None
     name: str | None = None
     presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)
+    freeze_preset_index: int | None = None
     automove_on: bool | None = None
     automove_id: int | None = None
     ceb_bl_version: str | None = None
@@ -69,6 +73,10 @@ class APIConnectionDeviceNotFoundError(HomeAssistantError):
     """Exception class for connection error when device was not found."""
 
 
+class APIAuthenticationError(HomeAssistantError):
+    """Exception class for authentication error, invalid PIN."""
+
+
 # endregion
 
 
@@ -79,15 +87,13 @@ class API:
         self,
         hass: HomeAssistant,
         mac: str,
-        settings_pin: str | None,
-        control_pin: str | None,
+        pin: str | None,
         callback: Callable[[VogelsMotionMountData], None],
     ) -> None:
         """Set up the default data."""
         self._hass = hass
         self._mac = mac
-        self._settings_pin = settings_pin
-        self._control_pin = control_pin
+        self._pin = pin
         self._callback = callback
         self._data = VogelsMotionMountData(connected=False)
         self._device: BLEDevice = bluetooth.async_ble_device_from_address(
@@ -100,23 +106,38 @@ class API:
     # region Public api
 
     async def test_connection(self):
-        """Test connection to the BLE device once using BleakClient."""
+        """Test connection to the BLE device once using BleakClient and disconnects immediately."""
         _LOGGER.debug("Test connection to %s", self._mac)
         if not self._device:
             _LOGGER.error("Device not found with address %s", self._mac)
             raise APIConnectionDeviceNotFoundError("Device not found.")
 
         try:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Device found with address %s attempting to connect", self._mac
             )
-            await BleakClient(self._device).connect(timeout=120)
+            await self._connect()
+            _LOGGER.debug("Connected to device %s", self._mac)
+            await self.disconnect()
         except BleakDeviceNotFoundError as err:
             _LOGGER.error("Failed to connect to device %s", self._mac)
             raise APIConnectionDeviceNotFoundError("Device not found.") from err
         except Exception as err:
             _LOGGER.error("Failed to connect to device %s", self._mac)
             raise APIConnectionError("Error connecting to api.") from err
+
+    async def disconnect(self):
+        """Disconnect from the BLE Device."""
+        if not self._client.is_connected:
+            _LOGGER.debug(
+                "Not connected to %s, no need to disconnect",
+                self._mac,
+            )
+            return
+
+        _LOGGER.debug("Diconnecting from %s", self._mac)
+        await self._client.disconnect()
+        _LOGGER.debug("Diconnected from %s", self._mac)
 
     async def load_initial_data(self) -> None:
         """Load the initial data from the device."""
@@ -219,6 +240,16 @@ class API:
             automove_id=new_id,
         )
 
+    async def set_freeze(self, preset_index: int):
+        """Set preset that is used for auto move."""
+        await self._connect(
+            self._client.write_gatt_char,
+            CHAR_FREEZE_UUID,
+            bytes([preset_index]),
+            response=True,
+        )
+        self._update(freeze_preset_index=preset_index)
+
     async def set_preset(
         self,
         preset_index: int,
@@ -226,7 +257,7 @@ class API:
         rotation: int | None = None,
         name: str | None = None,
     ):
-        """Select a preset index to move the MotionMount to."""
+        """Set data of preset."""
         preset = self._data.presets[preset_index]
 
         new_preset_id = preset.id
@@ -263,7 +294,10 @@ class API:
     # region Private functions
 
     async def _connect(
-        self, connected: Callable[[], Awaitable[None]] = None, *args, **kwargs
+        self,
+        connected: Callable[[], Awaitable[None]] = None,
+        *args,
+        **kwargs,
     ):
         """Connect and load initial data, skips and loads data if already connected."""
 
@@ -278,20 +312,67 @@ class API:
             _LOGGER.debug("Connecting to %s", self._mac)
             await self._client.connect(timeout=120)
             _LOGGER.debug("Connected to %s!", self._mac)
-            await self._setup_notifications()
 
         self._update(connected=self._client.is_connected)
+
+        await self._authenticate()
 
         if connected is not None:
             # calls callback before loading data in order to run command with less delay
             await connected(*args, **kwargs)
 
         if should_read_data:
-            # only read data if this was a new connection
+            # only read data and setup notifications if this was a new connection
+            await self._setup_notifications()
             await self._read_current_data()
 
+    async def _authenticate(self):
+        # Authenticate if necessary, raises APIAuthenticationError if not successful.
+        _raw_auth = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
+        _pin_required = int.from_bytes(_raw_auth, "big")
+
+        if _raw_auth.startswith(b"\x80"):
+            _LOGGER.debug(
+                "No authentication required %s (raw %s) or already authenticated",
+                _pin_required,
+                _raw_auth,
+            )
+            return
+
+        _LOGGER.debug(
+            "Authentication required %s (raw %s) sending pin %s",
+            _pin_required,
+            _raw_auth,
+            self._pin,
+        )
+        if self._pin is None:
+            raise APIAuthenticationError
+
+        await self._client.write_gatt_char(
+            CHAR_AUTHENTICATE_UUID, int(self._pin).to_bytes(2, byteorder="little")
+        )
+
+        for attempt in range(4):
+            _raw_auth = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
+            _pin_required = int.from_bytes(_raw_auth, "big")
+            if _raw_auth.startswith(b"\x80"):
+                _LOGGER.debug(
+                    "Authentication successful %s (raw %s)", _pin_required, _raw_auth
+                )
+                return
+            _LOGGER.debug(
+                "Not authenticated yet %s (raw %s), retry %s",
+                _pin_required,
+                _raw_auth,
+                attempt,
+            )
+            if attempt < 3:
+                await asyncio.sleep(0.1)
+
+        raise APIAuthenticationError()
+
     def _handle_disconnect(self, _):
-        """Update state when client disconnects."""
+        # Update state when client disconnects.
         _LOGGER.debug("Device %s disconnected!", self._mac)
         self._update(connected=self._client.is_connected)
 
@@ -331,6 +412,9 @@ class API:
         )
         self._handle_version_mcp_change(
             await self._client.read_gatt_char(CHAR_VERSIONS_MCP_UUID)
+        )
+        self._handle_freeze_preset_change(
+            await self._client.read_gatt_char(CHAR_FREEZE_UUID)
         )
 
     def _update(self, **kwargs):
@@ -398,6 +482,12 @@ class API:
             mcp_hw_version=".".join(str(b) for b in data[:3]),
             mcp_bl_version=".".join(str(b) for b in data[3:5]),
             mcp_fw_version=".".join(str(b) for b in data[5:7]),
+        )
+
+    def _handle_freeze_preset_change(self, data):
+        _LOGGER.debug("Consume Freeze preset change %s", data)
+        self._update(
+            freeze_preset_index=data[0],
         )
 
     # endregion

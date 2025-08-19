@@ -19,13 +19,12 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
-from .api import API, APIConnectionDeviceNotFoundError, APIConnectionError
+from .api import API, APIConnectionDeviceNotFoundError, APIConnectionError, APIAuthenticationError
 from .const import (
-    CONF_CONTROL_PIN,
+    CONF_PIN,
     CONF_ERROR,
     CONF_MAC,
     CONF_NAME,
-    CONF_SETTINGS_PIN,
     DOMAIN,
 )
 
@@ -46,15 +45,13 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         # Setup Values
         mac = UNDEFINED
         name = UNDEFINED
-        settings_pin = UNDEFINED
-        control_pin = UNDEFINED
+        pin = UNDEFINED
 
         # Read values from data if provided
         if data is not None:
             mac = data.get(CONF_MAC, UNDEFINED)
             name = data.get(CONF_NAME, f"Vogel's MotionMount ({mac})")
-            settings_pin = data.get(CONF_SETTINGS_PIN, UNDEFINED)
-            control_pin = data.get(CONF_CONTROL_PIN, UNDEFINED)
+            pin = data.get(CONF_PIN, UNDEFINED)
 
         # If discovery_info is set, use its address as the MAC and for the name if not provided
         if self.discovery_info is not None:
@@ -77,19 +74,16 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
                         multiline=False,
                     )
                 ),
-                vol.Optional(
-                    CONF_SETTINGS_PIN, default=settings_pin
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                    )
-                ),
-                vol.Optional(
-                    CONF_CONTROL_PIN, default=control_pin
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                    )
+                vol.Optional(CONF_PIN, default=pin): vol.All(
+                    selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0,
+                            max=9999,
+                            step=1,
+                            mode=selector.NumberSelectorMode.BOX,
+                        )
+                    ),
+                    vol.Coerce(int),
                 ),
             },
         )
@@ -103,13 +97,16 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
             await API(
                 hass=self.hass,
                 mac=user_input[CONF_MAC],
-                settings_pin=user_input.get(CONF_SETTINGS_PIN),
-                control_pin=user_input.get(CONF_CONTROL_PIN),
+                pin=user_input.get(CONF_PIN),
                 callback=lambda *_, **__: None,
             ).test_connection()
+            _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
         except APIConnectionDeviceNotFoundError as err:
             _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
             errors[CONF_ERROR] = "error_device_not_found"
+        except APIAuthenticationError as err:
+            _LOGGER.error("Setting APIConnectionError: %s", err)
+            errors[CONF_ERROR] = "error_invalid_athentication"
         except APIConnectionError as err:
             _LOGGER.error("Setting APIConnectionError: %s", err)
             errors[CONF_ERROR] = "error_cannot_connect"
@@ -132,7 +129,7 @@ class VogelsMotionMountConfigFlow(
         config_entry: ConfigEntry,
     ) -> VogelsMotionMountOptionsFlowHandler:
         """Create the options flow to change config later on."""
-        return VogelsMotionMountOptionsFlowHandler()
+        return VogelsMotionMountOptionsFlowHandler(config_entry)
 
     async def async_step_bluetooth(self, discovery_info):
         """Handle a bluetooth device being discovered."""
@@ -159,6 +156,7 @@ class VogelsMotionMountConfigFlow(
                 # Validation was successful, create a unique id and create the config entry.
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
+                _LOGGER.debug("Create entry with %s", user_input)
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,
@@ -176,6 +174,10 @@ class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStep
 
     mac_fixed = True
 
+    def __init__(self, config_entry: ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -184,9 +186,10 @@ class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStep
         if user_input is not None:
             errors = await self.validate_input(user_input)
             if not errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input,
+                _LOGGER.debug("Update entry with %s", user_input)
+
+                return self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=user_input
                 )
 
         return self.async_show_form(

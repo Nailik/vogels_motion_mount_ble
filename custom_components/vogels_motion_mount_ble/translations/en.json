@@ -3,6 +3,7 @@
     "error": {
       "error_cannot_connect": "Found device but unable to connect to the device.",
       "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
+      "error_invalid_athentication": "Invalid Authentication, check or disable PIN.",
       "error_unknown": "An unknown error occurred while trying to connect to the device."
     },
     "step": {
@@ -11,8 +12,7 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_settings_pin": "Settings PIN",
-          "conf_control_pin": "Control PIN"
+          "conf_pin": "PIN"
         }
       }
     }
@@ -29,8 +29,7 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_settings_pin": "Settings PIN",
-          "conf_control_pin": "Control PIN"
+          "conf_pin": "PIN"
         }
       }
     }
@@ -45,10 +44,10 @@
       "refresh_data": {
         "name": "Refresh Data"
       },
-      "selec_preset_default": {
-        "name": "Select default preset"
+      "select_preset_default": {
+        "name": "Select default preset x"
       },
-      "selec_preset_custom": {
+      "select_preset_custom": {
         "name": "Select preset {index}"
       }
     },

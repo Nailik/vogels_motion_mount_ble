@@ -18,7 +18,11 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
         """Initialise entity."""
         super().__init__(coordinator)
         self._preset_index = preset_index
-        self._attr_translation_placeholders = {"index": preset_index}
+        self._attr_translation_placeholders = {"index": self._preset_name}
+
+    def remove(self):
+        """Initialise entity."""
+        self.async_remove()
 
     @property
     def _preset_name(self) -> str:

@@ -14,6 +14,8 @@ from .const import (
     HA_SERVICE_ROTATION_ID,
     HA_SERVICE_SET_DISTANCE,
     HA_SERVICE_SET_ROTATION,
+    HA_SERVICE_SET_PRESET_DISTANCE,
+    HA_SERVICE_SET_PRESET_ROTATION,
     HA_SERVICE_SET_TV_WIDTH,
     HA_SERVICE_TV_WIDTH_ID,
 )
@@ -37,6 +39,23 @@ async def _set_rotation_service(call: ServiceCall) -> None:
 async def _set_tv_width_service(call: ServiceCall) -> None:
     _LOGGER.debug("set_tv_width_service called with data: %s", call.data)
     await get_coordinator(call).api.set_width(call.data[HA_SERVICE_TV_WIDTH_ID])
+
+
+async def _set_preset_distance_service(call: ServiceCall) -> None:
+    _LOGGER.debug("_set_preset_distance_service called with data: %s", call.data)
+    await get_coordinator(call).api.set_preset(
+        preset_index=call.data[HA_SERVICE_SET_PRESET_DISTANCE],
+        distance=call.data[HA_SERVICE_DISTANCE_ID],
+    )
+
+
+async def _set_preset_rotation_service(call: ServiceCall) -> None:
+    _LOGGER.debug("_set_preset_rotation_service called with data: %s", call.data)
+    await get_coordinator(call).api.set_preset(
+        call.data[HA_SERVICE_SET_PRESET_ROTATION],
+        rotation=call.data[HA_SERVICE_ROTATION_ID],
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -64,6 +83,18 @@ async def async_setup_entry(
         _set_tv_width_service,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        HA_SERVICE_SET_PRESET_DISTANCE,
+        _set_preset_distance_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        HA_SERVICE_SET_PRESET_ROTATION,
+        _set_preset_rotation_service,
+    )
+
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
@@ -84,7 +115,6 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     _attr_unique_id = "distance"
     _attr_translation_key = _attr_unique_id
-    _attr_native_unit_of_measurement = "%"
     _attr_mode = NumberMode.SLIDER
     _attr_min_value = 0
     _attr_max_value = 100

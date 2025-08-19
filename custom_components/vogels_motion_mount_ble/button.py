@@ -20,13 +20,16 @@ from .utils import get_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def _refresh_data_service(call: ServiceCall) -> None:
     _LOGGER.debug("_refresh_data_service called with data: %s", call.data)
     await get_coordinator(call).api.refreshData()
 
+
 async def _select_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("_select_preset_service called with data: %s", call.data)
     await get_coordinator(call).api.select_preset(call.data[HA_SERVICE_PRESET_ID])
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -69,7 +72,7 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     """Set up the Buttons to select the default preset."""
 
-    _attr_unique_id = "selec_preset_default"
+    _attr_unique_id = "select_preset_default"
     _attr_translation_key = _attr_unique_id
 
     async def async_press(self):
@@ -85,9 +88,8 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"selec_preset_{preset_index}"
-        self._attr_translation_key = "selec_preset_custom"
-
+        self._attr_unique_id = f"select_preset_{preset_index}"
+        self._attr_translation_key = "select_preset_custom"
 
     async def async_press(self):
         """Select a custom preset by it's id."""
