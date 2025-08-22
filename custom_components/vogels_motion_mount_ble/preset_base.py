@@ -20,9 +20,14 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
         self._preset_index = preset_index
         self._attr_translation_placeholders = {"index": self._preset_name}
 
-    def remove(self):
-        """Initialise entity."""
-        self.async_remove()
+    @property
+    def available(self) -> bool:
+        """Set availability of this index of Preset entity based on the lengths of presets in the data."""
+        return (
+            self.coordinator.data
+            and self.coordinator.data.presets
+            and self._preset_index in self.coordinator.data.presets
+        )
 
     @property
     def _preset_name(self) -> str:

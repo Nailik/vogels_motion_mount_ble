@@ -439,6 +439,10 @@ class API:
         self._update(name=data.decode("utf-8").rstrip("\x00"))
 
     def _handle_preset_change(self, preset_index, data: bytearray):
+        # check if data is empty, if so then preset doesn't exist
+        if int.from_bytes(data) == 0:
+            return
+
         preset_id = preset_index + 1
         # Preset IDs are 1-based because 0 is the default preset
         _LOGGER.debug("Consume preset change for id %s data %s", preset_id, data)
