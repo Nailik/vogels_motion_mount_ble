@@ -267,11 +267,10 @@ class API:
 
         # TODO max length for name
         name_bytes = (new_name).encode("utf-8")
-        id_bytes = bytes([new_preset_id])
         distance_bytes = int(new_distance).to_bytes(2, byteorder="big")
         rotation_bytes = int(new_rotation).to_bytes(2, byteorder="big")
 
-        data = id_bytes + distance_bytes + rotation_bytes + name_bytes
+        data = b"\x01" + distance_bytes + rotation_bytes + name_bytes
         newpresets = dict(self._data.presets)
 
         newpresets[preset_index] = VogelsMotionMountPreset(
@@ -280,11 +279,29 @@ class API:
             distance=new_distance,
             rotation=new_rotation,
         )
-        _LOGGER.debug("set_preset write data to %s", data)
+
         await self._connect(
             self._client.write_gatt_char,
             CHAR_PRESET_UUIDS[preset_index],
             data[:20].ljust(20, b"\x00"),
+            response=True,
+        )
+        self._update(presets=newpresets)
+
+    async def delete_preset(self, preset_index: int):
+        """Delete a preset by index to move the MotionMount to."""
+        _LOGGER.debug(
+            "delete_preset %s on id %s data %s",
+            preset_index,
+            CHAR_PRESET_UUIDS[preset_index],
+            bytes(0x01).ljust(20, b"\x00"),
+        )
+        newpresets = dict(self._data.presets)
+        newpresets[preset_index] = None
+        await self._connect(
+            self._client.write_gatt_char,
+            CHAR_PRESET_UUIDS[preset_index],
+            bytes(0x01).ljust(20, b"\x00"),
             response=True,
         )
         self._update(presets=newpresets)
@@ -439,23 +456,23 @@ class API:
         self._update(name=data.decode("utf-8").rstrip("\x00"))
 
     def _handle_preset_change(self, preset_index, data: bytearray):
-        # check if data is empty, if so then preset doesn't exist
-        if int.from_bytes(data) == 0:
-            return
-
-        preset_id = preset_index + 1
-        # Preset IDs are 1-based because 0 is the default preset
-        _LOGGER.debug("Consume preset change for id %s data %s", preset_id, data)
-        distance = int.from_bytes(data[1:3], "big")
-        rotation = int.from_bytes(data[3:5], "big")
-        name = data[5:].decode("utf-8").rstrip("\x00")
         new_presets = dict(self._data.presets)
-        new_presets[preset_index] = VogelsMotionMountPreset(
-            id=preset_id,
-            name=name,
-            distance=distance,
-            rotation=rotation,
-        )
+        new_presets[preset_index] = None
+        # check if data is empty, if so then preset doesn't exist
+        if int.from_bytes(data) != 0:
+            preset_id = preset_index + 1
+            # Preset IDs are 1-based because 0 is the default preset
+            _LOGGER.debug("Consume preset change for id %s data %s", preset_id, data)
+            distance = int.from_bytes(data[1:3], "big")
+            rotation = int.from_bytes(data[3:5], "big")
+            name = data[5:].decode("utf-8").rstrip("\x00")
+            new_presets[preset_index] = VogelsMotionMountPreset(
+                id=preset_id,
+                name=name,
+                distance=distance,
+                rotation=rotation,
+            )
+
         self._update(presets=new_presets)
 
     def _handle_automove_change(self, data: bytearray):

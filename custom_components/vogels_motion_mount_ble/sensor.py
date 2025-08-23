@@ -17,11 +17,16 @@ async def async_setup_entry(
     """Set up the Sensors for Distance, Rotation and versions."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
 
-    async_add_entities([
-            DistanceSensor(coordinator), RotationSensor(coordinator),
+    async_add_entities(
+        [
+            DistanceSensor(coordinator),
+            RotationSensor(coordinator),
             CEBBLSensor(coordinator),
-            MCPHWSensor(coordinator), MCPBLSensor(coordinator), MCPFWSensor(coordinator)
-        ])
+            MCPHWSensor(coordinator),
+            MCPBLSensor(coordinator),
+            MCPFWSensor(coordinator),
+        ]
+    )
 
 
 class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -37,6 +42,7 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
             return None
         return self.coordinator.data.distance
 
+
 class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Sensor for current rotation, may be different from requested rotation."""
 
@@ -49,6 +55,7 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.rotation
+
 
 class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Sensor for CEB BL Version."""
@@ -63,6 +70,7 @@ class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
             return None
         return self.coordinator.data.ceb_bl_version
 
+
 class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Sensor for MCP HW Version."""
 
@@ -76,6 +84,7 @@ class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
             return None
         return self.coordinator.data.mcp_hw_version
 
+
 class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Sensor for MCP BL Version."""
 
@@ -88,6 +97,7 @@ class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.mcp_bl_version
+
 
 class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Sensor for MCP FW Version."""

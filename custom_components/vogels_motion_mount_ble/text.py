@@ -27,9 +27,13 @@ async def _set_name(call: ServiceCall) -> None:
     _LOGGER.debug("_set_name called with data: %s", call.data)
     await get_coordinator(call).api.set_name(call.data[HA_SERVICE_NAME_ID])
 
+
 async def _set_preset_name(call: ServiceCall) -> None:
     _LOGGER.debug("_set_name called with data: %s", call.data)
-    await get_coordinator(call).api.set_preset(preset_index=call.data[HA_SERVICE_NAME_ID], name=call.data[HA_SERVICE_PRESET_ID])
+    await get_coordinator(call).api.set_preset(
+        preset_index=call.data[HA_SERVICE_NAME_ID], name=call.data[HA_SERVICE_PRESET_ID]
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -88,7 +92,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         self._attr_unique_id = f"preset_{preset_index}_name"
         self._attr_translation_key = "preset_name_custom"
         self._attr_native_min = 1
-        self._attr_native_max = 20  #TODO correct max length?
+        self._attr_native_max = 20  # TODO correct max length?
 
     @property
     def native_value(self):
@@ -99,4 +103,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_preset(preset_index=self._preset_index, name=value)
+        await self.coordinator.api.set_preset(
+            preset_index=self._preset_index, name=value
+        )

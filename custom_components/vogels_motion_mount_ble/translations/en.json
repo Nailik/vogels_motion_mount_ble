@@ -44,11 +44,17 @@
       "refresh_data": {
         "name": "Refresh Data"
       },
+      "disconnect": {
+        "name": "Disconnect"
+      },
       "select_preset_default": {
-        "name": "Select default preset x"
+        "name": "Select default preset"
       },
       "select_preset_custom": {
-        "name": "Select preset {index}"
+        "name": "Select preset {name}"
+      },
+      "delete_preset_custom": {
+        "name": "Delete preset {name}"
       }
     },
     "number": {
@@ -62,10 +68,10 @@
         "name": "TV width"
       },
       "preset_distance_custom": {
-        "name": "Preset {index} distance"
+        "name": "Preset {name} distance"
       },
       "preset_rotation_custom": {
-        "name": "Preset {index} rotation"
+        "name": "Preset {name} rotation"
       }
     },
     "select": {

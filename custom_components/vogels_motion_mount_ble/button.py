@@ -52,9 +52,11 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        [RefreshDataButton(coordinator), SelectPresetDefaultButton(coordinator)]
+        [RefreshDataButton(coordinator), DisconnectButton(coordinator), SelectPresetDefaultButton(coordinator)]
         # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
         + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
+        # Add one DeletePresetButton for each preset_id from 0 to 7 inclusive
+        + [DeletePresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
 
 
@@ -67,6 +69,17 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     async def async_press(self):
         """Execute data refresh."""
         await self.coordinator.api.refreshData()
+
+
+class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
+    """Set up the Button that provides an action to disconnect data."""
+
+    _attr_unique_id = "disconnect"
+    _attr_translation_key = _attr_unique_id
+
+    async def async_press(self):
+        """Execute disconnect."""
+        await self.coordinator.api.disconnect()
 
 
 class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
@@ -96,3 +109,19 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         await self.coordinator.api.select_preset(
             self.coordinator.data.presets[self._preset_index].id
         )
+
+
+class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
+    """Set up the Buttons to delete the custom presets."""
+
+    def __init__(
+        self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
+    ) -> None:
+        """Initialize unique_id because it's derived from preset_index."""
+        super().__init__(coordinator, preset_index)
+        self._attr_unique_id = f"delete_preset_{preset_index}"
+        self._attr_translation_key = "delete_preset_custom"
+
+    async def async_press(self):
+        """Select a custom preset by it's id."""
+        await self.coordinator.api.delete_preset(self._preset_index)
