@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
-from .base import VogelsMotionMountBleBaseEntity
+from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_DISTANCE_ID,
@@ -20,7 +20,6 @@ from .const import (
     HA_SERVICE_TV_WIDTH_ID,
 )
 from .coordinator import VogelsMotionMountBleCoordinator
-from .preset_base import VogelsMotionMountBlePresetBaseEntity
 from .utils import get_coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,8 +101,14 @@ async def async_setup_entry(
         DistanceNumber(coordinator),
         RotationNumber(coordinator),
         TVWidthNumber(coordinator),
-        *[PresetDistanceNumber(coordinator, preset_index) for preset_index in range(7)],
-        *[PresetRotationNumber(coordinator, preset_index) for preset_index in range(7)],
+        *[
+            PresetDistanceNumber(coordinator, preset_index)
+            for preset_index in range(1, 8)
+        ],
+        *[
+            PresetRotationNumber(coordinator, preset_index)
+            for preset_index in range(1, 8)
+        ],
     ]
 
     # Create the sensors.
@@ -182,6 +187,11 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
 
+    _attr_mode = NumberMode.SLIDER
+    _attr_min_value = 0
+    _attr_max_value = 100
+    _attr_step = 1
+
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
@@ -206,6 +216,11 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
 
 class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """Implementation of a number input for distance of a preset."""
+
+    _attr_mode = NumberMode.SLIDER
+    _attr_native_min_value = -100
+    _attr_native_max_value = 100
+    _attr_native_step = 1
 
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int

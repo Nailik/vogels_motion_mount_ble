@@ -4,11 +4,10 @@ import logging
 
 from homeassistant.components.text import TextEntity
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
-from .base import VogelsMotionMountBleBaseEntity
+from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_NAME_ID,
@@ -17,7 +16,6 @@ from .const import (
     HA_SERVICE_SET_PRESET_NAME,
 )
 from .coordinator import VogelsMotionMountBleCoordinator
-from .preset_base import VogelsMotionMountBlePresetBaseEntity
 from .utils import get_coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +55,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [NameText(coordinator)]
-        + [PresetNameText(coordinator, preset_index) for preset_index in range(7)]
+        + [PresetNameText(coordinator, preset_index) for preset_index in range(1, 8)]
     )
 
 

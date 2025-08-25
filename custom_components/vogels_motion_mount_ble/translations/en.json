@@ -55,6 +55,9 @@
       },
       "delete_preset_custom": {
         "name": "Delete preset {name}"
+      },
+      "add_preset_custom": {
+        "name": "Add preset {index}"
       }
     },
     "number": {

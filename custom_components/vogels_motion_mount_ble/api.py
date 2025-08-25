@@ -38,7 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 class VogelsMotionMountPreset:
     """Holds the data of a preset."""
 
-    id: int
     name: str
     distance: int
     rotation: int
@@ -162,12 +161,12 @@ class API:
 
     # region Actions API
 
-    async def select_preset(self, preset_id: int):
+    async def select_preset(self, preset_index: int):
         """Select a preset index to move the MotionMount to."""
         await self._connect(
             self._client.write_gatt_char,
             CHAR_PRESET_UUID,
-            bytes([preset_id]),
+            bytes([preset_index]),
             response=True,
         )
 
@@ -185,7 +184,7 @@ class API:
         await self._connect(
             self._client.write_gatt_char,
             CHAR_ROTATION_UUID,
-            int(rotation).to_bytes(2, byteorder="big"),
+            int(rotation).to_bytes(2, byteorder="big", signed=True),
             response=True,
         )
         self._update(requested_rotation=rotation)
@@ -260,7 +259,6 @@ class API:
         """Set data of preset."""
         preset = self._data.presets[preset_index]
 
-        new_preset_id = preset.id
         new_name = name if name is not None else preset.name
         new_distance = distance if distance is not None else preset.distance
         new_rotation = rotation if rotation is not None else preset.rotation
@@ -274,7 +272,6 @@ class API:
         newpresets = dict(self._data.presets)
 
         newpresets[preset_index] = VogelsMotionMountPreset(
-            id=new_preset_id,
             name=new_name,
             distance=new_distance,
             rotation=new_rotation,
@@ -416,7 +413,7 @@ class API:
         )
         self._handle_width_change(await self._client.read_gatt_char(CHAR_WIDTH_UUID))
         self._handle_name_change(await self._client.read_gatt_char(CHAR_NAME_UUID))
-        for preset_index in range(7):
+        for preset_index in range(1, 8):
             self._handle_preset_change(
                 preset_index,
                 await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index]),
@@ -459,10 +456,10 @@ class API:
         new_presets = dict(self._data.presets)
         new_presets[preset_index] = None
         # check if data is empty, if so then preset doesn't exist
-        if int.from_bytes(data) != 0:
+        _LOGGER.debug("Consume preset change for id %s data %s", preset_index + 1, data)
+        if data[0] != 0:
             preset_id = preset_index + 1
             # Preset IDs are 1-based because 0 is the default preset
-            _LOGGER.debug("Consume preset change for id %s data %s", preset_id, data)
             distance = int.from_bytes(data[1:3], "big")
             rotation = int.from_bytes(data[3:5], "big")
             name = data[5:].decode("utf-8").rstrip("\x00")
