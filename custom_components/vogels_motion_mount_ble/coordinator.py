@@ -2,17 +2,15 @@
 
 import logging
 
-from homeassistant.components import bluetooth
-from homeassistant.core import Callable, HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import Callable, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API, VogelsMotionMountData
-from .const import CONF_PIN, CONF_MAC, CONF_NAME
+from .const import CONF_MAC, CONF_NAME, CONF_PIN
 
 _LOGGER = logging.getLogger(__name__)
-from homeassistant.const import Platform
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -37,7 +35,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         unsub_options_update_listener: Callable[[], None],
     ) -> None:
         """Initialize coordinator."""
-        _LOGGER.debug("startup coordingtor with %s", config_entry.data)
+        _LOGGER.debug("Startup coordingtor with %s", config_entry.data)
         # Set variables from values entered in config flow setup
         self._unsub_options_update_listener = unsub_options_update_listener
         self.config_entry = config_entry
@@ -65,7 +63,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         self._setup_task = hass.loop.create_task(self._setup())
 
     async def _setup(self):
-        _LOGGER.error("_setup called")
+        _LOGGER.debug("Setup api")
         # todo if this throws an error (e.g. due to invalid pin) this should show an error in the ui
         await self.api.load_initial_data()
         await self.hass.config_entries.async_forward_entry_setups(
@@ -76,4 +74,4 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         self._unsub_options_update_listener()
         if self._setup_task:
             self._setup_task.cancel()
-        await self.api.disconnect()
+        await self.api.unload()

@@ -19,14 +19,13 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
-from .api import API, APIConnectionDeviceNotFoundError, APIConnectionError, APIAuthenticationError
-from .const import (
-    CONF_PIN,
-    CONF_ERROR,
-    CONF_MAC,
-    CONF_NAME,
-    DOMAIN,
+from .api import (
+    API,
+    APIAuthenticationError,
+    APIConnectionDeviceNotFoundError,
+    APIConnectionError,
 )
+from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +104,7 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
             _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
             errors[CONF_ERROR] = "error_device_not_found"
         except APIAuthenticationError as err:
-            _LOGGER.error("Setting APIConnectionError: %s", err)
+            _LOGGER.error("Setting APIAuthenticationError: %s", err)
             errors[CONF_ERROR] = "error_invalid_athentication"
         except APIConnectionError as err:
             _LOGGER.error("Setting APIConnectionError: %s", err)
@@ -172,9 +171,10 @@ class VogelsMotionMountConfigFlow(
 class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStepMixin):
     """Update the options via UI."""
 
+    # mac cannot be changed in options flow
     mac_fixed = True
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -191,6 +191,11 @@ class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStep
                 return self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
                 )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=self.prefilledForm(user_input),
+                errors=errors,
+            )
 
         return self.async_show_form(
             step_id="init",

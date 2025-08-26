@@ -14,13 +14,14 @@ async def async_setup_entry(
     config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Sensors for Distance, Rotation and versions."""
+    """Set up the Sensors for Distance, Rotation, Pin and Versions."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
 
     async_add_entities(
         [
             DistanceSensor(coordinator),
             RotationSensor(coordinator),
+            PinSettingsSensor(coordinator),
             CEBBLSensor(coordinator),
             MCPHWSensor(coordinator),
             MCPBLSensor(coordinator),
@@ -111,3 +112,17 @@ class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.mcp_fw_version
+
+
+class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
+    """Sensor for Pin Settings."""
+
+    _attr_unique_id = "pin_settings"
+    _attr_translation_key = _attr_unique_id
+
+    @property
+    def native_value(self):
+        """Return the current value."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.pin_setting

@@ -96,6 +96,27 @@
           "hdmi_4": "HDMI 4",
           "hdmi_5": "HDMI 5"
         }
+      },
+      "freeze_preset": {
+        "name": "Freeze preset",
+        "state": {
+          "1": "Preset 1",
+          "2": "Preset 2",
+          "3": "Preset 3",
+          "4": "Preset 4",
+          "5": "Preset 5",
+          "6": "Preset 6",
+          "7": "Preset 7"
+        },
+        "options": {
+          "1": "Preset 1",
+          "2": "Preset 2",
+          "3": "Preset 3",
+          "4": "Preset 4",
+          "5": "Preset 5",
+          "6": "Preset 6",
+          "7": "Preset 7"
+        }
       }
     },
     "sensor": {
@@ -116,6 +137,14 @@
       },
       "mcp_fw_version": {
         "name": "MCP BL Version"
+      },
+      "pin_settings": {
+        "name": "Pin Settings",
+        "state": {
+          "12": "Off",
+          "13": "Single",
+          "15": "Multi"
+        }
       }
     },
     "text": {
@@ -124,6 +153,12 @@
       },
       "preset_name_custom": {
         "name": "Preset {index} name"
+      },
+      "authorised_user_pin": {
+        "name": "Authorised User pin"
+      },
+      "supervisior_pin": {
+        "name": "Supervisior pin"
       }
     }
   },

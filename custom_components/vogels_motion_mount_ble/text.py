@@ -7,13 +7,15 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
+from .api import VogelsMotionMountPinSettings
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_NAME_ID,
-    HA_SERVICE_PRESET_ID,
     HA_SERVICE_SET_NAME,
-    HA_SERVICE_SET_PRESET_NAME,
+    HA_SERVICE_SET_AUTHORISED_USER_PIN,
+    HA_SERVICE_SET_SUPERVISIOR_PIN,
+    HA_SERVICE_PIN_ID,
 )
 from .coordinator import VogelsMotionMountBleCoordinator
 from .utils import get_coordinator
@@ -22,15 +24,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _set_name(call: ServiceCall) -> None:
-    _LOGGER.debug("_set_name called with data: %s", call.data)
+    _LOGGER.debug("Set name service called with data: %s", call.data)
     await get_coordinator(call).api.set_name(call.data[HA_SERVICE_NAME_ID])
 
 
-async def _set_preset_name(call: ServiceCall) -> None:
-    _LOGGER.debug("_set_name called with data: %s", call.data)
-    await get_coordinator(call).api.set_preset(
-        preset_index=call.data[HA_SERVICE_NAME_ID], name=call.data[HA_SERVICE_PRESET_ID]
+async def _set_authorised_user_pin(call: ServiceCall) -> None:
+    _LOGGER.debug("Set authorised user pin service called with data: %s", call.data)
+    await get_coordinator(call).api.set_authorised_user_pin(
+        call.data[HA_SERVICE_PIN_ID]
     )
+
+
+async def _set_supervisior_pin(call: ServiceCall) -> None:
+    _LOGGER.debug("Set supervisior pin service called with data: %s", call.data)
+    await get_coordinator(call).api.set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
 
 
 async def async_setup_entry(
@@ -38,7 +45,7 @@ async def async_setup_entry(
     config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the TextEntities for name and preset names."""
+    """Set up the TextEntities for name, preset names and pins."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
 
     hass.services.async_register(
@@ -49,12 +56,22 @@ async def async_setup_entry(
 
     hass.services.async_register(
         DOMAIN,
-        HA_SERVICE_SET_PRESET_NAME,
-        _set_preset_name,
+        HA_SERVICE_SET_AUTHORISED_USER_PIN,
+        _set_authorised_user_pin,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        HA_SERVICE_SET_SUPERVISIOR_PIN,
+        _set_supervisior_pin,
     )
 
     async_add_entities(
-        [NameText(coordinator)]
+        [
+            NameText(coordinator),
+            AuthorisedUserPinText(coordinator),
+            SupervisiorPinText(coordinator),
+        ]
         + [PresetNameText(coordinator, preset_index) for preset_index in range(1, 8)]
     )
 
@@ -100,7 +117,53 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         return None
 
     async def async_set_value(self, value: str) -> None:
-        """Set the value from the UI."""
+        """Set the preset name value from the UI."""
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index, name=value
         )
+
+
+class AuthorisedUserPinText(VogelsMotionMountBleBaseEntity, TextEntity):
+    """Implementation of a the Name Text."""
+
+    _attr_unique_id = "authorised_user_pin"
+    _attr_translation_key = _attr_unique_id
+    _attr_native_min = 4
+    _attr_native_max = 4
+
+    @property
+    def native_value(self):
+        """Return the state of the entity."""
+        if self.coordinator.data is None:
+            return None
+        return "    "
+
+    async def async_set_value(self, value: str) -> None:
+        """Set the authoised user pin value from the UI."""
+        await self.coordinator.api.set_authorised_user_pin(value)
+
+
+class SupervisiorPinText(VogelsMotionMountBleBaseEntity, TextEntity):
+    """Implementation of a the Name Text."""
+
+    # TODO only available if there is already an authorised user pin
+    _attr_unique_id = "supervisior_pin"
+    _attr_translation_key = _attr_unique_id
+    _attr_native_min = 4
+    _attr_native_max = 4
+
+    @property
+    def native_value(self):
+        """Return the state of the entity."""
+        if self.coordinator.data is None:
+            return None
+        return "    "
+
+    @property
+    def available(self) -> bool:
+        """Set availability of this index of Preset entity based if the preset is available in the data."""
+        return self.coordinator.data.pin is not VogelsMotionMountPinSettings.Deactivated
+
+    async def async_set_value(self, value: str) -> None:
+        """Set the supervisior pin value from the UI."""
+        await self.coordinator.api.set_supervisior_pin(value)

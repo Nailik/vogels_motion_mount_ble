@@ -22,12 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _set_automove_service(call: ServiceCall) -> None:
-    _LOGGER.debug("_set_automove_service called with data: %s", call.data)
+    _LOGGER.debug("Set automove service called with data: %s", call.data)
     await get_coordinator(call).api.set_automove(call.data[HA_SERVICE_AUTOMOVE_ID])
 
 
 async def _set_freeze_preset_service(call: ServiceCall) -> None:
-    _LOGGER.debug("_set_freeze_preset_service called with data: %s", call.data)
+    _LOGGER.debug("Set freeze service called with data: %s", call.data)
     await get_coordinator(call).api.set_freeze(call.data[HA_SERVICE_PRESET_ID])
 
 
@@ -92,6 +92,13 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         if self.coordinator.data.freeze_preset_index is None:
             return None
         return self._attr_options[self.coordinator.data.freeze_preset_index]
+
+    @property
+    def available(self) -> bool:
+        """Set availability if automove is turned on."""
+        if self.coordinator.data and self.coordinator.data.automove_on:
+            return True
+        return False
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""

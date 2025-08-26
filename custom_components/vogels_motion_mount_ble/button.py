@@ -10,9 +10,15 @@ from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .const import (
     DOMAIN,
+    HA_SERVICE_DELETE_PRESET,
+    HA_SERVICE_DISCONNECT,
+    HA_SERVICE_DISTANCE_ID,
+    HA_SERVICE_NAME_ID,
     HA_SERVICE_PRESET_ID,
     HA_SERVICE_REFRESH_DATA,
+    HA_SERVICE_ROTATION_ID,
     HA_SERVICE_SELECT_PRESET,
+    HA_SERVICE_SET_PRESET,
 )
 from .coordinator import VogelsMotionMountBleCoordinator
 from .utils import get_coordinator
@@ -21,13 +27,33 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _refresh_data_service(call: ServiceCall) -> None:
-    _LOGGER.debug("_refresh_data_service called with data: %s", call.data)
+    _LOGGER.debug("Refresh data service called with data: %s", call.data)
     await get_coordinator(call).api.refreshData()
 
 
+async def _disconnect_service(call: ServiceCall) -> None:
+    _LOGGER.debug("Disconnect service called with data: %s", call.data)
+    await get_coordinator(call).api.disconnect()
+
+
 async def _select_preset_service(call: ServiceCall) -> None:
-    _LOGGER.debug("_select_preset_service called with data: %s", call.data)
+    _LOGGER.debug("Select preset service called with data: %s", call.data)
     await get_coordinator(call).api.select_preset(call.data[HA_SERVICE_PRESET_ID])
+
+
+async def _delete_preset_service(call: ServiceCall) -> None:
+    _LOGGER.debug("Delete preset service called with data: %s", call.data)
+    await get_coordinator(call).api.delete_preset(call.data[HA_SERVICE_PRESET_ID])
+
+
+async def _set_preset_service(call: ServiceCall) -> None:
+    _LOGGER.debug("Add preset service called with data: %s", call.data)
+    await get_coordinator(call).api.set_preset(
+        call.data[HA_SERVICE_PRESET_ID],
+        call.data[HA_SERVICE_NAME_ID],
+        call.data[HA_SERVICE_DISTANCE_ID],
+        call.data[HA_SERVICE_ROTATION_ID],
+    )
 
 
 async def async_setup_entry(
@@ -46,8 +72,26 @@ async def async_setup_entry(
 
     hass.services.async_register(
         DOMAIN,
+        HA_SERVICE_DISCONNECT,
+        _disconnect_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
         HA_SERVICE_SELECT_PRESET,
         _select_preset_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        HA_SERVICE_DELETE_PRESET,
+        _delete_preset_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        HA_SERVICE_SET_PRESET,
+        _set_preset_service,
     )
 
     async_add_entities(
@@ -88,6 +132,13 @@ class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     _attr_unique_id = "disconnect"
     _attr_translation_key = _attr_unique_id
 
+    @property
+    def available(self) -> bool:
+        """Set availability only if device is connected currently."""
+        if self.coordinator.data and self.coordinator.data.connected:
+            return True
+        return False
+
     async def async_press(self):
         """Execute disconnect."""
         await self.coordinator.api.disconnect()
@@ -116,7 +167,7 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         self._attr_translation_key = "select_preset_custom"
 
     async def async_press(self):
-        """Select a custom preset by it's id."""
+        """Select a custom preset by it's index."""
         await self.coordinator.api.select_preset(
             self.coordinator.data.presets[self._preset_index].id
         )
@@ -134,7 +185,7 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         self._attr_translation_key = "delete_preset_custom"
 
     async def async_press(self):
-        """Select a custom preset by it's id."""
+        """Delete a custom preset by it's index."""
         await self.coordinator.api.delete_preset(self._preset_index)
 
 
@@ -150,9 +201,12 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         self._attr_translation_key = "add_preset_custom"
 
     async def async_press(self):
-        """Select a custom preset by it's id."""
+        """Add a custom preset by it's index with empty data."""
         await self.coordinator.api.set_preset(
-            self._preset_index, 0, 0, f"Preset {self._preset_index}"
+            self._preset_index,
+            0,
+            0,
+            f"Preset {self._preset_index}",  # TODO translation
         )
 
     @property
