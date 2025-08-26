@@ -38,14 +38,14 @@
 | `c005fa07-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
 | `c005fa08-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | CEB BL Version |
 | `c005fa09-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa0a-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 0 Format:<br>• Bytes 1–2: LittleEndian, Distance<br>• Bytes 3–4: LittleEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
-| `c005fa0b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 1 Format:<br>• Bytes 1–2: LittleEndian, Distance<br>• Bytes 3–4: LittleEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
-| `c005fa0c-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 2 Format:<br>• Bytes 1–2: LittleEndian, Distance<br>• Bytes 3–4: LittleEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
-| `c005fa0d-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 3 Format:<br>• Bytes 1–2: LittleEndian, Distance<br>• Bytes 3–4: LittleEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
-| `c005fa0e-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 4 Format:<br>• Bytes 1–2: LittleEndian, Distance<br>• Bytes 3–4: LittleEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
-| `c005fa0f-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 5 Format:<br>• Bytes 1–2: LittleEndian, Distance<br>• Bytes 3–4: LittleEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
-| `c005fa10-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 6 Format:<br>• Bytes 1–2: LittleEndian, Distance<br>• Bytes 3–4: LittleEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
-| `c005fa14-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Freeze position |
+| `c005fa0a-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 0 Format:<br>• Byte 0: exists/deleted 0x01/0x0<br>• Bytes 1–2: BigEndian, Distance<br>• Bytes 3–4: BigEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
+| `c005fa0b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 1 Format:<br>• Byte 0: exists/deleted 0x01/0x0<br>• Bytes 1–2: BigEndian, Distance<br>• Bytes 3–4: BigEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
+| `c005fa0c-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 2 Format:<br>• Byte 0: exists/deleted 0x01/0x0<br>• Bytes 1–2: BigEndian, Distance<br>• Bytes 3–4: BigEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
+| `c005fa0d-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 3 Format:<br>• Byte 0: exists/deleted 0x01/0x0<br>• Bytes 1–2: BigEndian, Distance<br>• Bytes 3–4: BigEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
+| `c005fa0e-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 4 Format:<br>• Byte 0: exists/deleted 0x01/0x0<br>• Bytes 1–2: BigEndian, Distance<br>• Bytes 3–4: BigEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
+| `c005fa0f-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 5 Format:<br>• Byte 0: exists/deleted 0x01/0x0<br>• Bytes 1–2: BigEndian, Distance<br>• Bytes 3–4: BigEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
+| `c005fa10-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 6 Format:<br>• Byte 0: exists/deleted 0x01/0x0<br>• Bytes 1–2: BigEndian, Distance<br>• Bytes 3–4: BigEndian, Rotation<br>• Bytes 5–end: Name (UTF-8 string) |
+| `c005fa14-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Freeze position, single byte that defines which preset index is used |
 | `c005fa15-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
 | `c005fa16-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
 | `c005fa17-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
@@ -75,7 +75,7 @@
 | `c005fa2a-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Call Preset with id 0x00 - 0x06 |
 | `c005fa2b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | TV width in cm |
 | `c005fa2d-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Settings PIN to authenticate session |
-| `c005fa2e-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Check if PIN is required:<br>• Not required: `0x80800000`<br>• Required: `0x00000000` |
+| `c005fa2e-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Check if PIN is required, starts with:<br>• Not required: `0x80`<br>• Required: `0x0` |
 | `c005fa2f-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Control PIN to authenticate session |
 | `c005fa30-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
 | `c005fa32-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
@@ -85,7 +85,7 @@
 | `c005fa36-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
 | `c005fa37-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Name |
 | `c005fa38-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa39-0651-4800-b000-000000000000` | ✅ | ❌ | ✅ | Unknown |
+| `c005fa39-0651-4800-b000-000000000000` | ✅ | ❌ | ✅ | Pin Information<br>• No Pin: `0x0c`<br>• Only Authorised user Pin: `0x0d`• Different Pin for Authorised user and supervisior: `0x0f` |
 | `c005fa3a-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
 
 ---
