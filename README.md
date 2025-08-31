@@ -1,6 +1,24 @@
 # Vogels MotionMount (BLE) for Home Assistant - DEV
 
-## Installation
+## Setup
+
+Use HACS to add this repository or copy the contents in the custom_integrations folder.
+
+During Setup the following options appear:
+- MAC: The mac address of the device, required to connect to a BLE device
+- Device name: Local device name, only used within Home Assistant, not necessary to match the BLE Device name.
+- PIN: Within the Vogel's MotionMount you can setup 2 different pins
+  - Authorized user pin: this pin can be used to control the device or change settings
+  - Supervisior pin: when this secondary pin is setup, the authorized user will loose the possibility to change the settings, which settings an authorized user has access to can be changed
+- Preset Subdevices: This combines the actions of subdevices add/delete/name/distance/rotation/select into a secondary device
+
+When the integration is setup the integration tries to connect to the Vogel's MotionMount on each restart, it tries in 1 minute intervals until successful connection.
+
+## Limitations
+
+- Preset Subdevices cannot be changed in options flow (doesn't work currently)
+- Changing Pin is not supported yet
+- Changing the name of a preset doesn't update it's entities yet, you need to restart Home Assistant
 
 ## Status
 
@@ -12,14 +30,15 @@
 | Presets | Name | set_preset_name | ✅ | Length 1-20 characters (max length to be verified) | 
 | Presets | Distance | set_preset_distance | ✅ |  | 
 | Presets | Rotation | set_preset_rotation | ✅ |  | 
-| Presets | Delete | delete_preset | ❌ | deletes a preset | 
-| Presets | Add | add_preset | ❌ | adds a new preset | 
+| Presets | Delete | delete_preset | ✅ | deletes a preset | 
+| Presets | Add | add_preset | ✅ | adds a new preset | 
 | Select Preset | Move TV to a preset | select_preset | ✅ |  |
 | Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes | set_automove | ✅ | "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5" |
 | Freeze preset | Preset to be used when TV is turned of | set_freeze_preset | ❌ |  |
 | TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ |  |
-| Settings Pin | Pin to change the settings | | ❌ |  |
-| Control Pin | Pin to change the controls | | ❌ |  |
+| Authorized user Pin | Pin to controls or change the settings | | ❌ |  |
+| Supervisor Pin | Pin to limit settings control for authorizes user | | ❌ |  |
+| Authorizes uer features | Wich settings an authorized user can change | | ❌ |  |
 | CEB BL, FW Version | Version of CEB |  | ✅ |  |
 | MCP BL, FW Version | Version of MCP |  | ✅ |  |
 
