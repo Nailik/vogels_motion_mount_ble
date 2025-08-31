@@ -8,7 +8,7 @@ from homeassistant.core import Callable, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API, VogelsMotionMountData
-from .const import CONF_MAC, CONF_NAME, CONF_PIN
+from .const import CONF_MAC, CONF_NAME, CONF_PIN, CONF_PRESET_SUBDEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         self.mac = config_entry.data[CONF_MAC]
         self._name = config_entry.data[CONF_NAME]
         self._pin = config_entry.data.get(CONF_PIN)
+        self.preset_subdevice = config_entry.data.get(CONF_PRESET_SUBDEVICE, False)
         self._loaded = False
 
         # Initialise DataUpdateCoordinator (that's the device name shown to the user)

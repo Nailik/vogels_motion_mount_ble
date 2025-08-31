@@ -7,6 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import (
@@ -21,11 +22,10 @@ from homeassistant.helpers import selector
 
 from .api import (
     API,
-    APIAuthenticationError,
     APIConnectionDeviceNotFoundError,
     APIConnectionError,
 )
-from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
+from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN, CONF_PRESET_SUBDEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,12 +45,14 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         mac = UNDEFINED
         name = UNDEFINED
         pin = UNDEFINED
+        preset_subdevice = False
 
         # Read values from data if provided
         if data is not None:
             mac = data.get(CONF_MAC, UNDEFINED)
             name = data.get(CONF_NAME, f"Vogel's MotionMount ({mac})")
             pin = data.get(CONF_PIN, UNDEFINED)
+            preset_subdevice = data.get(CONF_PRESET_SUBDEVICE, False)
 
         # If discovery_info is set, use its address as the MAC and for the name if not provided
         if self.discovery_info is not None:
@@ -84,6 +86,9 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
                     ),
                     vol.Coerce(int),
                 ),
+                vol.Required(CONF_PRESET_SUBDEVICE, default=preset_subdevice): selector.BooleanSelector(
+                    selector.BooleanSelectorConfig()
+                )
             },
         )
 
@@ -103,7 +108,7 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         except APIConnectionDeviceNotFoundError as err:
             _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
             errors[CONF_ERROR] = "error_device_not_found"
-        except APIAuthenticationError as err:
+        except ConfigEntryAuthFailed as err:
             _LOGGER.error("Setting APIAuthenticationError: %s", err)
             errors[CONF_ERROR] = "error_invalid_athentication"
         except APIConnectionError as err:
@@ -187,9 +192,9 @@ class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStep
             errors = await self.validate_input(user_input)
             if not errors:
                 _LOGGER.debug("Update entry with %s", user_input)
-
-                return self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=user_input
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data=user_input,
                 )
             return self.async_show_form(
                 step_id="init",

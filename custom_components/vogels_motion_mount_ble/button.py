@@ -101,17 +101,11 @@ async def async_setup_entry(
             SelectPresetDefaultButton(coordinator),
         ]
         # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
-        + [
-            SelectPresetButton(coordinator, preset_index)
-            for preset_index in range(1, 8)
-        ]
+        + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
         # Add one DeletePresetButton for each preset_id from 0 to 7 inclusive
-        + [
-            DeletePresetButton(coordinator, preset_index)
-            for preset_index in range(1, 8)
-        ]
+        + [DeletePresetButton(coordinator, preset_index) for preset_index in range(7)]
         # Add one AddPresetButton for each preset_id from 0 to 7 inclusive
-        + [AddPresetButton(coordinator, preset_index) for preset_index in range(1, 8)]
+        + [AddPresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
 
 
@@ -152,7 +146,7 @@ class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 
     async def async_press(self):
         """Select the default preset with id 0."""
-        await self.coordinator.api.select_preset(0)
+        await self.coordinator.api.select_default_preset()
 
 
 class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -168,9 +162,7 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
 
     async def async_press(self):
         """Select a custom preset by it's index."""
-        await self.coordinator.api.select_preset(
-            self.coordinator.data.presets[self._preset_index].id
-        )
+        await self.coordinator.api.select_preset(self._preset_index)
 
 
 class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -203,20 +195,15 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     async def async_press(self):
         """Add a custom preset by it's index with empty data."""
         await self.coordinator.api.set_preset(
-            self._preset_index,
-            0,
-            0,
-            f"Preset {self._preset_index}",  # TODO translation
+            preset_index=self._preset_index,
+            name=f"Preset {self._preset_index}",  # TODO translation
+            distance=0,
+            rotation=0,
         )
 
     @property
     def available(self) -> bool:
         """Set availability of this index of Preset entity based on the lengths of presets in the data."""
-        if (
-            self.coordinator.data
-            and self.coordinator.data.presets
-            and self._preset_index in self.coordinator.data.presets
-            and not self.coordinator.data.presets[self._preset_index]
-        ):
+        if self.coordinator.data and self.coordinator.data.presets and not self._preset:
             return True
         return False

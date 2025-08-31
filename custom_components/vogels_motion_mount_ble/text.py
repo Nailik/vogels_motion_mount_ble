@@ -72,7 +72,7 @@ async def async_setup_entry(
             AuthorisedUserPinText(coordinator),
             SupervisiorPinText(coordinator),
         ]
-        + [PresetNameText(coordinator, preset_index) for preset_index in range(1, 8)]
+        + [PresetNameText(coordinator, preset_index) for preset_index in range(7)]
     )
 
 
@@ -162,7 +162,10 @@ class SupervisiorPinText(VogelsMotionMountBleBaseEntity, TextEntity):
     @property
     def available(self) -> bool:
         """Set availability of this index of Preset entity based if the preset is available in the data."""
-        return self.coordinator.data.pin is not VogelsMotionMountPinSettings.Deactivated
+        return (
+            self.coordinator.data.pin_setting
+            is not VogelsMotionMountPinSettings.Deactivated
+        )
 
     async def async_set_value(self, value: str) -> None:
         """Set the supervisior pin value from the UI."""

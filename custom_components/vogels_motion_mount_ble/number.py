@@ -71,14 +71,8 @@ async def async_setup_entry(
         DistanceNumber(coordinator),
         RotationNumber(coordinator),
         TVWidthNumber(coordinator),
-        *[
-            PresetDistanceNumber(coordinator, preset_index)
-            for preset_index in range(1, 8)
-        ],
-        *[
-            PresetRotationNumber(coordinator, preset_index)
-            for preset_index in range(1, 8)
-        ],
+        *[PresetDistanceNumber(coordinator, preset_index) for preset_index in range(7)],
+        *[PresetRotationNumber(coordinator, preset_index) for preset_index in range(7)],
     ]
 
     # Create the sensors.
@@ -91,8 +85,8 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_unique_id = "distance"
     _attr_translation_key = _attr_unique_id
     _attr_mode = NumberMode.SLIDER
-    _attr_min_value = 0
-    _attr_max_value = 100
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
     _attr_step = 1
 
     @property
@@ -136,6 +130,7 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """NumberEntity to set the TV width."""
 
+#TODO max min values
     _attr_unique_id = "tv_width"
     _attr_translation_key = _attr_unique_id
     _attr_native_unit_of_measurement = "cm"
@@ -158,8 +153,8 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """NumberEntity to set distance of a preset."""
 
     _attr_mode = NumberMode.SLIDER
-    _attr_min_value = 0
-    _attr_max_value = 100
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
     _attr_step = 1
 
     def __init__(
