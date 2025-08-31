@@ -1,68 +1,37 @@
-"""Interfaces with the Integration 101 Template api sensors."""
-
-import logging
+"""Binary sensor entities to define properties for Vogels Motion Mount BLE entities."""
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyConfigEntry
-from .base import ExampleBaseEntity
+from . import VogelsMotionMountBleConfigEntry
+from .base import VogelsMotionMountBleBaseEntity
 from .const import DOMAIN
-from homeassistant.helpers import config_validation as cv
-import voluptuous as vol
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.core import HomeAssistant, ServiceCall, callback
 
-_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MyConfigEntry,
+    config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Binary Sensors."""
+    """Set up the connection Sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([ExampleBinarySensor(coordinator)])
+    async_add_entities([ConnectionBinarySensor(coordinator)])
 
 
-class ExampleBinarySensor(ExampleBaseEntity, BinarySensorEntity):
-    """Implementation of a sensor."""
+class ConnectionBinarySensor(VogelsMotionMountBleBaseEntity, BinarySensorEntity):
+    """Sensor to indicate if the Vogels Motion Mount is connected."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_has_entity_name = True
-    _attr_translation_key = "connection"
-    _attr_should_poll = True
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update sensor with latest data from coordinator."""
-        _LOGGER.exception("_handle_coordinator_update binary sensor")
-        # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.async_write_ha_state()
+    _attr_unique_id = "connection"
+    _attr_translation_key = _attr_unique_id
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "connection"
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        # All entities must have a unique id.  Think carefully what you want this to be as
-        # changing it later will cause HA to create new entities.
-        return f"{DOMAIN}-{self.coordinator.mac}-connected"
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the binary sensor is on."""
-        _LOGGER.exception("is_on binary sensor")
+    def is_on(self):
+        """Return if the MotionMount is currently connected."""
         if not self.coordinator.data:
-            _LOGGER.error("No data available in coordinator")
             return None
-        # This needs to enumerate to true or false
         return self.coordinator.data.connected
-

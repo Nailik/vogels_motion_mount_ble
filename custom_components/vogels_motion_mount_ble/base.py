@@ -1,102 +1,92 @@
-"""Base entity which all other entity platform classes can inherit.
-
-As all entity types have a common set of properties, you can
-create a base entity like this and inherit it in all your entity platforms.
-
-This just makes your code more efficient and is totally optional.
-
-See each entity platform (ie sensor.py, switch.py) for how this is inheritted
-and what additional properties and methods you need to add for each entity type.
-
-"""
+"""Base entity to define common properties and methods for Vogels Motion Mount BLE entities."""
 
 import logging
-from typing import Any
-
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import VogelsMotionMountPreset
 from .const import DOMAIN
-from .coordinator import ExampleCoordinator
+from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
+    """Base Entity Class for all Entities."""
 
-class ExampleBaseEntity(CoordinatorEntity):
-    """Base Entity Class.
-
-    This inherits a CoordinatorEntity class to register your entites to be updated
-    by your DataUpdateCoordinator when async_update_data is called, either on the scheduled
-    interval or by forcing an update.
-    """
-
-    coordinator: ExampleCoordinator
-
-    # ----------------------------------------------------------------------------
-    # Using attr_has_entity_name = True causes HA to name your entities with the
-    # device name and entity name.  Ie if your name property of your entity is
-    # Voltage and this entity belongs to a device, Lounge Socket, this will name
-    # your entity to be sensor.lounge_socket_voltage
-    #
-    # It is highly recommended (by me) to use this to give a good name structure
-    # to your entities.  However, totally optional.
-    # ----------------------------------------------------------------------------
+    coordinator: VogelsMotionMountBleCoordinator
     _attr_has_entity_name = True
-
-    def __init__(self, coordinator: ExampleCoordinator) -> None:
-        """Initialise entity."""
-        super().__init__(coordinator)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-
-        # ----------------------------------------------------------------------------
-        # Identifiers are what group entities into the same device.
-        # If your device is created elsewhere, you can just specify the indentifiers
-        # parameter to link an entity to a device.
-        # If your device connects via another device, add via_device parameter with
-        # the indentifiers of that device.
-        #
-        # Device identifiers should be unique, so use your integration name (DOMAIN)
-        # and a device uuid, mac address or some other unique attribute.
-        # ----------------------------------------------------------------------------
         return DeviceInfo(
             name=self.coordinator.name,
-            manufacturer="Vogelsr",
+            manufacturer="Vogels",
             model="Motion Mount",
             identifiers={(DOMAIN, self.coordinator.mac)},
         )
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self.coordinator.name
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+        self.async_write_ha_state()
+
+
+class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
+    """Base Entity Class For Preset Entities."""
+    #TODO name doesn't update yet directly
+    def __init__(
+        self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
+    ) -> None:
+        """Initialise entity."""
+        super().__init__(coordinator)
+        self._preset_index = preset_index
+        self._attr_translation_placeholders = {
+            "name": self._preset_name,
+            "index": self._preset_index,
+        }
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update sensor with latest data from coordinator."""
+        self._attr_translation_placeholders = {
+            "name": self._preset_name,
+        }
+        self.async_write_ha_state()
 
     @property
-    def unique_id(self) -> str:
-        """Return unique id."""
+    def device_info(self):
+        """Return device information."""
+        if not self.coordinator.preset_subdevice:
+            return super().device_info
+        return DeviceInfo(
+            name=f"Preset {self._preset_name}",
+            manufacturer="Vogels",
+            model="Motion Mount",
+            identifiers={(DOMAIN, f"{self.coordinator.mac}_{self._preset_index}")},
+            via_device=(DOMAIN, self.coordinator.mac),
+        )
 
-        # ----------------------------------------------------------------------------
-        # All entities must have a unique id across your whole Home Assistant server -
-        # and that also goes for anyone using your integration who may have many other
-        # integrations loaded.
-        #
-        # Think carefully what you want this to be as changing it later will cause HA
-        # to create new entities.
-        #
-        # It is recommended to have your integration name (DOMAIN), some unique id
-        # from your device such as a UUID, MAC address etc (not IP address) and then
-        # something unique to your entity (like name - as this would be unique on a
-        # device)
-        #
-        # If in your situation you have some hub that connects to devices which then
-        # you want to create multiple sensors for each device, you would do something
-        # like.
-        #
-        # f"{DOMAIN}-{HUB_MAC_ADDRESS}-{DEVICE_UID}-{ENTITY_NAME}""
-        #
-        # This is even more important if your integration supports multiple instances.
-        # ----------------------------------------------------------------------------
-        return f"{DOMAIN}-{self.coordinator.mac}"
+    @property
+    def available(self) -> bool:
+        """Set availability of this index of Preset entity based if the preset is available in the data."""
+        return self._preset is not None
+
+    @property
+    def _preset_name(self) -> str:
+        """Name of the preset or it's index if no name is available."""
+        if self._preset:
+            return f"{self._preset.name}"
+        return f"{self._preset_index}"
+
+    @property
+    def _preset(self) -> VogelsMotionMountPreset | None:
+        """Preset if available or none."""
+        if (
+            self.coordinator.data
+            and self.coordinator.data.presets
+            and self._preset_index in self.coordinator.data.presets
+        ):
+            return self.coordinator.data.presets[self._preset_index]
+        return None

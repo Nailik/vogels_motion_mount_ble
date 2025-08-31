@@ -1,0 +1,219 @@
+{
+  "config": {
+    "error": {
+      "error_cannot_connect": "Found device but unable to connect to the device.",
+      "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
+      "error_invalid_athentication": "Invalid Authentication, check or disable PIN.",
+      "error_unknown": "An unknown error occurred while trying to connect to the device."
+    },
+    "step": {
+      "user": {
+        "title": "Configure Options",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Device name",
+          "conf_pin": "PIN",
+          "conf_preset_subdevices": "Use Preset Subdevices"
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "error_cannot_connect": "Found device but unable to connect to the device.",
+      "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
+      "error_unknown": "An unknown error occurred while trying to connect to the device."
+    },
+    "step": {
+      "init": {
+        "title": "Configure Options",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Device name",
+          "conf_pin": "PIN",
+          "conf_preset_subdevices": "Use Preset Subdevices"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connection": {
+        "name": "Connection"
+      }
+    },
+    "button": {
+      "refresh_data": {
+        "name": "Refresh Data"
+      },
+      "disconnect": {
+        "name": "Disconnect"
+      },
+      "select_preset_default": {
+        "name": "Select default preset"
+      },
+      "select_preset_custom": {
+        "name": "Select preset {name}"
+      },
+      "delete_preset_custom": {
+        "name": "Delete preset {name}"
+      },
+      "add_preset_custom": {
+        "name": "Add preset {index}"
+      }
+    },
+    "number": {
+      "distance": {
+        "name": "Distance"
+      },
+      "rotation": {
+        "name": "Rotation"
+      },
+      "tv_width": {
+        "name": "TV width"
+      },
+      "preset_distance_custom": {
+        "name": "Preset {name} distance"
+      },
+      "preset_rotation_custom": {
+        "name": "Preset {name} rotation"
+      }
+    },
+    "select": {
+      "auto_move": {
+        "name": "Automove setting",
+        "state": {
+          "off": "Off",
+          "hdmi_1": "HDMI 1",
+          "hdmi_2": "HDMI 2",
+          "hdmi_3": "HDMI 3",
+          "hdmi_4": "HDMI 4",
+          "hdmi_5": "HDMI 5"
+        },
+        "options": {
+          "off": "Off",
+          "hdmi_1": "HDMI 1",
+          "hdmi_2": "HDMI 2",
+          "hdmi_3": "HDMI 3",
+          "hdmi_4": "HDMI 4",
+          "hdmi_5": "HDMI 5"
+        }
+      },
+      "freeze_preset": {
+        "name": "Freeze preset",
+        "state": {
+          "1": "Preset 1",
+          "2": "Preset 2",
+          "3": "Preset 3",
+          "4": "Preset 4",
+          "5": "Preset 5",
+          "6": "Preset 6",
+          "7": "Preset 7"
+        },
+        "options": {
+          "1": "Preset 1",
+          "2": "Preset 2",
+          "3": "Preset 3",
+          "4": "Preset 4",
+          "5": "Preset 5",
+          "6": "Preset 6",
+          "7": "Preset 7"
+        }
+      }
+    },
+    "sensor": {
+      "current_distance": {
+        "name": "Distance"
+      },
+      "current_rotation": {
+        "name": "Rotation"
+      },
+      "ceb_bl_version": {
+        "name": "CEB BL Version"
+      },
+      "mcp_hw_version": {
+        "name": "MCP BL Version"
+      },
+      "mcp_bl_version": {
+        "name": "MCP BL Version"
+      },
+      "mcp_fw_version": {
+        "name": "MCP BL Version"
+      },
+      "pin_settings": {
+        "name": "Pin Settings",
+        "state": {
+          "12": "Off",
+          "13": "Single",
+          "15": "Multi"
+        }
+      }
+    },
+    "text": {
+      "name": {
+        "name": "Name"
+      },
+      "preset_name_custom": {
+        "name": "Preset {index} name"
+      },
+      "authorised_user_pin": {
+        "name": "Authorised User pin"
+      },
+      "supervisior_pin": {
+        "name": "Supervisior pin"
+      }
+    }
+  },
+  "selector": {
+    "set_automove": {
+      "options": {
+        "off": "Off",
+        "hdmi_1": "HDMI 1",
+        "hdmi_2": "HDMI 2",
+        "hdmi_3": "HDMI 3",
+        "hdmi_4": "HDMI 4",
+        "hdmi_5": "HDMI 5"
+      }
+    }
+  },
+  "services": {
+    "set_automove": {
+      "name": "Select Automove Mode",
+      "description": "Automove Mode determines if and how TV turn on/off action is recognized.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "automove_id": {
+          "name": "Automove setting",
+          "description": "HDMI mode or OFF."
+        }
+      }
+    },
+    "set_name": {
+      "name": "Set Name",
+      "description": "Set Name of device.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Text with max 20 characters."
+        }
+      }
+    },
+    "set_mode": {
+      "name": "Set Mode",
+      "description": "Set the operating mode.",
+      "fields": {
+        "mode": {
+          "name": "Mode",
+          "description": "The mode to set"
+        }
+      }
+    }
+  }
+}

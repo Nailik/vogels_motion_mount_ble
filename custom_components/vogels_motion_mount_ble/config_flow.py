@@ -1,4 +1,4 @@
-"""Config flow for Integration 101 Template integration."""
+"""Config flow and options flow for Vogels Motion Mount BLE integration."""
 
 from __future__ import annotations
 
@@ -6,217 +6,204 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from voluptuous.schema_builder import UNDEFINED
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryBaseFlow,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 
-from .api import API, APIConnectionError
-from .const import DOMAIN
+from .api import (
+    API,
+    APIConnectionDeviceNotFoundError,
+    APIConnectionError,
+)
+from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN, CONF_PRESET_SUBDEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-# Data to be input by the user in the config flow.
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(
-            CONF_NAME, description={"suggested_value": "Vogel's Motion Mount"}
-        ): str,
-        vol.Optional(CONF_PIN): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-    }
-)
 
+class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
+    """Mixin to provide async_step_user for config and options flow."""
 
-def prefilledForm(name: str) -> vol.Schema:
-    """Return a form schema with prefilled values for host and name."""
-    # Return a schema where CONF_HOST is shown but not editable (using selector.TextSelector with disabled=True)
-    return vol.Schema(
-        {
-            vol.Required(CONF_NAME, default=name): str,
-            vol.Optional(CONF_PIN): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                )
-            ),
-        }
-    )
+    discovery_info: BluetoothServiceInfoBleak | None = None
+    mac_fixed: bool = False
 
+    def prefilledForm(
+        self,
+        data: dict[str, Any] | None = None,
+    ) -> vol.Schema:
+        """Return a form schema with prefilled values from data."""
+        # Setup Values
+        mac = UNDEFINED
+        name = UNDEFINED
+        pin = UNDEFINED
+        preset_subdevice = False
 
-class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle the config flow for VogelsMotionMount Integration."""
+        # Read values from data if provided
+        if data is not None:
+            mac = data.get(CONF_MAC, UNDEFINED)
+            name = data.get(CONF_NAME, f"Vogel's MotionMount ({mac})")
+            pin = data.get(CONF_PIN, UNDEFINED)
+            preset_subdevice = data.get(CONF_PRESET_SUBDEVICE, False)
 
-    VERSION = 1
-    _input_data: dict[str, Any]
+        # If discovery_info is set, use its address as the MAC and for the name if not provided
+        if self.discovery_info is not None:
+            mac = self.discovery_info.address
+            name = f"Vogel's MotionMount ({mac})" if name == UNDEFINED else name
 
-    def __init__(self):
-        """Setup data."""
-        self.discovery_info: BluetoothServiceInfoBleak | None = None
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            result = await self.setup_entry(user_input)
-            if isinstance(result, dict) and "type" in result:
-                return result
-            errors = result
-
-        if user_input is not None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-                        vol.Required(
-                            CONF_NAME,
-                            description={"suggested_value": "Vogel's Motion Mount"},
-                            default=user_input.get(CONF_NAME),
-                        ): str,
-                        vol.Optional(
-                            CONF_PIN, default=user_input.get(CONF_PIN)
-                        ): selector.NumberSelector(
-                            selector.NumberSelectorConfig(
-                                min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                            )
-                        ),
-                    }
+        # Provide Schema
+        return vol.Schema(
+            {
+                vol.Required(CONF_MAC, default=mac): selector.TextSelector(
+                    selector.TextSelectorConfig(
+                        type=selector.TextSelectorType.TEXT,
+                        multiline=False,
+                        read_only=self.mac_fixed,
+                    )
                 ),
-                errors=errors,
-            )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(
-                        CONF_NAME,
-                        description={"suggested_value": "Vogel's Motion Mount"},
-                    ): str,
-                    vol.Optional(CONF_PIN): selector.NumberSelector(
+                vol.Required(CONF_NAME, default=name): selector.TextSelector(
+                    selector.TextSelectorConfig(
+                        type=selector.TextSelectorType.TEXT,
+                        multiline=False,
+                    )
+                ),
+                vol.Optional(CONF_PIN, default=pin): vol.All(
+                    selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=0, max=9999, mode=selector.NumberSelectorMode.BOX
+                            min=0,
+                            max=9999,
+                            step=1,
+                            mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
-                }
-            ),
-            errors=errors,
+                    vol.Coerce(int),
+                ),
+                vol.Required(CONF_PRESET_SUBDEVICE, default=preset_subdevice): selector.BooleanSelector(
+                    selector.BooleanSelectorConfig()
+                )
+            },
         )
+
+    async def validate_input(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, str] | None:
+        """Set up the entry from user data."""
+        errors: dict[str, str] = {}
+        try:
+            await API(
+                hass=self.hass,
+                mac=user_input[CONF_MAC],
+                pin=user_input.get(CONF_PIN),
+                callback=lambda *_, **__: None,
+            ).test_connection()
+            _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
+        except APIConnectionDeviceNotFoundError as err:
+            _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
+            errors[CONF_ERROR] = "error_device_not_found"
+        except ConfigEntryAuthFailed as err:
+            _LOGGER.error("Setting APIAuthenticationError: %s", err)
+            errors[CONF_ERROR] = "error_invalid_athentication"
+        except APIConnectionError as err:
+            _LOGGER.error("Setting APIConnectionError: %s", err)
+            errors[CONF_ERROR] = "error_cannot_connect"
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Setting Exception: %s", err)
+            errors[CONF_ERROR] = "error_unknown"
+        return errors
+
+
+class VogelsMotionMountConfigFlow(
+    ConfigFlow, VogelsMotionMountUserStepMixin, domain=DOMAIN
+):
+    """Handle the config flow for Vogel's MotionMount Integration."""
+
+    VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> VogelsMotionMountOptionsFlowHandler:
+        """Create the options flow to change config later on."""
+        return VogelsMotionMountOptionsFlowHandler(config_entry)
 
     async def async_step_bluetooth(self, discovery_info):
         """Handle a bluetooth device being discovered."""
+        # Check if the device already exists.
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
         self.discovery_info = discovery_info
 
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(self, user_input: dict[str, Any] | None = None):
-        """Confirm adding the discovered device."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            result = await self.setup_entry(
-                data={
-                    CONF_HOST: self.discovery_info.address,
-                    CONF_NAME: user_input[CONF_NAME],
-                    CONF_PIN: user_input.get(CONF_PIN),
-                }
-            )
-            _LOGGER.debug("setup_entry result: %s", result)
-            if isinstance(result, dict) and "type" in result:
-                _LOGGER.debug("setup_entry return ConfigFlowResult: %s", result)
-                return result
-            errors = result
-
-        if user_input is not None:
-            # If no user input, show the form with prefilled values
-            return self.async_show_form(
-                step_id="confirm",
-                errors=errors,
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
-                        vol.Optional(
-                            CONF_PIN, default=user_input.get(CONF_PIN)
-                        ): selector.NumberSelector(
-                            selector.NumberSelectorConfig(
-                                min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                            )
-                        ),
-                    }
-                ),
-            )
-
-        _LOGGER.debug(
-            "async_show_form self.discovery_info.advertisement.local_namet: %s",
-            self.discovery_info.advertisement.local_name,
-        )
+        self.mac_fixed = True
         return self.async_show_form(
-            step_id="confirm",
-            errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME, default=self.discovery_info.advertisement.local_name
-                    ): str,
-                    vol.Optional(CONF_PIN): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0, max=9999, mode=selector.NumberSelectorMode.BOX
-                        )
-                    ),
-                }
-            ),
+            step_id="user",
+            data_schema=self.prefilledForm(),
         )
 
-    async def validate_user_input(self, data: dict[str, Any]) -> None:
-        """Validate the user input by testing connection."""
-        _LOGGER.debug("Validating user input: %s", data)
-        mac = data[CONF_HOST]
-
-        # Create an API instance and try to connect.
-        api = API(mac, data.get(CONF_PIN), lambda *_, **__: None)
-        try:
-            await api.testConnect()
-        except APIConnectionError as err:
-            raise CannotConnect from err
-
-    async def setup_entry(
-        self, data: dict[str, Any]
-    ) -> dict[str, str] | ConfigFlowResult:
-        """Setup the entry from user data."""
-        _LOGGER.debug("Setting up entry with data: %s", data)
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the entry with unique id if not already configured."""
         errors: dict[str, str] = {}
-        try:
-            await self.validate_user_input(data)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except Exception:  # noqa: BLE001
-            errors["base"] = "unknown"
+        if user_input is not None:
+            errors = await self.validate_input(user_input)
+            if not errors:
+                # Validation was successful, create a unique id and create the config entry.
+                await self.async_set_unique_id(user_input[CONF_MAC])
+                self._abort_if_unique_id_configured()
+                _LOGGER.debug("Create entry with %s", user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                )
 
-        _LOGGER.debug("Setting async_set_unique_id: %s", data)
-        if not errors:
-            # Validation was successful, so create a unique id for this instance of your integration
-            # and create the config entry.
-            await self.async_set_unique_id(data[CONF_HOST])
-            self._abort_if_unique_id_configured()
-            _LOGGER.debug("Setting async_create_entry: %s", data)
-            return self.async_create_entry(title=data[CONF_NAME], data=data)
-
-        return errors
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.prefilledForm(user_input),
+            errors=errors,
+        )
 
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStepMixin):
+    """Update the options via UI."""
+
+    # mac cannot be changed in options flow
+    mac_fixed = True
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options update."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors = await self.validate_input(user_input)
+            if not errors:
+                _LOGGER.debug("Update entry with %s", user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=self.prefilledForm(user_input),
+                errors=errors,
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.prefilledForm(self.config_entry.data),
+            errors=errors,
+        )
