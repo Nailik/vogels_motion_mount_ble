@@ -12,7 +12,8 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_pin": "PIN"
+          "conf_pin": "PIN",
+          "conf_preset_subdevices": "Use Preset Subdevices"
         }
       }
     }
@@ -29,7 +30,8 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_pin": "PIN"
+          "conf_pin": "PIN",
+          "conf_preset_subdevices": "Use Preset Subdevices"
         }
       }
     }
