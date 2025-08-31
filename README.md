@@ -1,4 +1,6 @@
-# Vogels MotionMount (BLE) for Home Assistant - DEV
+# Vogels MotionMount (BLE) for Home Assistant - Alpha
+
+Project is still in Alpha, some features are missing and there are no unit tests yet.
 
 ## Setup
 
