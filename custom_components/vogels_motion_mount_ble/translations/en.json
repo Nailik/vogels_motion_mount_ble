@@ -13,7 +13,7 @@
           "conf_mac": "MAC",
           "conf_name": "Device name",
           "conf_pin": "PIN",
-          "conf_preset_subdevices": "Use Preset Subdevices"
+          "conf_preset_subdevice": "Use Preset Subdevices"
         }
       }
     }
@@ -31,7 +31,7 @@
           "conf_mac": "MAC",
           "conf_name": "Device name",
           "conf_pin": "PIN",
-          "conf_preset_subdevices": "Use Preset Subdevices"
+          "conf_preset_subdevice": "Use Preset Subdevices"
         }
       }
     }
@@ -59,7 +59,7 @@
         "name": "Delete preset {name}"
       },
       "add_preset_custom": {
-        "name": "Add preset {index}"
+        "name": "Add preset {name}"
       }
     },
     "number": {
@@ -154,7 +154,7 @@
         "name": "Name"
       },
       "preset_name_custom": {
-        "name": "Preset {index} name"
+        "name": "Preset {name} name"
       },
       "authorised_user_pin": {
         "name": "Authorised User pin"

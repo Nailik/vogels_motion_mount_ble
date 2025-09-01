@@ -11,6 +11,7 @@ from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
     """Base Entity Class for all Entities."""
 
@@ -21,7 +22,7 @@ class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
-            name=self.coordinator.name,
+            # name=self.coordinator.name,
             manufacturer="Vogels",
             model="Motion Mount",
             identifiers={(DOMAIN, self.coordinator.mac)},
@@ -35,25 +36,14 @@ class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
 
 class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     """Base Entity Class For Preset Entities."""
-    #TODO name doesn't update yet directly
+
+    # TODO name doesn't update yet directly
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
         """Initialise entity."""
         super().__init__(coordinator)
         self._preset_index = preset_index
-        self._attr_translation_placeholders = {
-            "name": self._preset_name,
-            "index": self._preset_index,
-        }
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update sensor with latest data from coordinator."""
-        self._attr_translation_placeholders = {
-            "name": self._preset_name,
-        }
-        self.async_write_ha_state()
 
     @property
     def device_info(self):
@@ -78,6 +68,13 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
         """Name of the preset or it's index if no name is available."""
         if self._preset:
             return f"{self._preset.name}"
+        return f"{self._preset_index}"
+
+    @property
+    def _prop_preset_index(self) -> str:
+        """Index of the preset."""
+        if self._preset:
+            return f"{self._preset.index}"
         return f"{self._preset_index}"
 
     @property

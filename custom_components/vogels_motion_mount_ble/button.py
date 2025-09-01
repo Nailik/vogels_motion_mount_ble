@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
+from homeassistant.helpers.entity import generate_entity_id
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .const import (
@@ -100,12 +100,12 @@ async def async_setup_entry(
             DisconnectButton(coordinator),
             SelectPresetDefaultButton(coordinator),
         ]
+        # Add one AddPresetButton for each preset_id from 0 to 7 inclusive
+        + [AddPresetButton(coordinator, preset_index) for preset_index in range(7)]
         # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
         + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
         # Add one DeletePresetButton for each preset_id from 0 to 7 inclusive
         + [DeletePresetButton(coordinator, preset_index) for preset_index in range(7)]
-        # Add one AddPresetButton for each preset_id from 0 to 7 inclusive
-        + [AddPresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
 
 
@@ -157,7 +157,10 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"select_preset_{preset_index}"
+        self._attr_translation_placeholders = {
+            "name": self._preset_name,
+        }
+        self._attr_unique_id = f"select_preset_id_{preset_index}"
         self._attr_translation_key = "select_preset_custom"
 
     async def async_press(self):
@@ -173,7 +176,8 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"delete_preset_{preset_index}"
+        self._attr_translation_placeholders = {"name": self._prop_preset_index}
+        self._attr_unique_id = f"delete_preset_{self._prop_preset_index}"
         self._attr_translation_key = "delete_preset_custom"
 
     async def async_press(self):
@@ -189,7 +193,8 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"add_preset_{preset_index}"
+        self._attr_translation_placeholders = {"name": self._prop_preset_index}
+        self._attr_unique_id = f"add_preset_{self._prop_preset_index}"
         self._attr_translation_key = "add_preset_custom"
 
     async def async_press(self):

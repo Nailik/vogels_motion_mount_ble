@@ -41,6 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 class VogelsMotionMountPreset:
     """Holds the data of a preset."""
 
+    index: int
     name: str
     distance: int
     rotation: int
@@ -276,7 +277,10 @@ class API:
         )
         await self._read_preset(preset_index)
         if self._data.presets[preset_index] != VogelsMotionMountPreset(
-            name=new_name, distance=new_distance, rotation=new_rotation
+            index=preset_index,
+            name=new_name,
+            distance=new_distance,
+            rotation=new_rotation,
         ):
             raise APISettingsError(
                 "Preset change not saved on device. %s",
@@ -565,6 +569,7 @@ class API:
             )
             name = data[5:].decode("utf-8").rstrip("\x00")
             new_presets[preset_index] = VogelsMotionMountPreset(
+                index=preset_index,
                 name=name,
                 distance=distance,
                 rotation=rotation,
@@ -600,18 +605,22 @@ class API:
         data = await self._client.read_gatt_char(CHAR_PIN_SETTINGS_UUID)
         self._logger.debug("Read Pin Settings %s", data)
         if data == VogelsMotionMountPinSettings.Deactivated:
+            self._logger.debug("Read Pin Settings Deactivated")
             self._update(
                 pin_setting=VogelsMotionMountPinSettings.Deactivated,
             )
         elif data == VogelsMotionMountPinSettings.Single:
+            self._logger.debug("Read Pin Settings Single")
             self._update(
                 pin_setting=VogelsMotionMountPinSettings.Single,
             )
         elif data == VogelsMotionMountPinSettings.Multi:
+            self._logger.debug("Read Pin Settings Multi")
             self._update(
                 pin_setting=VogelsMotionMountPinSettings.Multi,
             )
         else:
+            self._logger.debug("Read Pin Settings None")
             self._update(
                 pin_setting=None,
             )
