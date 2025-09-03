@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VogelsMotionMountBleConfigEntry
 from .api import VogelsMotionMountPinSettings
-from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
+from .base import VogelsMotionMountBleBaseEntity
 from .const import (
     DOMAIN,
     HA_SERVICE_SET_MULTI_PIN_FEATURES,
