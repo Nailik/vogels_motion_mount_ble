@@ -79,6 +79,10 @@ class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchE
     def is_on(self) -> bool:
         return self.coordinator.data.multi_pin_features.change_presets
 
+    @property
+    def icon(self):
+        return "mdi:security"
+    
     async def async_toggle(self, **kwargs):
         """Toggle if change presets is on or off."""
         await self.coordinator.api.set_multi_pin_features(
@@ -103,6 +107,10 @@ class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEnti
     def is_on(self) -> bool:
         return self.coordinator.data.multi_pin_features.change_name
 
+    @property
+    def icon(self):
+        return "mdi:security"
+    
     async def async_toggle(self, **kwargs):
         """Toggle if change name is on or off."""
         await self.coordinator.api.set_multi_pin_features(
@@ -126,7 +134,11 @@ class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, Switch
     @property
     def is_on(self) -> bool:
         return self.coordinator.data.multi_pin_features.disable_channel
-
+    
+    @property
+    def icon(self):
+        return "mdi:security"
+    
     async def async_toggle(self, **kwargs):
         """Toggle if disable channeld is on or off."""
         await self.coordinator.api.set_multi_pin_features(
@@ -151,6 +163,10 @@ class MultiPinFeatureChangeTvOnOffDetectionSwitch(VogelsMotionMountBleBaseEntity
     def is_on(self) -> bool:
         return self.coordinator.data.multi_pin_features.change_tv_on_off_detection
 
+    @property
+    def icon(self):
+        return "mdi:security"
+    
     async def async_toggle(self, **kwargs):
         """Toggle if change tv on off detection is on or off."""
         await self.coordinator.api.set_multi_pin_features(
@@ -175,6 +191,10 @@ class MultiPinFeatureChangeDefaultPositionSwitch(VogelsMotionMountBleBaseEntity,
     def is_on(self) -> bool:
         return self.coordinator.data.multi_pin_features.change_default_position
 
+    @property
+    def icon(self):
+        return "mdi:security"
+    
     async def async_toggle(self, **kwargs):
         """Toggle if change default position is on or off."""
         await self.coordinator.api.set_multi_pin_features(
@@ -199,6 +219,10 @@ class MultiPinFeatureStartCalibrationSwitch(VogelsMotionMountBleBaseEntity, Swit
     def is_on(self) -> bool:
         return self.coordinator.data.multi_pin_features.start_calibration
 
+    @property
+    def icon(self):
+        return "mdi:security"
+    
     async def async_toggle(self, **kwargs):
         """Toggle if start calibration is on or off."""
         await self.coordinator.api.set_multi_pin_features(

@@ -118,6 +118,10 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     async def async_press(self):
         """Execute data refresh."""
         await self.coordinator.api.refreshData()
+    
+    @property
+    def icon(self):
+        return "mdi:refresh"
 
 
 class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
@@ -136,6 +140,10 @@ class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     async def async_press(self):
         """Execute disconnect."""
         await self.coordinator.api.disconnect()
+    
+    @property
+    def icon(self):
+        return "mdi:power-plug-off"
 
 
 class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
@@ -147,6 +155,10 @@ class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     async def async_press(self):
         """Select the default preset with id 0."""
         await self.coordinator.api.select_default_preset()
+    
+    @property
+    def icon(self):
+        return "mdi:wall"
 
 
 class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -166,6 +178,10 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     async def async_press(self):
         """Select a custom preset by it's index."""
         await self.coordinator.api.select_preset(self._preset_index)
+    
+    @property
+    def icon(self):
+        return "mdi:rotate-3d"
 
 
 class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -183,6 +199,10 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     async def async_press(self):
         """Delete a custom preset by it's index."""
         await self.coordinator.api.delete_preset(self._preset_index)
+
+    @property
+    def icon(self):
+        return "mdi:delete"
 
 
 class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -212,3 +232,7 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         if self.coordinator.data and self.coordinator.data.presets and not self._preset:
             return True
         return False
+    
+    @property
+    def icon(self):
+        return "mdi:plus"

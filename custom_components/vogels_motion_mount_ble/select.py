@@ -76,6 +76,10 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         # Set index -1 of option or None for "Off"
         await self.coordinator.api.set_automove(index - 1 if (index != 0) else None)
 
+    @property
+    def icon(self):
+        return "mdi:autorenew"
+
 
 class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     """Implementation of the Freeze preset Selector."""
@@ -104,3 +108,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         """Select an option."""
         index = self._attr_options.index(option)
         await self.coordinator.api.set_freeze(index)
+
+    @property
+    def icon(self):
+        return "mdi:snowflake"

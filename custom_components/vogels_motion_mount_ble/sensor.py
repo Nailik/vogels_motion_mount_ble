@@ -43,6 +43,9 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
             return None
         return self.coordinator.data.distance
 
+    @property
+    def icon(self):
+        return "mdi:ruler"
 
 class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     """Sensor for current rotation, may be different from requested rotation."""
@@ -56,6 +59,10 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.rotation
+    
+    @property
+    def icon(self):
+        return "mdi:angle-obtuse"
 
 
 class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -70,6 +77,10 @@ class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.ceb_bl_version
+    
+    @property
+    def icon(self):
+        return "mdi:version"
 
 
 class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -84,6 +95,10 @@ class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.mcp_hw_version
+    
+    @property
+    def icon(self):
+        return "mdi:version"
 
 
 class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -98,6 +113,10 @@ class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.mcp_bl_version
+    
+    @property
+    def icon(self):
+        return "mdi:version"
 
 
 class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -112,6 +131,10 @@ class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.mcp_fw_version
+    
+    @property
+    def icon(self):
+        return "mdi:version"
 
 
 class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -126,3 +149,7 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         if not self.coordinator.data:
             return None
         return self.coordinator.data.pin_setting
+    
+    @property
+    def icon(self):
+        return "mdi:version"

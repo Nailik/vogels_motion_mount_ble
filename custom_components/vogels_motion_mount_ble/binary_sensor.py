@@ -35,3 +35,7 @@ class ConnectionBinarySensor(VogelsMotionMountBleBaseEntity, BinarySensorEntity)
         if not self.coordinator.data:
             return None
         return self.coordinator.data.connected
+    
+    @property
+    def icon(self):
+        return "mdi:wifi" if self.is_on else "mdi:wifi-off"

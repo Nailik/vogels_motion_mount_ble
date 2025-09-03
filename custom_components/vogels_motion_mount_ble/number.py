@@ -102,6 +102,9 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_distance(value)
 
+    @property
+    def icon(self):
+        return "mdi:ruler"
 
 class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """NumberEntity to set the rotation."""
@@ -126,6 +129,9 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_rotation(value)
 
+    @property
+    def icon(self):
+        return "mdi:angle-obtuse"
 
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """NumberEntity to set the TV width."""
@@ -147,6 +153,10 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_width(value)
+
+    @property
+    def icon(self):
+        return "mdi:television-box"
 
 
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
@@ -181,6 +191,9 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
             preset_index=self._preset_index, distance=value
         )
 
+    @property
+    def icon(self):
+        return "mdi:ruler"
 
 class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """NumberEntity to set rotation of a preset."""
@@ -213,3 +226,7 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index, rotation=value
         )
+
+    @property
+    def icon(self):
+        return "mdi:angle-obtuse"
