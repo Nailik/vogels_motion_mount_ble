@@ -108,7 +108,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
         self._attr_translation_key = "preset_name_custom"
         self._attr_native_min = 1
-        self._attr_native_max = 20  # TODO correct max length?
+        self._attr_native_max = 40  # TODO correct max length?
 
     @property
     def native_value(self):

@@ -26,6 +26,7 @@ from .const import (
     CHAR_PIN_SETTINGS_UUID,
     CHAR_PRESET_UUID,
     CHAR_PRESET_UUIDS,
+    CHAR_PRESET_NAMES_UUIDS,
     CHAR_ROTATION_UUID,
     CHAR_VERSIONS_CEB_UUID,
     CHAR_VERSIONS_MCP_UUID,
@@ -246,7 +247,7 @@ class API:
         distance: int | None = None,
         rotation: int | None = None,
     ):
-        """Change data of a preset."""
+        """Change data of a preset, name has a max length of 32 characters."""
         self._logger.debug(
             "Change preset %s to name %s, distance to %s and rotation to %s",
             preset_index,
@@ -265,7 +266,7 @@ class API:
         rotation_bytes = int(new_rotation).to_bytes(2, byteorder="big", signed=True)
         data = b"\x01" + distance_bytes + rotation_bytes + name_bytes
         self._logger.debug(
-            "write rotation for preset %s",
+            "write data for preset %s",
             data,
         )
         await self._connect(
@@ -274,16 +275,24 @@ class API:
             data[:20].ljust(20, b"\x00"),
             response=True,
         )
+        await self._connect(
+            self._client.write_gatt_char,
+            CHAR_PRESET_NAMES_UUIDS[preset_index],
+            data[20:37].ljust(17, b"\x00"),
+            response=True,
+        )
         await self._read_preset(preset_index)
-        if self._data.presets[preset_index] != VogelsMotionMountPreset(
+        expected_data = VogelsMotionMountPreset(
             index=preset_index,
             name=new_name,
             distance=new_distance,
             rotation=new_rotation,
-        ):
+        )
+
+        if self._data.presets[preset_index] != expected_data:
             raise APISettingsError(
-                "Preset change not saved on device. %s",
-                self._data.presets[preset_index].rotation,
+                "Preset change not saved on device. expeced %s actual %s.",
+                expected_data, self._data.presets[preset_index]
             )
 
     async def delete_preset(self, preset_index: int):
@@ -609,11 +618,12 @@ class API:
         self._handle_distance_change(None, data)
 
     async def _read_preset(self, preset_index):
-        data = await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index])
+        data1 = await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index])
+        data2 = await self._client.read_gatt_char(CHAR_PRESET_NAMES_UUIDS[preset_index])
+        data = data1 + data2
         self._logger.debug("Read preset for index %s data %s", preset_index, data)
         new_presets = dict(self._data.presets)
         new_presets[preset_index] = None
-        # check if first data byte is 0 (preset not set)
         if data[0] != 0:
             distance = max(0, min(int.from_bytes(data[1:3], "big"), 100))
             rotation = max(
