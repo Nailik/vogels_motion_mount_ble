@@ -22,8 +22,8 @@ class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
-            # name=self.coordinator.name,
-            manufacturer="Vogels",
+            name=self.coordinator.name,
+            manufacturer="Vogel's",
             model="Motion Mount",
             identifiers={(DOMAIN, self.coordinator.mac)},
         )
@@ -46,19 +46,6 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
         self._preset_index = preset_index
 
     @property
-    def device_info(self):
-        """Return device information."""
-        if not self.coordinator.preset_subdevice:
-            return super().device_info
-        return DeviceInfo(
-            name=f"Preset {self._preset_name}",
-            manufacturer="Vogels",
-            model="Motion Mount",
-            identifiers={(DOMAIN, f"{self.coordinator.mac}_{self._preset_index}")},
-            via_device=(DOMAIN, self.coordinator.mac),
-        )
-
-    @property
     def available(self) -> bool:
         """Set availability of this index of Preset entity based if the preset is available in the data."""
         return self._preset is not None
@@ -73,6 +60,7 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     @property
     def _prop_preset_index(self) -> str:
         """Index of the preset."""
+        # Note: seems to be required to use _preset, when using _preset_index it is not correctly working and will change it's entity id when recreating entities
         if self._preset:
             return f"{self._preset.index}"
         return f"{self._preset_index}"

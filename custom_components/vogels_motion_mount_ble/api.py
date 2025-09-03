@@ -50,10 +50,9 @@ class VogelsMotionMountPreset:
 class VogelsMotionMountPinSettings(Enum):
     """Defines the possible pin settings."""
 
-    Deactivated = 0x0C  # 12
-    Single = 0x0D  # 13
-    Multi = 0x0F  # 15
-
+    Deactivated = 12
+    Single = 13
+    Multi = 14
 
 @dataclass
 class MultiPinFeatures:
@@ -88,7 +87,7 @@ class VogelsMotionMountData:
     mcp_hw_version: str | None = None
     mcp_bl_version: str | None = None
     mcp_fw_version: str | None = None
-    pin_features: MultiPinFeatures | None = None
+    multi_pin_features: MultiPinFeatures | None = None
 
 
 class APIConnectionError(HomeAssistantError):
@@ -186,7 +185,7 @@ class API:
                 raise ConfigEntryAuthFailed from err
             except Exception as err:  # noqa: BLE001
                 self._logger.error("Exception while reading initial data %s", err)
-            await asyncio.sleep(60)
+            await asyncio.sleep(5)
 
     async def refreshData(self):
         """Read data from BLE device, connects if necessary."""
@@ -260,7 +259,7 @@ class API:
         new_name: str = name if name is not None else preset.name
         new_distance = distance if distance is not None else preset.distance
         new_rotation = rotation if rotation is not None else preset.rotation
-        # TODO max length for name
+        # TODO max length for name also in translation of service etc
         name_bytes = new_name.encode("utf-8")
         distance_bytes = int(new_distance).to_bytes(2, byteorder="big")
         rotation_bytes = int(new_rotation).to_bytes(2, byteorder="big", signed=True)
@@ -332,7 +331,9 @@ class API:
         await self._connect(
             self._client.write_gatt_char, CHAR_WIDTH_UUID, bytes([width]), response=True
         )
-        self._update(width=width)
+        await self._read_width()
+        if self._data.width != width:
+            raise APISettingsError("Width data not saved on device.")
 
     async def set_automove(self, id: int | None):
         """Select a automove option where None is off."""
@@ -359,15 +360,15 @@ class API:
             int(data).to_bytes(2, byteorder="big"),
             response=True,
         )
-        self._update(
-            automove_on=on,
-            automove_id=new_id,
-        )
+        await self._read_automove()
+        if self._data.automove_id != new_id or self._data.automove_on != on:
+            raise APISettingsError("Automove data not saved on device.")
 
     async def set_authorised_user_pin(self, pin: str):
         """Set 4 digit pin for authorised users."""
         self._logger.debug("Set authorized user pin to %ss", pin)
-
+    #TODO max length, only digits?
+        #TODO if pin setting is null then resetting is not allowed (0000) would it work tho??
         if len(pin) == 4 and pin.isdigit():
             data = int(pin).to_bytes(2, byteorder="little")
             await self._connect(
@@ -377,11 +378,14 @@ class API:
                 response=True,
             )
         else:
-            self._logger.warning("Invalid change set_supervisior_pin to %s", pin)
+            #TODO read pin settings must be single or multi, if pin was 0000 should be non
+            self._logger.error("Invalid change set authorized user pin to %s", pin)
 
     async def set_supervisior_pin(self, pin: str):
         """Set 4 digit pin for supervisior."""
         self._logger.debug("Set superivisor pin to %s", pin)
+    #TODO max length, only digits?
+    #TODO only allowed if there is already an authorised user pin
 
         if len(pin) == 4 and pin.isdigit():
             data = int(pin).to_bytes(2, byteorder="little")
@@ -391,8 +395,9 @@ class API:
                 data,
                 response=True,
             )
+            #TODO read pin settings must be multi if pin was not 0000 else should be single (reset)
         else:
-            self._logger.warning("Invalid change set_supervisior_pin to %s", pin)
+            self._logger.error("Invalid change set supervisior pin to %s", pin)
 
     async def set_freeze(self, preset_index: int):
         """Set preset that is used for auto move freeze position."""
@@ -405,6 +410,53 @@ class API:
             response=True,
         )
         self._update(freeze_preset_index=preset_index)
+        await self._read_freeze_preset()
+        if self._data.freeze_preset_index != preset_index:
+            raise APISettingsError("Freeze preset data not saved on device.")
+
+    async def set_multi_pin_features(
+        self, 
+        change_presets: bool | None = None,
+        change_name: bool | None = None,
+        disable_channel: bool | None = None,
+        change_tv_on_off_detection: bool | None = None,
+        change_default_position: bool | None = None,
+        start_calibration: bool | None = None
+    ):
+        """Set the pin settings."""
+        self._logger.debug("Set multi pin features to change_presets %s change_name %s disable_channel %s change_tv_on_off_detection %s change_default_position %s start_calibration  %s", change_presets, change_name, disable_channel, change_tv_on_off_detection, change_default_position, start_calibration)
+
+        new_change_presets = change_presets or self._data.multi_pin_features.change_presets
+        new_change_name = change_name or self._data.multi_pin_features.change_name
+        new_disable_channel = disable_channel or self._data.multi_pin_features.disable_channel
+        new_change_tv_on_off_detection = change_tv_on_off_detection or self._data.multi_pin_features.change_tv_on_off_detection
+        new_change_default_position = change_default_position or self._data.multi_pin_features.change_default_position
+        new_start_calibration = start_calibration or self._data.multi_pin_features.start_calibration
+
+        value = 0
+        value |= int(new_change_presets) << 0
+        value |= int(new_change_name) << 1
+        value |= int(new_disable_channel) << 2
+        value |= int(new_change_tv_on_off_detection) << 3
+        value |= int(new_change_default_position) << 4
+        value |= int(new_start_calibration) << 7
+
+        await self._connect(
+            self._client.write_gatt_char,
+            CHAR_PIN_SETTINGS_UUID,
+            bytes([value]),
+            response=True,
+        )
+        self._read_multi_pin_features()
+        if self._data.multi_pin_features != MultiPinFeatures(
+            change_presets=new_change_presets,
+            change_name=new_change_name,
+            disable_channel=new_disable_channel,
+            change_tv_on_off_detection=new_change_tv_on_off_detection,
+            change_default_position=new_change_default_position,
+            start_calibration=new_start_calibration,
+        ):
+            raise APISettingsError("Pin features data not saved on device.")
 
     # endregion
     # endregion
@@ -604,33 +656,20 @@ class API:
     async def _read_pin_settings(self):
         data = await self._client.read_gatt_char(CHAR_PIN_SETTINGS_UUID)
         self._logger.debug("Read Pin Settings %s", data)
-        if data == VogelsMotionMountPinSettings.Deactivated:
-            self._logger.debug("Read Pin Settings Deactivated")
-            self._update(
-                pin_setting=VogelsMotionMountPinSettings.Deactivated,
-            )
-        elif data == VogelsMotionMountPinSettings.Single:
-            self._logger.debug("Read Pin Settings Single")
-            self._update(
-                pin_setting=VogelsMotionMountPinSettings.Single,
-            )
-        elif data == VogelsMotionMountPinSettings.Multi:
-            self._logger.debug("Read Pin Settings Multi")
-            self._update(
-                pin_setting=VogelsMotionMountPinSettings.Multi,
-            )
-        else:
-            self._logger.debug("Read Pin Settings None")
-            self._update(
-                pin_setting=None,
-            )
+        try:
+            pin_setting = VogelsMotionMountPinSettings(int(data[0]))  # cast int to Enum
+            self._logger.debug("Read Pin Settings %s", pin_setting.name)
+            self._update(pin_setting=pin_setting)
+        except ValueError:
+            self._logger.debug("Read Pin Settings None (unknown value: %s)", int(data[0]))
+            self._update(pin_setting=None)
 
     async def _read_multi_pin_features(self):
         data = await self._client.read_gatt_char(CHAR_MULTI_PIN_FEATURES_UUID)
         self._logger.debug("Read Multi Pin Features %s", data)
         value = data[0]
         self._update(
-            pin_features=MultiPinFeatures(
+            multi_pin_features=MultiPinFeatures(
                 change_presets=bool(value & (1 << 0)),
                 change_name=bool(value & (1 << 1)),
                 disable_channel=bool(value & (1 << 2)),

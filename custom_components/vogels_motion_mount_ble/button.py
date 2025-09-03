@@ -102,10 +102,10 @@ async def async_setup_entry(
         ]
         # Add one AddPresetButton for each preset_id from 0 to 7 inclusive
         + [AddPresetButton(coordinator, preset_index) for preset_index in range(7)]
-        # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
-        + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
         # Add one DeletePresetButton for each preset_id from 0 to 7 inclusive
         + [DeletePresetButton(coordinator, preset_index) for preset_index in range(7)]
+        # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
+        + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
 
 

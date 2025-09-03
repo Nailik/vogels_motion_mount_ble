@@ -23,6 +23,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.TEXT,
+    Platform.SWITCH,
 ]
 
 #TODO setup async_on_unload according to https://developers.home-assistant.io/docs/config_entries_options_flow_handler/
@@ -55,18 +56,6 @@ async def async_setup_entry(
     # Store coordinator
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     config_entry.runtime_data = RuntimeData(coordinator)
-    return True
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    config_entry: VogelsMotionMountBleConfigEntry,
-    device_entry: DeviceEntry,
-) -> bool:
-    """Delete device if selected from UI."""
-    _LOGGER.debug("async_remove_config_entry_device")
-    # TODO: Implement your logic to remove the device.
-    # bluetooth.async_rediscover_address(hass, "44:44:33:11:23:42")
     return True
 
 async def async_reload_entry(hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry) -> None:

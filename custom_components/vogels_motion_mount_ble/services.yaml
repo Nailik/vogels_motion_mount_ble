@@ -1,3 +1,210 @@
+refresh_data:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+disconnect:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+select_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    preset:
+      required: true
+      selector:
+        select:
+          translation_key: "preset"
+          options:
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+            - "5"
+            - "6"
+delete_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    preset:
+      required: true
+      selector:
+        select:
+          translation_key: "preset"
+          options:
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+            - "5"
+            - "6"
+set_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    preset:
+      required: true
+      selector:
+        select:
+          translation_key: "preset"
+          options:
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+            - "5"
+            - "6"
+    name:
+      required: true
+      selector:
+        text:
+          multiline: false
+    distance:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider
+    rotation:
+      required: true
+      selector:
+        number:
+          min: -100
+          max: 100
+          step: 1
+          mode: slider
+set_distance:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    distance:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider
+set_rotation:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    rotation:
+      required: true
+      selector:
+        number:
+          min: -100
+          max: 100
+          step: 1
+          mode: slider
+set_tv_width:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    tv_width:
+      required: true
+      selector:
+        text:
+          multiline: false
+set_automove:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    automove_id:
+      required: true
+      selector:
+        select:
+          translation_key: "automove"
+          options:
+            - "off"
+            - "hdmi_1"
+            - "hdmi_2"
+            - "hdmi_3"
+            - "hdmi_4"
+            - "hdmi_5"
+set_freeze_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    freeze_preset:
+      required: true
+      selector:
+        select:
+          translation_key: "preset"
+          options:
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+            - "5"
+            - "6"
+set_multi_pin_features:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
+    multi_pin_feature_change_presets:
+      required: true
+      selector:
+        boolean:
+    multi_pin_feature_change_name:
+      required: true
+      selector:
+        boolean:
+    multi_pin_feature_disable_channel:
+      required: true
+      selector:
+        boolean:
+    multi_pin_feature_change_tv_on_off_detection:
+      required: true
+      selector:
+        boolean:
+    multi_pin_feature_change_default_position:
+      required: true
+      selector:
+        boolean:
+    multi_pin_feature_start_calibration:
+      required: true
+      selector:
+        boolean:
 set_name:
   fields:
     device_id:
@@ -10,101 +217,27 @@ set_name:
       selector:
         text:
           multiline: false
-          min_length: 1
-          max_length: 20
-          mode: text
-set_automove:
+set_authorised_user_pin:
   fields:
     device_id:
       required: true
       selector:
         device:
           integration: vogels_motion_mount_ble
-    automove_id:
+    pin:
       required: true
       selector:
-        select:
-          translation_key: "set_automove"
-          options: ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
-select_preset:
-  name: Set Preset
-  description: Sets the preset by ID
-  target:
-    device:
-     integration: vogels_motion_mount_ble
-  fields:
-    preset_id:
-      name: Preset ID
-      description: The numeric ID of the preset
-      required: true
-      selector:
-        select:
-          options:
-            - 0
-            - 1
-            - 2
-            - 3
-            - 4
-            - 5
-            - 6
-            - 7
-set_distance:
-  name: Set Distance
-  description: Sets the distance form the wall
+        text:
+          multiline: false
+set_supervisior_pin:
   fields:
     device_id:
-      name: Target Entity
-      description: The entity to move
       required: true
       selector:
         device:
           integration: vogels_motion_mount_ble
-    distance:
-      name: Distance
-      description: The distance in percentage
+    pin:
       required: true
       selector:
-        number:
-          min: 0
-          step: 1
-          max: 100
-          mode: slider
-set_rotation:
-  name: Set Rotation of the TV
-  description: Sets the rotation of the TV
-  fields:
-    device_id:
-      name: Target Entity
-      description: The entity to rotate
-      required: true
-      selector:
-        device:
-          integration: vogels_motion_mount_ble
-    rotation:
-      name: Rotation
-      description: The rotation in percentage
-      required: true
-      selector:
-        number:
-          min: -100
-          step: 1
-          max: 100
-          mode: slider
-set_tv_width:
-  name: Set TV Width
-  description: Sets the width of the TV
-  fields:
-    device_id:
-      name: Target Entity
-      description: The entity to set the width for.
-      required: true
-      selector:
-        device:
-          integration: vogels_motion_mount_ble
-    tv_width:
-      name: Width
-      description: The width in cm
-      required: true
-      selector:
-        number:
-          mode: box
+        text:
+          multiline: false

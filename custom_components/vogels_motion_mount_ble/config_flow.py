@@ -25,7 +25,7 @@ from .api import (
     APIConnectionDeviceNotFoundError,
     APIConnectionError,
 )
-from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN, CONF_PRESET_SUBDEVICE
+from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
             mac = data.get(CONF_MAC, UNDEFINED)
             name = data.get(CONF_NAME, f"Vogel's MotionMount ({mac})")
             pin = data.get(CONF_PIN, UNDEFINED)
-            preset_subdevice = data.get(CONF_PRESET_SUBDEVICE, False)
 
         # If discovery_info is set, use its address as the MAC and for the name if not provided
         if self.discovery_info is not None:
@@ -86,9 +85,6 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
                     ),
                     vol.Coerce(int),
                 ),
-                vol.Required(CONF_PRESET_SUBDEVICE, default=preset_subdevice): selector.BooleanSelector(
-                    selector.BooleanSelectorConfig()
-                )
             },
         )
 

@@ -105,9 +105,9 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
         self._attr_translation_placeholders = {
-            "name": preset_index,
+            "name": self._prop_preset_index,
         }
-        # TODO self._attr_unique_id = f"preset_{preset_index}_name"
+        self._attr_unique_id = f"preset_{self._prop_preset_index}_name"
         self._attr_translation_key = "preset_name_custom"
         self._attr_native_min = 1
         self._attr_native_max = 20  # TODO correct max length?
@@ -166,8 +166,8 @@ class SupervisiorPinText(VogelsMotionMountBleBaseEntity, TextEntity):
     def available(self) -> bool:
         """Set availability of this index of Preset entity based if the preset is available in the data."""
         return (
-            self.coordinator.data.pin_setting
-            is not VogelsMotionMountPinSettings.Deactivated
+            self.coordinator.data.pin_setting is not None and
+            self.coordinator.data.pin_setting is not VogelsMotionMountPinSettings.Deactivated
         )
 
     async def async_set_value(self, value: str) -> None:
