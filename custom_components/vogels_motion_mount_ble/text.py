@@ -104,10 +104,8 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_translation_placeholders = {
-            "name": self._prop_preset_index,
-        }
-        self._attr_unique_id = f"preset_{self._prop_preset_index}_name"
+        self._attr_translation_placeholders = {"name": self._prop_preset_index}
+        self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
         self._attr_translation_key = "preset_name_custom"
         self._attr_native_min = 1
         self._attr_native_max = 20  # TODO correct max length?

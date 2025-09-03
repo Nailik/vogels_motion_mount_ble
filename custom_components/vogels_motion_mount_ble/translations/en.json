@@ -152,23 +152,31 @@
       }
     },
     "switch": {
-      "multi_pin_feature_change_presets": {
-        "name": "Change presets"
+      "change_presets": {
+        "name": "Change presets",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
       },
-      "multi_pin_feature_change_name": {
+      "change_name": {
         "name": "Change name"
       },
-      "multi_pin_feature_disable_channel": {
+      "disable_channel": {
         "name": "Disable channel"
       },
-      "multi_pin_feature_change_tv_on_off_detection": {
+      "change_tv_on_off_detection": {
         "name": "Change tv on off detection"
       },
-      "multi_pin_feature_change_default_position": {
+      "change_default_position": {
         "name": "Change default position"
       },
-      "multi_pin_feature_start_calibration": {
-        "name": "Start calibration"
+      "start_calibration": {
+        "name": "Start calibration",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
       }
     },
     "text": {

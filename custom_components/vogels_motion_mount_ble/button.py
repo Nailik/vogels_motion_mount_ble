@@ -235,3 +235,6 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     @property
     def icon(self):
         return "mdi:plus"
+    
+
+    #TODO button to run diagonse or calibration?

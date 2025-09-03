@@ -64,7 +64,7 @@ async def async_setup_entry(
 class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchEntity):
     """Set up the Switch to change multi pin feature change presets."""
 
-    _attr_unique_id = "multi_pin_feature_change_presets"
+    _attr_unique_id = "change_presets"
     _attr_translation_key = _attr_unique_id
 
     @property
@@ -92,7 +92,7 @@ class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchE
 class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEntity):
     """Set up the Switch to change multi pin feature change name."""
 
-    _attr_unique_id = "multi_pin_feature_change_name"
+    _attr_unique_id = "change_name"
     _attr_translation_key = _attr_unique_id
 
     @property
@@ -120,7 +120,7 @@ class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEnti
 class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, SwitchEntity):
     """Set up the Switch to change multi pin feature disable channel."""
 
-    _attr_unique_id = "multi_pin_feature_disable_channel"
+    _attr_unique_id = "disable_channel"
     _attr_translation_key = _attr_unique_id
 
     @property
@@ -148,7 +148,7 @@ class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, Switch
 class MultiPinFeatureChangeTvOnOffDetectionSwitch(VogelsMotionMountBleBaseEntity, SwitchEntity):
     """Set up the Switch to change multi pin feature change tv on off detection."""
 
-    _attr_unique_id = "multi_pin_feature_change_tv_on_off_detection"
+    _attr_unique_id = "change_tv_on_off_detection"
     _attr_translation_key = _attr_unique_id
 
     @property
@@ -176,7 +176,7 @@ class MultiPinFeatureChangeTvOnOffDetectionSwitch(VogelsMotionMountBleBaseEntity
 class MultiPinFeatureChangeDefaultPositionSwitch(VogelsMotionMountBleBaseEntity, SwitchEntity):
     """Set up the Switch to change multi pin feature change default position."""
 
-    _attr_unique_id = "multi_pin_feature_change_default_position"
+    _attr_unique_id = "change_default_position"
     _attr_translation_key = _attr_unique_id
 
     @property
@@ -204,7 +204,7 @@ class MultiPinFeatureChangeDefaultPositionSwitch(VogelsMotionMountBleBaseEntity,
 class MultiPinFeatureStartCalibrationSwitch(VogelsMotionMountBleBaseEntity, SwitchEntity):
     """Set up the Switch to change multi pin feature start calibration."""
 
-    _attr_unique_id = "multi_pin_feature_start_calibration"
+    _attr_unique_id = "start_calibration"
     _attr_translation_key = _attr_unique_id
 
     @property
