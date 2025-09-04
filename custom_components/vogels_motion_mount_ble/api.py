@@ -23,6 +23,7 @@ from .const import (
     CHAR_MULTI_PIN_FEATURES_UUID,
     CHAR_NAME_UUID,
     CHAR_PIN_CHECK_UUID,
+    CHAR_CHANGE_PIN_UUID,
     CHAR_PIN_SETTINGS_UUID,
     CHAR_PRESET_UUID,
     CHAR_PRESET_UUIDS,
@@ -53,7 +54,24 @@ class VogelsMotionMountPinSettings(Enum):
 
     Deactivated = 12
     Single = 13
-    Multi = 14
+    Multi = 15
+
+
+class VogelsMotionMountPinType(Enum):
+    """Defines the possible pin type."""
+
+    Authorized_user = 1
+    Supervisior = 2
+
+
+class VogelsMotionMountAuthenticationType(Enum):
+    """Defines the authentication options."""
+
+    Wrong = -2
+    Missing = -1
+    Authorized_user = 0
+    Supervisior = 1
+
 
 @dataclass
 class MultiPinFeatures:
@@ -89,6 +107,8 @@ class VogelsMotionMountData:
     mcp_bl_version: str | None = None
     mcp_fw_version: str | None = None
     multi_pin_features: MultiPinFeatures | None = None
+    pin_type: VogelsMotionMountPinType | None = None
+    auth_type: VogelsMotionMountAuthenticationType | None = None
 
 
 class APIConnectionError(HomeAssistantError):
@@ -117,6 +137,8 @@ class API:
         callback: Callable[[VogelsMotionMountData], None],
     ) -> None:
         """Set up the default data."""
+        self._logger = logging.getLogger(f"{__name__}.{mac}")
+        self._logger.debug("Setup bluetooth api with mac %s and pin %s", mac, pin)
         self._hass = hass
         self._mac = mac
         self._pin = pin
@@ -128,7 +150,7 @@ class API:
         self._client: BleakClient = BleakClient(
             self._device, disconnected_callback=self._handle_disconnect, timeout=120
         )
-        self._logger = logging.getLogger(f"{__name__}.{self._mac}")
+        self._load_task = None
 
     # region Public api
 
@@ -140,6 +162,9 @@ class API:
             raise APIConnectionDeviceNotFoundError("Device not found.")
 
         try:
+            # make sure we are disconnected before testing connection otherwise authentication might not be tested
+            self.cancel_loading()
+            await self.disconnect()
             self._logger.debug("Device found attempting to connect")
             await self._client.connect(timeout=120)
             await self._authenticate()
@@ -172,11 +197,23 @@ class API:
         self._device = None
         self._client = None
 
-    async def load_initial_data(self) -> None:
+    async def start_loading_initial_data(self):
+        """Start a task to load initial data until succeeds."""
+        self._logger.debug("start_loading_initial_data")
+        if self._load_task is None or self._load_task.done():
+            self._load_task = asyncio.create_task(self._load_initial_data())
+        await self._load_task
+
+    def cancel_loading(self):
+        """Stop the task that loads initial data iummediately."""
+        if self._load_task and not self._load_task.done():
+            self._load_task.cancel()
+
+    async def _load_initial_data(self) -> None:
         """Load the initial data from the device."""
         while True:
             try:
-                self._logger.debug("Initial data connection connecting")
+                self._logger.debug("Initial data connection connecting ")
                 await self.refreshData()
                 break
             except ConfigEntryAuthFailed as err:
@@ -291,8 +328,7 @@ class API:
 
         if self._data.presets[preset_index] != expected_data:
             raise APISettingsError(
-                "Preset change not saved on device. expeced %s actual %s.",
-                expected_data, self._data.presets[preset_index]
+                f"Preset change not saved on device. expected {expected_data} actual {self._data.presets[preset_index]}."
             )
 
     async def delete_preset(self, preset_index: int):
@@ -376,35 +412,35 @@ class API:
     async def set_authorised_user_pin(self, pin: str):
         """Set 4 digit pin for authorised users."""
         self._logger.debug("Set authorized user pin to %ss", pin)
-    #TODO max length, only digits?
-        #TODO if pin setting is null then resetting is not allowed (0000) would it work tho??
+        # TODO max length, only digits?
+        # TODO if pin setting is null then resetting is not allowed (0000) would it work tho??
         if len(pin) == 4 and pin.isdigit():
             data = int(pin).to_bytes(2, byteorder="little")
             await self._connect(
                 self._client.write_gatt_char,
-                CHAR_PIN_SETTINGS_UUID,
+                CHAR_CHANGE_PIN_UUID,
                 data,
                 response=True,
             )
         else:
-            #TODO read pin settings must be single or multi, if pin was 0000 should be non
+            # TODO read pin settings must be single or multi, if pin was 0000 should be non
             self._logger.error("Invalid change set authorized user pin to %s", pin)
 
     async def set_supervisior_pin(self, pin: str):
         """Set 4 digit pin for supervisior."""
         self._logger.debug("Set superivisor pin to %s", pin)
-    #TODO max length, only digits?
-    #TODO only allowed if there is already an authorised user pin
-
+        # TODO max length, only digits?
+        # TODO only allowed if there is already an authorised user pin
+        # UUID: c005fa2f-0651-4800-b000-000000000000 data: 0x 0f 67 | writeType : 1
         if len(pin) == 4 and pin.isdigit():
             data = int(pin).to_bytes(2, byteorder="little")
             await self._connect(
                 self._client.write_gatt_char,
-                CHAR_PIN_SETTINGS_UUID,
+                CHAR_CHANGE_PIN_UUID,
                 data,
                 response=True,
             )
-            #TODO read pin settings must be multi if pin was not 0000 else should be single (reset)
+            # TODO read pin settings must be multi if pin was not 0000 else should be single (reset)
         else:
             self._logger.error("Invalid change set supervisior pin to %s", pin)
 
@@ -424,23 +460,43 @@ class API:
             raise APISettingsError("Freeze preset data not saved on device.")
 
     async def set_multi_pin_features(
-        self, 
+        self,
         change_presets: bool | None = None,
         change_name: bool | None = None,
         disable_channel: bool | None = None,
         change_tv_on_off_detection: bool | None = None,
         change_default_position: bool | None = None,
-        start_calibration: bool | None = None
+        start_calibration: bool | None = None,
     ):
         """Set the pin settings."""
-        self._logger.debug("Set multi pin features to change_presets %s change_name %s disable_channel %s change_tv_on_off_detection %s change_default_position %s start_calibration  %s", change_presets, change_name, disable_channel, change_tv_on_off_detection, change_default_position, start_calibration)
+        self._logger.debug(
+            "Set multi pin features to change_presets %s change_name %s disable_channel %s change_tv_on_off_detection %s change_default_position %s start_calibration  %s",
+            change_presets,
+            change_name,
+            disable_channel,
+            change_tv_on_off_detection,
+            change_default_position,
+            start_calibration,
+        )
 
-        new_change_presets = change_presets or self._data.multi_pin_features.change_presets
+        new_change_presets = (
+            change_presets or self._data.multi_pin_features.change_presets
+        )
         new_change_name = change_name or self._data.multi_pin_features.change_name
-        new_disable_channel = disable_channel or self._data.multi_pin_features.disable_channel
-        new_change_tv_on_off_detection = change_tv_on_off_detection or self._data.multi_pin_features.change_tv_on_off_detection
-        new_change_default_position = change_default_position or self._data.multi_pin_features.change_default_position
-        new_start_calibration = start_calibration or self._data.multi_pin_features.start_calibration
+        new_disable_channel = (
+            disable_channel or self._data.multi_pin_features.disable_channel
+        )
+        new_change_tv_on_off_detection = (
+            change_tv_on_off_detection
+            or self._data.multi_pin_features.change_tv_on_off_detection
+        )
+        new_change_default_position = (
+            change_default_position
+            or self._data.multi_pin_features.change_default_position
+        )
+        new_start_calibration = (
+            start_calibration or self._data.multi_pin_features.start_calibration
+        )
 
         value = 0
         value |= int(new_change_presets) << 0
@@ -504,54 +560,77 @@ class API:
             await self._setup_notifications()
             await self._read_current_data()
 
+    def _encode_pin(self, mode: VogelsMotionMountPinType) -> bytes:
+        """Encode a PIN into 2-byte sequence for API.
+
+        mode = "auth"   -> direct little-endian
+        mode = "change" -> little-endian, high byte + 0x40
+        """
+        # Convert to little-endian bytes
+        pin = int(self._pin)
+        low = pin & 0xFF
+        high = (pin >> 8) & 0xFF
+
+        if mode == VogelsMotionMountPinType.Supervisior:
+            high = (high + 0x40) & 0xFF  # add offset, wrap if >255
+
+        return bytes([low, high])
+
+    async def _check_authentication(self) -> bool:
+        _auth_info = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
+        if _auth_info.startswith(b"\x80\x80"):
+            self._update(auth_type=VogelsMotionMountAuthenticationType.Supervisior)
+        elif _auth_info.startswith(b"\x80"):
+            self._update(auth_type=VogelsMotionMountAuthenticationType.Authorized_user)
+        else:
+            return False
+        return True
+
+    async def _authenticate_as(self, mode: VogelsMotionMountPinType) -> bool:
+        self._logger.debug("_authenticate_as %s", mode)
+        await self._client.write_gatt_char(
+            CHAR_AUTHENTICATE_UUID, self._encode_pin(mode)
+        )
+        for attempt in range(4):
+            if await self._check_authentication():
+                self._update(pin_type=mode)
+                self._logger.debug("_authenticate_as %s success", mode)
+                return True
+            if attempt < 3:
+                await asyncio.sleep(0.1)
+        self._logger.debug("_authenticate_as %s fail", mode)
+        return False
+
+    # TODO timeout
     async def _authenticate(self):
         self._logger.debug("Authenticate")
 
-        # TODO allow different authentication types (different settings required different pin)
-        # TODO evaluate result of action if authenticated proberly?
-        # TODO handle timeout (seems to start at 127 and then count down to zero?)
-        # Authenticate if necessary, raises APIAuthenticationError if not successful.
-        _raw_auth = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
-        _pin_required = int.from_bytes(_raw_auth, "big")
-
-        if _raw_auth.startswith(b"\x80"):
-            self._logger.debug(
-                "No authentication required %s (raw %s) or already authenticated",
-                _pin_required,
-                _raw_auth,
-            )
+        if await self._check_authentication():
+            self._logger.debug("already authenticated!")
             return
 
-        self._logger.debug(
-            "Authentication required %s (raw %s) sending pin %s",
-            _pin_required,
-            _raw_auth,
-            self._pin,
-        )
+        # authentication required but no pin set
         if self._pin is None:
+            self._update(auth_type=VogelsMotionMountAuthenticationType.Missing)
             raise ConfigEntryAuthFailed
 
-        await self._client.write_gatt_char(
-            CHAR_AUTHENTICATE_UUID, int(self._pin).to_bytes(2, byteorder="little")
+        order = (
+            [
+                VogelsMotionMountPinType.Authorized_user,
+                VogelsMotionMountPinType.Supervisior,
+            ]
+            if self._data.pin_type == VogelsMotionMountPinType.Authorized_user
+            else [
+                VogelsMotionMountPinType.Supervisior,
+                VogelsMotionMountPinType.Authorized_user,
+            ]
         )
 
-        for attempt in range(4):
-            _raw_auth = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
-            _pin_required = int.from_bytes(_raw_auth, "big")
-            if _raw_auth.startswith(b"\x80"):
-                self._logger.debug(
-                    "Authentication successful %s (raw %s)", _pin_required, _raw_auth
-                )
+        for mode in order:
+            if await self._authenticate_as(mode=mode):
                 return
-            self._logger.debug(
-                "Not authenticated yet %s (raw %s), retry %s",
-                _pin_required,
-                _raw_auth,
-                attempt,
-            )
-            if attempt < 3:
-                await asyncio.sleep(0.1)
 
+        self._update(auth_type=VogelsMotionMountAuthenticationType.Wrong)
         raise ConfigEntryAuthFailed
 
     def _handle_disconnect(self, _):
@@ -671,7 +750,9 @@ class API:
             self._logger.debug("Read Pin Settings %s", pin_setting.name)
             self._update(pin_setting=pin_setting)
         except ValueError:
-            self._logger.debug("Read Pin Settings None (unknown value: %s)", int(data[0]))
+            self._logger.debug(
+                "Read Pin Settings None (unknown value: %s)", int(data[0])
+            )
             self._update(pin_setting=None)
 
     async def _read_multi_pin_features(self):

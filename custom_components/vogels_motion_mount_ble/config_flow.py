@@ -45,7 +45,6 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         mac = UNDEFINED
         name = UNDEFINED
         pin = UNDEFINED
-        preset_subdevice = False
 
         # Read values from data if provided
         if data is not None:
@@ -129,7 +128,7 @@ class VogelsMotionMountConfigFlow(
         config_entry: ConfigEntry,
     ) -> VogelsMotionMountOptionsFlowHandler:
         """Create the options flow to change config later on."""
-        return VogelsMotionMountOptionsFlowHandler(config_entry)
+        return VogelsMotionMountOptionsFlowHandler()
 
     async def async_step_bluetooth(self, discovery_info):
         """Handle a bluetooth device being discovered."""
@@ -175,10 +174,6 @@ class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStep
     # mac cannot be changed in options flow
     mac_fixed = True
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -188,6 +183,11 @@ class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStep
             errors = await self.validate_input(user_input)
             if not errors:
                 _LOGGER.debug("Update entry with %s", user_input)
+                self.hass.config_entries.async_update_entry(
+                    entry=self.config_entry,
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                )
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,

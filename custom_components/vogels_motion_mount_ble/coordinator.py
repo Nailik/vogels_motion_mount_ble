@@ -14,12 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.BUTTON,
-    Platform.SELECT,
     Platform.NUMBER,
-    Platform.TEXT,
+    Platform.SELECT,
+    Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
 ]
 
 
@@ -44,6 +44,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         self._name = config_entry.data[CONF_NAME]
         self._pin = config_entry.data.get(CONF_PIN)
         self._loaded = False
+        self._hass = hass
 
         # Initialise DataUpdateCoordinator (that's the device name shown to the user)
         super().__init__(
@@ -58,21 +59,24 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             hass=hass,
             mac=self.mac,
             pin=self._pin,
-            callback=self.async_set_updated_data,  # todo setup presets - only if changed? add/remove the entities to have the correct names?
+            callback=self.async_set_updated_data,
         )
 
-        self._setup_task = hass.loop.create_task(self._setup())
-
-    async def _setup(self):
-        _LOGGER.debug("Setup api")
-        # todo if this throws an error (e.g. due to invalid pin) this should show an error in the ui
-        await self.api.load_initial_data()
-        await self.hass.config_entries.async_forward_entry_setups(
-            self.config_entry, PLATFORMS
-        )
+        self._setup_task = self._hass.loop.create_task(self._setup())
 
     async def unload(self):
+        """Unload the coordinator."""
         self._unsub_options_update_listener()
+        self.api.cancel_loading()
+        _LOGGER.debug("unload coordinator")
         if self._setup_task:
             self._setup_task.cancel()
         await self.api.unload()
+
+    async def _setup(self):
+        _LOGGER.debug("Setup api")
+        # TODO if this throws an error (e.g. due to invalid pin) this should show an error in the ui
+        await self.api.start_loading_initial_data()
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )

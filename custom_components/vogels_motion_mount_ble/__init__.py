@@ -25,7 +25,7 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-#TODO setup async_on_unload according to https://developers.home-assistant.io/docs/config_entries_options_flow_handler/
+# TODO setup async_on_unload according to https://developers.home-assistant.io/docs/config_entries_options_flow_handler/
 type VogelsMotionMountBleConfigEntry = ConfigEntry[RuntimeData]
 
 
@@ -43,12 +43,12 @@ async def async_setup_entry(
     _LOGGER.debug("async_setup_entry called with config_entry: %s", config_entry)
 
     # Registers update listener to update config entry when options are updated.
-    unsub_options_update_listener = config_entry.add_update_listener(async_reload_entry)
+    unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
 
-        # TODO use this until ble device can be reached raise ConfigEntryNotReady
+    # TODO use this until ble device can be reached raise ConfigEntryNotReady
     # Initialise the coordinator that manages data updates from your api.
     coordinator = VogelsMotionMountBleCoordinator(
-        hass, config_entry, unsub_options_update_listener
+        hass, config_entry, unsub_update_listener
     )
     # Creates initial dictionary for the DOMAIN in hass.data
     hass.data.setdefault(DOMAIN, {})
@@ -57,14 +57,12 @@ async def async_setup_entry(
     config_entry.runtime_data = RuntimeData(coordinator)
     return True
 
-async def async_reload_entry(hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry) -> None:
-    """Reload config entry."""
-    await async_unload_entry(hass, config_entry)
-    await async_setup_entry(hass, config_entry)
 
-async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Handle options update."""
-    _LOGGER.debug("options_update_listener async_reload")
+async def async_reload_entry(
+    hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
+) -> None:
+    """Reload config entry."""
+    _LOGGER.debug("async_reload_entry async_reload")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
@@ -78,7 +76,9 @@ async def async_unload_entry(
     ):
         _LOGGER.debug("async_unload_entry pop")
         # Remove config entry from domain.
-        coordinator: VogelsMotionMountBleCoordinator = hass.data[DOMAIN].pop(config_entry.entry_id)
+        coordinator: VogelsMotionMountBleCoordinator = hass.data[DOMAIN].pop(
+            config_entry.entry_id
+        )
         # Disconnect and remove options_update_listener.
         await coordinator.unload()
 
