@@ -172,6 +172,7 @@ class SupervisiorPinText(VogelsMotionMountBleBaseEntity, TextEntity):
     def available(self) -> bool:
         """Set availability of this index of Preset entity based if the preset is available in the data."""
         return (
+            self.coordinator.data is not None and
             self.coordinator.data.pin_setting is not None and
             self.coordinator.data.pin_setting is not VogelsMotionMountPinSettings.Deactivated
         )

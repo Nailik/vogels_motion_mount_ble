@@ -20,3 +20,5 @@ atm it doesn't support not setting any pin and just read data
 # todo width input is not validated
 
 # todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings
+
+# todo setup enabled/disabled change multi pin settings depending on login permission

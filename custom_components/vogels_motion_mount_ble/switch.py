@@ -71,13 +71,16 @@ class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchE
     def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
+            self.coordinator.data is not None and
             self.coordinator.data.pin_setting is not None and
             self.coordinator.data.pin_setting is VogelsMotionMountPinSettings.Multi
         )
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.data.multi_pin_features.change_presets
+        if self.coordinator.data is not None and self.coordinator.data.multi_pin_features is not None:
+            return self.coordinator.data.multi_pin_features.change_presets
+        return False
 
     @property
     def icon(self):
@@ -99,13 +102,16 @@ class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEnti
     def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
+            self.coordinator.data is not None and
             self.coordinator.data.pin_setting is not None and
             self.coordinator.data.pin_setting is VogelsMotionMountPinSettings.Multi
         )
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.data.multi_pin_features.change_name
+        if self.coordinator.data is not None and self.coordinator.data.multi_pin_features is not None:
+            return self.coordinator.data.multi_pin_features.change_name
+        return False
 
     @property
     def icon(self):
@@ -127,13 +133,16 @@ class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, Switch
     def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
+            self.coordinator.data is not None and
             self.coordinator.data.pin_setting is not None and
             self.coordinator.data.pin_setting is VogelsMotionMountPinSettings.Multi
         )
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.data.multi_pin_features.disable_channel
+        if self.coordinator.data is not None and self.coordinator.data.multi_pin_features is not None:
+            return self.coordinator.data.multi_pin_features.disable_channel
+        return False
     
     @property
     def icon(self):
@@ -155,13 +164,16 @@ class MultiPinFeatureChangeTvOnOffDetectionSwitch(VogelsMotionMountBleBaseEntity
     def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
+            self.coordinator.data is not None and
             self.coordinator.data.pin_setting is not None and
             self.coordinator.data.pin_setting is VogelsMotionMountPinSettings.Multi
         )
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.data.multi_pin_features.change_tv_on_off_detection
+        if self.coordinator.data is not None and self.coordinator.data.multi_pin_features is not None:
+            return self.coordinator.data.multi_pin_features.change_tv_on_off_detection
+        return False
 
     @property
     def icon(self):
@@ -183,13 +195,16 @@ class MultiPinFeatureChangeDefaultPositionSwitch(VogelsMotionMountBleBaseEntity,
     def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
+            self.coordinator.data is not None and
             self.coordinator.data.pin_setting is not None and
             self.coordinator.data.pin_setting is VogelsMotionMountPinSettings.Multi
         )
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.data.multi_pin_features.change_default_position
+        if self.coordinator.data is not None and self.coordinator.data.multi_pin_features is not None:
+            return self.coordinator.data.multi_pin_features.change_default_position
+        return False
 
     @property
     def icon(self):
@@ -211,13 +226,16 @@ class MultiPinFeatureStartCalibrationSwitch(VogelsMotionMountBleBaseEntity, Swit
     def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
+            self.coordinator.data is not None and
             self.coordinator.data.pin_setting is not None and
             self.coordinator.data.pin_setting is VogelsMotionMountPinSettings.Multi
         )
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.data.multi_pin_features.start_calibration
+        if self.coordinator.data is not None and self.coordinator.data.multi_pin_features is not None:
+            return self.coordinator.data.multi_pin_features.start_calibration
+        return False
 
     @property
     def icon(self):

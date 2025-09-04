@@ -8,7 +8,7 @@ import logging
 
 from bleak import BleakClient, BLEDevice
 from bleak.exc import BleakDeviceNotFoundError
-from bleak_retry_connector import establish_connection
+from bleak_retry_connector import establish_connection, BleakClientWithServiceCache
 
 from homeassistant.components import bluetooth
 from homeassistant.core import Callable, HomeAssistant
@@ -184,7 +184,12 @@ class API:
             # make sure we are disconnected before testing connection otherwise authentication might not be tested
             await self.disconnect()
             self._logger.debug("Device found attempting to connect")
-            self._client = await establish_connection(self._device, self._device.name)
+            self._client = await establish_connection(
+                BleakClientWithServiceCache,
+                self._device, 
+                name = self._device.name or "Unknown Device",
+                disconnected_callback=self._handle_disconnect,
+            )
             await self._authenticate()
             self._logger.debug("Connected")
             await self.disconnect()
@@ -606,7 +611,12 @@ class API:
         else:
             should_read_data = True
             self._logger.debug("Connecting")
-            self._client = await establish_connection(self._device, self._device.name)
+            self._client = await establish_connection(
+                BleakClientWithServiceCache,
+                self._device, 
+                name = self._device.name or "Unknown Device",
+                disconnected_callback=self._handle_disconnect,
+            )
             self._logger.debug("Connected!")
 
         self._update(connected=self._client.is_connected)

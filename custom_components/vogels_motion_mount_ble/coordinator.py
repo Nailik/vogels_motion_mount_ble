@@ -39,7 +39,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         unsub_options_update_listener: Callable[[], None],
     ) -> None:
         """Initialize coordinator."""
-        _LOGGER.debug("Startup coordingtor with %s", config_entry.data)
+        _LOGGER.debug("Startup coordinator with %s", config_entry.data)
         # Set variables from values entered in config flow setup
         self._unsub_options_update_listener = unsub_options_update_listener
         self.config_entry = config_entry
