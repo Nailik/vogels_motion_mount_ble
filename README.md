@@ -36,11 +36,11 @@ When the integration is setup the integration tries to connect to the Vogel's Mo
 | Presets | Add | add_preset | ✅ | adds a new preset | 
 | Select Preset | Move TV to a preset | select_preset | ✅ |  |
 | Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes | set_automove | ✅ | "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5" |
-| Freeze preset | Preset to be used when TV is turned of | set_freeze_preset | ❌ |  |
+| Freeze preset | Preset to be used when TV is turned of | set_freeze_preset | ✅ |  |
 | TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ |  |
-| Authorized user Pin | Pin to controls or change the settings | | ❌ |  |
-| Supervisor Pin | Pin to limit settings control for authorizes user | | ❌ |  |
-| Authorizes uer features | Wich settings an authorized user can change | | ❌ |  |
+| Authorized user Pin | Pin to controls or change the settings | | ✅ |  |
+| Supervisor Pin | Pin to limit settings control for authorizes user | | ✅ |  |
+| Authorizes user features | Wich settings an authorized user can change | | ❌ |  |
 | CEB BL, FW Version | Version of CEB |  | ✅ |  |
 | MCP BL, FW Version | Version of MCP |  | ✅ |  |
 
@@ -69,13 +69,13 @@ When the integration is setup the integration tries to connect to the Vogel's Mo
 | `c005fa14-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Freeze position, single byte that defines which preset index is used |
 | `c005fa15-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
 | `c005fa16-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa17-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa18-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa19-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa1a-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa1b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa1c-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa1d-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
+| `c005fa17-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 0 (17 Bytes) |
+| `c005fa18-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 1 (17 Bytes) |
+| `c005fa19-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 2 (17 Bytes) |
+| `c005fa1a-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 3 (17 Bytes) |
+| `c005fa1b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 4 (17 Bytes) |
+| `c005fa1c-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 5 (17 Bytes) |
+| `c005fa1d-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 6 (17 Bytes) |
 | `c005fa21-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Unknown |
 | `c005fa22-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
 | `c005fa23-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
@@ -96,7 +96,7 @@ When the integration is setup the integration tries to connect to the Vogel's Mo
 | `c005fa2a-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Call Preset with id 0x00 - 0x06 |
 | `c005fa2b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | TV width in cm |
 | `c005fa2d-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Settings PIN to authenticate session |
-| `c005fa2e-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Check if PIN is required, starts with:<br>• Not required: `0x80`<br>• Required: `0x0` |
+| `c005fa2e-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Check permission:<br>• Settings and Control (Supervisior): `0x80x80`<br>• Control only: `0x80` |
 | `c005fa2f-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Control PIN to authenticate session |
 | `c005fa30-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
 | `c005fa32-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
