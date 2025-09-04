@@ -1,0 +1,22 @@
+todo overall data check for services
+especially preset name length
+name length
+authorised user pin length + only digits? + if supervisior pin is set then resetting is not allowed, test reset
+supervisior pin length + only digits? + only allowed if authorised user pin is set, test reset
+
+todo check pin settings after set (single/multi changed, not none)
+
+disable settings entities if only allowed to control
+
+return meaningful errors if authentication fails or only authenticated for control but try to change settings
+
+
+
+atm it doesn't support not setting any pin and just read data 
+
+
+
+
+# todo width input is not validated
+
+# todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings

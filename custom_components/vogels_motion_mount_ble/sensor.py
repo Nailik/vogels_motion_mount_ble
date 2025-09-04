@@ -80,7 +80,7 @@ class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     
     @property
     def icon(self):
-        return "mdi:version"
+        return "mdi:alpha-v"
 
 
 class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -98,7 +98,7 @@ class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     
     @property
     def icon(self):
-        return "mdi:version"
+        return "mdi:alpha-v"
 
 
 class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -116,7 +116,7 @@ class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     
     @property
     def icon(self):
-        return "mdi:version"
+        return "mdi:alpha-v"
 
 
 class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -134,7 +134,7 @@ class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     
     @property
     def icon(self):
-        return "mdi:version"
+        return "mdi:alpha-v"
 
 
 class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -152,4 +152,4 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     
     @property
     def icon(self):
-        return "mdi:version"
+        return "mdi:alpha-v"

@@ -15,6 +15,7 @@ from .const import (
     HA_SERVICE_SELECT_AUTOMOVE,
     HA_SERVICE_SET_FREEZE_PRESET,
 )
+from .api import VogelsMotionMountAutoMoveType
 from .coordinator import VogelsMotionMountBleCoordinator
 from .utils import get_coordinator
 
@@ -64,17 +65,13 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def current_option(self):
         """Return the current active automove option."""
-        if self.coordinator.data is None or self.coordinator.data.automove_id is None:
+        if self.coordinator.data is None or self.coordinator.data.automove_type is None:
             return None
-        if self.coordinator.data.automove_on:
-            return self._attr_options[self.coordinator.data.automove_id + 1]
-        return self._attr_options[0]
+        return self.coordinator.data.automove_type.value
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        index = self._attr_options.index(option)
-        # Set index -1 of option or None for "Off"
-        await self.coordinator.api.set_automove(index - 1 if (index != 0) else None)
+        await self.coordinator.api.set_automove(option)
 
     @property
     def icon(self):
@@ -100,7 +97,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Set availability if automove is turned on."""
-        if self.coordinator.data and self.coordinator.data.automove_on:
+        if self.coordinator.data and self.coordinator.data.automove_type is not VogelsMotionMountAutoMoveType.Off:
             return True
         return False
 

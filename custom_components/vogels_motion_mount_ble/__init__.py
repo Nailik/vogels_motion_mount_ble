@@ -5,8 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
+import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.const import Platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -25,7 +27,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-# TODO setup async_on_unload according to https://developers.home-assistant.io/docs/config_entries_options_flow_handler/
 type VogelsMotionMountBleConfigEntry = ConfigEntry[RuntimeData]
 
 
@@ -50,11 +51,14 @@ async def async_setup_entry(
     coordinator = VogelsMotionMountBleCoordinator(
         hass, config_entry, unsub_update_listener
     )
+
     # Creates initial dictionary for the DOMAIN in hass.data
     hass.data.setdefault(DOMAIN, {})
     # Store coordinator
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     config_entry.runtime_data = RuntimeData(coordinator)
+    # Create entries
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 

@@ -2,10 +2,13 @@
 
 import logging
 
+import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import Callable, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from datetime import timedelta
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
 from .api import API, VogelsMotionMountData
 from .const import CONF_MAC, CONF_NAME, CONF_PIN
@@ -52,6 +55,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=config_entry.title,
             config_entry=config_entry,
+            update_interval=timedelta(minutes=1),
         )
 
         # Initialise your api here
@@ -62,21 +66,14 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             callback=self.async_set_updated_data,
         )
 
-        self._setup_task = self._hass.loop.create_task(self._setup())
-
     async def unload(self):
-        """Unload the coordinator."""
-        self._unsub_options_update_listener()
-        self.api.cancel_loading()
         _LOGGER.debug("unload coordinator")
-        if self._setup_task:
-            self._setup_task.cancel()
+        self._unsub_options_update_listener()
         await self.api.unload()
+        
 
-    async def _setup(self):
-        _LOGGER.debug("Setup api")
-        # TODO if this throws an error (e.g. due to invalid pin) this should show an error in the ui
-        await self.api.start_loading_initial_data()
-        await self.hass.config_entries.async_forward_entry_setups(
-            self.config_entry, PLATFORMS
-        )
+    async def _async_update_data(self):
+        if self.data is not None:
+            return
+        await self.api.refreshData()
+        self.update_interval = None
