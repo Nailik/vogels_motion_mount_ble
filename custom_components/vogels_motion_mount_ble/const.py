@@ -75,6 +75,12 @@ HA_SERVICE_PIN_ID = "pin"
 HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_PRESET_ID = "multi_pin_feature_change_presets"
 HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_NAME_ID = "multi_pin_feature_change_name"
 HA_SERVICE_MULTI_PIN_FEATURE_DISABLE_CHANNEL_ID = "multi_pin_feature_disable_channel"
-HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_TV_ON_OFF_DETECTION_ID = "multi_pin_feature_change_tv_on_off_detection"
-HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_DEFAULT_PRESET_ID = "multi_pin_feature_change_default_position"
-HA_SERVICE_MULTI_PIN_FEATURE_START_CALIBRATION_ID = "multi_pin_feature_start_calibration"
+HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_TV_ON_OFF_DETECTION_ID = (
+    "multi_pin_feature_change_tv_on_off_detection"
+)
+HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_DEFAULT_PRESET_ID = (
+    "multi_pin_feature_change_default_position"
+)
+HA_SERVICE_MULTI_PIN_FEATURE_START_CALIBRATION_ID = (
+    "multi_pin_feature_start_calibration"
+)

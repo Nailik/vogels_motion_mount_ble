@@ -88,6 +88,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_native_min_value = 0
     _attr_native_max_value = 100
     _attr_step = 1
+    _attr_icon = "mdi:ruler"
 
     @property
     def native_value(self):
@@ -102,9 +103,6 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_distance(value)
 
-    @property
-    def icon(self):
-        return "mdi:ruler"
 
 class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """NumberEntity to set the rotation."""
@@ -115,6 +113,7 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_native_min_value = -100
     _attr_native_max_value = 100
     _attr_native_step = 1
+    _attr_icon = "mdi:angle-obtuse"
 
     @property
     def native_value(self):
@@ -129,9 +128,6 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_rotation(value)
 
-    @property
-    def icon(self):
-        return "mdi:angle-obtuse"
 
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """NumberEntity to set the TV width."""
@@ -142,6 +138,7 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_native_unit_of_measurement = "cm"
     _attr_mode = NumberMode.BOX
     _attr_native_step = 1
+    _attr_icon = "mdi:television-box"
 
     @property
     def native_value(self):
@@ -154,10 +151,6 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         """Set the value from the UI."""
         await self.coordinator.api.set_width(value)
 
-    @property
-    def icon(self):
-        return "mdi:television-box"
-
 
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """NumberEntity to set distance of a preset."""
@@ -166,6 +159,7 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     _attr_native_min_value = 0
     _attr_native_max_value = 100
     _attr_step = 1
+    _attr_icon = "mdi:ruler"
 
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
@@ -191,9 +185,6 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
             preset_index=self._preset_index, distance=value
         )
 
-    @property
-    def icon(self):
-        return "mdi:ruler"
 
 class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     """NumberEntity to set rotation of a preset."""
@@ -202,6 +193,7 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     _attr_native_min_value = -100
     _attr_native_max_value = 100
     _attr_native_step = 1
+    _attr_icon = "mdi:angle-obtuse"
 
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
@@ -226,7 +218,3 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index, rotation=value
         )
-
-    @property
-    def icon(self):
-        return "mdi:angle-obtuse"

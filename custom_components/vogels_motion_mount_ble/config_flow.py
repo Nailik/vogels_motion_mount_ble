@@ -7,7 +7,6 @@ from typing import Any
 
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import (
@@ -18,13 +17,10 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 
-from .api import (
-    API,
-    APIConnectionDeviceNotFoundError,
-    APIConnectionError,
-)
+from .api import API, APIConnectionDeviceNotFoundError, APIConnectionError
 from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

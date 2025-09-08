@@ -1,12 +1,10 @@
-import logging
+"""Utility methods."""
 
 from homeassistant.core import ServiceCall
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, HA_SERVICE_DEVICE_ID
 from .coordinator import VogelsMotionMountBleCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:

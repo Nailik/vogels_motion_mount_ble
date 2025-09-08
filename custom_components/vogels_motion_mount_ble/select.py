@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
+from .api import VogelsMotionMountAutoMoveType
 from .base import VogelsMotionMountBleBaseEntity
 from .const import (
     DOMAIN,
@@ -15,7 +16,6 @@ from .const import (
     HA_SERVICE_SELECT_AUTOMOVE,
     HA_SERVICE_SET_FREEZE_PRESET,
 )
-from .api import VogelsMotionMountAutoMoveType
 from .coordinator import VogelsMotionMountBleCoordinator
 from .utils import get_coordinator
 
@@ -61,6 +61,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_unique_id = "auto_move"
     _attr_translation_key = _attr_unique_id
     _attr_options = ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
+    _attr_icon = "mdi:autorenew"
 
     @property
     def current_option(self):
@@ -73,10 +74,6 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         """Select an option."""
         await self.coordinator.api.set_automove(option)
 
-    @property
-    def icon(self):
-        return "mdi:autorenew"
-
 
 class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     """Implementation of the Freeze preset Selector."""
@@ -84,6 +81,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_unique_id = "freeze_preset"
     _attr_translation_key = _attr_unique_id
     _attr_options = ["0", "1", "2", "3", "4", "5", "6", "7"]
+    _attr_icon = "mdi:snowflake"
 
     @property
     def current_option(self):
@@ -97,7 +95,11 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Set availability if automove is turned on."""
-        if self.coordinator.data and self.coordinator.data.automove_type is not VogelsMotionMountAutoMoveType.Off:
+        if (
+            self.coordinator.data
+            and self.coordinator.data.automove_type
+            is not VogelsMotionMountAutoMoveType.Off
+        ):
             return True
         return False
 
@@ -105,7 +107,3 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         """Select an option."""
         index = self._attr_options.index(option)
         await self.coordinator.api.set_freeze(index)
-
-    @property
-    def icon(self):
-        return "mdi:snowflake"

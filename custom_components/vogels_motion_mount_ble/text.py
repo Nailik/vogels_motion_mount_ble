@@ -12,10 +12,10 @@ from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBase
 from .const import (
     DOMAIN,
     HA_SERVICE_NAME_ID,
-    HA_SERVICE_SET_NAME,
-    HA_SERVICE_SET_AUTHORISED_USER_PIN,
-    HA_SERVICE_SET_SUPERVISIOR_PIN,
     HA_SERVICE_PIN_ID,
+    HA_SERVICE_SET_AUTHORISED_USER_PIN,
+    HA_SERVICE_SET_NAME,
+    HA_SERVICE_SET_SUPERVISIOR_PIN,
 )
 from .coordinator import VogelsMotionMountBleCoordinator
 from .utils import get_coordinator
@@ -83,6 +83,7 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     _attr_translation_key = _attr_unique_id
     _attr_native_min = 1
     _attr_native_max = 20
+    _attr_icon = "mdi:rename-box-outline"
 
     @property
     def native_value(self):
@@ -99,6 +100,11 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
 class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     """Implementation of a sensor."""
 
+    _attr_translation_key = "preset_name_custom"
+    _attr_native_min = 1
+    _attr_native_max = 32
+    _attr_icon = "mdi:form-textbox"
+
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
@@ -106,9 +112,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         super().__init__(coordinator, preset_index)
         self._attr_translation_placeholders = {"name": self._prop_preset_index}
         self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
-        self._attr_translation_key = "preset_name_custom"
-        self._attr_native_min = 1
-        self._attr_native_max = 40  # TODO correct max length?
 
     @property
     def native_value(self):
@@ -122,10 +125,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index, name=value
         )
-    
-    @property
-    def icon(self):
-        return "mdi:format-title"
 
 
 class AuthorisedUserPinText(VogelsMotionMountBleBaseEntity, TextEntity):
@@ -135,6 +134,7 @@ class AuthorisedUserPinText(VogelsMotionMountBleBaseEntity, TextEntity):
     _attr_translation_key = _attr_unique_id
     _attr_native_min = 4
     _attr_native_max = 4
+    _attr_icon = "mdi:lock"
 
     @property
     def native_value(self):
@@ -146,20 +146,16 @@ class AuthorisedUserPinText(VogelsMotionMountBleBaseEntity, TextEntity):
     async def async_set_value(self, value: str) -> None:
         """Set the authoised user pin value from the UI."""
         await self.coordinator.api.set_authorised_user_pin(value)
-    
-    @property
-    def icon(self):
-        return "mdi:lock"
 
 
 class SupervisiorPinText(VogelsMotionMountBleBaseEntity, TextEntity):
     """Implementation of a the Name Text."""
 
-    # TODO only available if there is already an authorised user pin
     _attr_unique_id = "supervisior_pin"
     _attr_translation_key = _attr_unique_id
     _attr_native_min = 4
     _attr_native_max = 4
+    _attr_icon = "mdi:shield-key"
 
     @property
     def native_value(self):
@@ -172,15 +168,12 @@ class SupervisiorPinText(VogelsMotionMountBleBaseEntity, TextEntity):
     def available(self) -> bool:
         """Set availability of this index of Preset entity based if the preset is available in the data."""
         return (
-            self.coordinator.data is not None and
-            self.coordinator.data.pin_setting is not None and
-            self.coordinator.data.pin_setting is not VogelsMotionMountPinSettings.Deactivated
+            self.coordinator.data is not None
+            and self.coordinator.data.pin_setting is not None
+            and self.coordinator.data.pin_setting
+            is not VogelsMotionMountPinSettings.Deactivated
         )
 
     async def async_set_value(self, value: str) -> None:
         """Set the supervisior pin value from the UI."""
         await self.coordinator.api.set_supervisior_pin(value)
-    
-    @property
-    def icon(self):
-        return "mdi:shield-key"

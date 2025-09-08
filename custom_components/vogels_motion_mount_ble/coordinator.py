@@ -1,14 +1,12 @@
 """Coordinator for Vogels Motion Mount BLE integration in order to hold api."""
 
+from datetime import timedelta
 import logging
 
-import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import Callable, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from datetime import timedelta
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
 from .api import API, VogelsMotionMountData
 from .const import CONF_MAC, CONF_NAME, CONF_PIN
@@ -67,10 +65,10 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         )
 
     async def unload(self):
+        """Disconnect and unload."""
         _LOGGER.debug("unload coordinator")
         self._unsub_options_update_listener()
         await self.api.unload()
-        
 
     async def _async_update_data(self):
         if self.data is not None:

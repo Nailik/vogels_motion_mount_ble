@@ -5,11 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-import asyncio
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -19,12 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.BUTTON,
-    Platform.SELECT,
     Platform.NUMBER,
-    Platform.TEXT,
+    Platform.SELECT,
+    Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
 ]
 
 type VogelsMotionMountBleConfigEntry = ConfigEntry[RuntimeData]
