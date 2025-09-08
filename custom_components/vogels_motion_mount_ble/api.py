@@ -70,8 +70,8 @@ class VogelsMotionMountAuthenticationType(Enum):
 
     Wrong = -2
     Missing = -1
-    Control = 0
-    Full = 1
+    Control = 1
+    Full = 2
 
 
 class VogelsMotionMountAutoMoveType(Enum):
@@ -125,7 +125,6 @@ class VogelsMotionMountData:
     mcp_bl_version: str | None = None
     mcp_fw_version: str | None = None
     multi_pin_features: MultiPinFeatures | None = None
-    pin_type: VogelsMotionMountPinType | None = None
     auth_type: VogelsMotionMountAuthenticationType | None = None
 
 
@@ -172,6 +171,8 @@ class API:
         self._data = VogelsMotionMountData(connected=False)
         self._device: BLEDevice | None = None
         self._client: BleakClient | None = None
+        # store last validated pin type to reuse
+        self._pin_type: VogelsMotionMountPinType | None = None
 
     # region Public api
 
@@ -190,7 +191,6 @@ class API:
                 BleakClientWithServiceCache,
                 self._device,
                 name=self._device.name or "Unknown Device",
-                disconnected_callback=self._handle_disconnect,
             )
             await self._authenticate()
             self._logger.debug("Connected")
@@ -239,11 +239,9 @@ class API:
             )
 
         await self._connect(
-            VogelsMotionActionType.Control,
-            self._client.write_gatt_char,
-            CHAR_DISTANCE_UUID,
-            int(distance).to_bytes(2, byteorder="big"),
-            response=True,
+            type=VogelsMotionActionType.Control,
+            char_uuid=CHAR_DISTANCE_UUID,
+            data=int(distance).to_bytes(2, byteorder="big"),
         )
         self._update(requested_distance=distance)
 
@@ -257,11 +255,9 @@ class API:
             )
 
         await self._connect(
-            VogelsMotionActionType.Control,
-            self._client.write_gatt_char,
-            CHAR_ROTATION_UUID,
-            int(rotation).to_bytes(2, byteorder="big", signed=True),
-            response=True,
+            type=VogelsMotionActionType.Control,
+            char_uuid=CHAR_ROTATION_UUID,
+            data=int(rotation).to_bytes(2, byteorder="big", signed=True),
         )
         self._logger.debug(
             "write rotation  %s",
@@ -273,11 +269,9 @@ class API:
         """Select a preset index to move the MotionMount to."""
         self._logger.debug("Select default preset")
         await self._connect(
-            VogelsMotionActionType.Control,
-            self._client.write_gatt_char,
-            CHAR_PRESET_UUID,
-            bytes([0]),
-            response=True,
+            type=VogelsMotionActionType.Control,
+            char_uuid=CHAR_PRESET_UUID,
+            data=bytes([0]),
         )
 
     async def select_preset(self, preset_index: int):
@@ -295,13 +289,11 @@ class API:
             )
 
         await self._connect(
-            VogelsMotionActionType.Control,
-            self._client.write_gatt_char,
-            CHAR_PRESET_UUID,
-            bytes(
+            type=VogelsMotionActionType.Control,
+            char_uuid=CHAR_PRESET_UUID,
+            data=bytes(
                 [preset_index + 1]
             ),  # Preset IDs are 1-based because 0 is the default preset
-            response=True,
         )
 
     # endregion
@@ -317,11 +309,9 @@ class API:
 
         newname = bytearray(name.encode("utf-8"))[:20].ljust(20, b"\x00")
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_NAME_UUID,
-            newname,
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_NAME_UUID,
+            data=newname,
         )
         await self._read_name()
         if self._data.name != name:
@@ -382,19 +372,15 @@ class API:
 
         # write first 20 bytes, distance, rotation and beginning of name
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_PRESET_UUIDS[preset_index],
-            data[:20].ljust(20, b"\x00"),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_PRESET_UUIDS[preset_index],
+            data=data[:20].ljust(20, b"\x00"),
         )
         # write rest of name
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_PRESET_NAMES_UUIDS[preset_index],
-            data[20:].ljust(17, b"\x00"),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_PRESET_NAMES_UUIDS[preset_index],
+            data=data[20:].ljust(17, b"\x00"),
         )
 
         await self._read_preset(preset_index)
@@ -426,11 +412,9 @@ class API:
         newpresets = dict(self._data.presets)
         newpresets[preset_index] = None
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_PRESET_UUIDS[preset_index],
-            bytes(0x01).ljust(20, b"\x00"),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_PRESET_UUIDS[preset_index],
+            data=bytes(0x01).ljust(20, b"\x00"),
         )
         await self._read_preset(preset_index)
         if self._data.presets[preset_index] is not None:
@@ -442,11 +426,9 @@ class API:
         """Select a preset index to move the MotionMount to."""
         self._logger.debug("Set width %s", width)
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_WIDTH_UUID,
-            bytes([width]),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_WIDTH_UUID,
+            data=bytes([width]),
         )
         await self._read_width()
         if self._data.width != width:
@@ -480,11 +462,9 @@ class API:
             new_id = CHAR_AUTOMOVE_ON_OPTIONS[automove_types.index(automove_type)]
 
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_AUTOMOVE_UUID,
-            int(new_id).to_bytes(2, byteorder="big"),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_AUTOMOVE_UUID,
+            data=int(new_id).to_bytes(2, byteorder="big"),
         )
         await self._read_automove()
         if (
@@ -516,11 +496,9 @@ class API:
             )
 
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_CHANGE_PIN_UUID,
-            int(pin).to_bytes(2, byteorder="little"),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_CHANGE_PIN_UUID,
+            data=int(pin).to_bytes(2, byteorder="little"),
         )
         await self._read_pin_settings()
 
@@ -542,7 +520,7 @@ class API:
 
     async def set_supervisior_pin(self, pin: str):
         """Set 4 digit pin for supervisior."""
-        self._logger.debug("Set supervisior pin to %ss", pin)
+        self._logger.debug("Set supervisior pin to %s", pin)
         remove = pin == "0000"
 
         if remove and self._data.pin_setting == VogelsMotionMountPinSettings.Single:
@@ -565,12 +543,13 @@ class API:
                 "Supervisior pin contains non digit characters."
             )
 
+        self._logger.debug(
+            "Set supervisior pin to %s for device %s", pin, self._device.name
+        )
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_CHANGE_PIN_UUID,
-            int(pin).to_bytes(2, byteorder="little"),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_CHANGE_PIN_UUID,
+            data=int(pin).to_bytes(2, byteorder="little"),
         )
         await self._read_pin_settings()
 
@@ -599,11 +578,9 @@ class API:
             )
 
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_FREEZE_UUID,
-            bytes([preset_index]),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_FREEZE_UUID,
+            data=bytes([preset_index]),
         )
         await self._read_freeze_preset()
         if self._data.freeze_preset_index != preset_index:
@@ -662,11 +639,9 @@ class API:
         value |= int(new_start_calibration) << 7
 
         await self._connect(
-            VogelsMotionActionType.Settings,
-            self._client.write_gatt_char,
-            CHAR_PIN_SETTINGS_UUID,
-            bytes([value]),
-            response=True,
+            type=VogelsMotionActionType.Settings,
+            char_uuid=CHAR_PIN_SETTINGS_UUID,
+            data=bytes([value]),
         )
         self._read_multi_pin_features()
         new_multi_pin_features = MultiPinFeatures(
@@ -705,9 +680,8 @@ class API:
     async def _connect(
         self,
         type: VogelsMotionActionType | None = None,
-        connected: Callable[[], Awaitable[None]] = None,
-        *args,
-        **kwargs,
+        char_uuid: str | None = None,
+        data: bytes | None = None,
     ):
         if not self._initialize_device():
             raise APIConnectionDeviceNotFoundError("Device not found.")
@@ -732,9 +706,10 @@ class API:
 
         await self._authenticate(type)
 
-        if connected is not None:
+        if char_uuid is not None and data is not None:
+            self._logger.debug("Run function!")
             # calls callback before loading data in order to run command with less delay
-            await connected(*args, **kwargs)
+            await self._client.write_gatt_char(char_uuid, data, response=True)
 
         if should_read_data:
             # only read data and setup notifications if this was a new connection
@@ -761,11 +736,18 @@ class API:
     # check if authentication is full or only control or none at all
     async def _check_authentication(self) -> bool:
         _auth_info = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
+        self._logger.debug("_check_authentication returns %s", _auth_info)
         if _auth_info.startswith(b"\x80\x80"):
             self._update(auth_type=VogelsMotionMountAuthenticationType.Full)
         elif _auth_info.startswith(b"\x80"):
             self._update(auth_type=VogelsMotionMountAuthenticationType.Control)
         else:
+            # little endian first 2 bytes are seconds * 100 (so to read /100 is required)
+            time_little = int.from_bytes(_auth_info[:2], "little")
+            time_big = int.from_bytes(_auth_info[:2], "big")
+            self._logger.debug(
+                "_check_authentication time little %s bit %s", time_little, time_big
+            )
             return False
         return True
 
@@ -778,7 +760,7 @@ class API:
         )
         for attempt in range(4):
             if await self._check_authentication():
-                self._update(pin_type=type)
+                self._pin_type = type
                 self._logger.debug("_authenticate_as %s success", type)
                 return True
             if attempt < 3:
@@ -804,14 +786,14 @@ class API:
         # authentication required but no pin set
         if self._pin is None:
             self._update(auth_type=VogelsMotionMountAuthenticationType.Missing)
-            raise ConfigEntryAuthFailed
+            raise APIAuthenticationError("Authentication missing.")
 
         authentication_types = (
             [
                 VogelsMotionMountPinType.Authorized_user,
                 VogelsMotionMountPinType.Supervisior,
             ]
-            if self._data.pin_type == VogelsMotionMountPinType.Authorized_user
+            if self._pin_type == VogelsMotionMountPinType.Authorized_user
             else [
                 VogelsMotionMountPinType.Supervisior,
                 VogelsMotionMountPinType.Authorized_user,
@@ -822,7 +804,7 @@ class API:
             if await self._authenticate_as(type=auth_type):
                 if (
                     auth_type == VogelsMotionMountAuthenticationType.Control
-                    and auth_type == VogelsMotionActionType.Settings
+                    and type == VogelsMotionActionType.Settings
                 ):
                     raise APIAuthenticationError(
                         "Not authenticated for settings action."
@@ -830,7 +812,7 @@ class API:
                 return
 
         self._update(auth_type=VogelsMotionMountAuthenticationType.Wrong)
-        raise ConfigEntryAuthFailed
+        raise APIAuthenticationError("Invalid pin.")
 
     # disconnect from the client
     def _handle_disconnect(self, _):
@@ -940,7 +922,9 @@ class API:
                 VogelsMotionMountAutoMoveType.Hdmi_5,
             ]
             self._update(
-                automove_type=automove_types[automove_id],
+                automove_type=automove_types[
+                    CHAR_AUTOMOVE_ON_OPTIONS.index(automove_id)
+                ],
                 automove_id=CHAR_AUTOMOVE_ON_OPTIONS.index(automove_id),
             )
         else:

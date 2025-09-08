@@ -97,6 +97,14 @@ class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchE
             return self.coordinator.data.multi_pin_features.change_presets
         return False
 
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.async_toggle()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.async_toggle()
+
     async def async_toggle(self, **kwargs):
         """Toggle if change presets is on or off."""
         await self.coordinator.api.set_multi_pin_features(change_presets=not self.is_on)
@@ -128,6 +136,14 @@ class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEnti
             return self.coordinator.data.multi_pin_features.change_name
         return False
 
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.async_toggle()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.async_toggle()
+
     async def async_toggle(self, **kwargs):
         """Toggle if change name is on or off."""
         await self.coordinator.api.set_multi_pin_features(change_name=not self.is_on)
@@ -158,6 +174,14 @@ class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, Switch
         ):
             return self.coordinator.data.multi_pin_features.disable_channel
         return False
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.async_toggle()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.async_toggle()
 
     async def async_toggle(self, **kwargs):
         """Toggle if disable channeld is on or off."""
@@ -194,6 +218,14 @@ class MultiPinFeatureChangeTvOnOffDetectionSwitch(
             return self.coordinator.data.multi_pin_features.change_tv_on_off_detection
         return False
 
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.async_toggle()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.async_toggle()
+
     async def async_toggle(self, **kwargs):
         """Toggle if change tv on off detection is on or off."""
         await self.coordinator.api.set_multi_pin_features(
@@ -229,6 +261,14 @@ class MultiPinFeatureChangeDefaultPositionSwitch(
             return self.coordinator.data.multi_pin_features.change_default_position
         return False
 
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.async_toggle()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.async_toggle()
+
     async def async_toggle(self, **kwargs):
         """Toggle if change default position is on or off."""
         await self.coordinator.api.set_multi_pin_features(
@@ -263,6 +303,14 @@ class MultiPinFeatureStartCalibrationSwitch(
         ):
             return self.coordinator.data.multi_pin_features.start_calibration
         return False
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.async_toggle()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.async_toggle()
 
     async def async_toggle(self, **kwargs):
         """Toggle if start calibration is on or off."""

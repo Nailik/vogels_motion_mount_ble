@@ -149,6 +149,15 @@
           "13": "Single",
           "15": "Multi"
         }
+      },
+      "authentication": {
+        "name": "Authentication",
+        "state": {
+          "-2": "Wrong",
+          "-1": "Missing",
+          "1": "Control",
+          "2": "Full"
+        }
       }
     },
     "switch": {
@@ -185,12 +194,6 @@
       },
       "preset_name_custom": {
         "name": "Preset {preset} name"
-      },
-      "authorised_user_pin": {
-        "name": "Authorised User pin"
-      },
-      "supervisior_pin": {
-        "name": "Supervisior pin"
       }
     }
   },

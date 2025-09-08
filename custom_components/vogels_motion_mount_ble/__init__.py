@@ -44,7 +44,6 @@ async def async_setup_entry(
     # Registers update listener to update config entry when options are updated.
     unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
 
-    # TODO use this until ble device can be reached raise ConfigEntryNotReady
     # Initialise the coordinator that manages data updates from your api.
     coordinator = VogelsMotionMountBleCoordinator(
         hass, config_entry, unsub_update_listener

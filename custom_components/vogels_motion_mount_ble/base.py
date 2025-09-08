@@ -38,7 +38,6 @@ class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
 class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     """Base Entity Class For Preset Entities."""
 
-    # TODO name doesn't update yet directly
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:

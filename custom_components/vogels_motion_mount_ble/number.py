@@ -132,12 +132,12 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     """NumberEntity to set the TV width."""
 
-    # TODO max min values
     _attr_unique_id = "tv_width"
     _attr_translation_key = _attr_unique_id
     _attr_native_unit_of_measurement = "cm"
     _attr_mode = NumberMode.BOX
     _attr_native_step = 1
+    _attr_native_max_value = 1000
     _attr_icon = "mdi:television-box"
 
     @property
@@ -149,7 +149,7 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_width(value)
+        await self.coordinator.api.set_width(int(value))
 
 
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):

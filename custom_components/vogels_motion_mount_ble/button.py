@@ -205,7 +205,7 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         """Add a custom preset by it's index with empty data."""
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index,
-            name=f"Preset {self._preset_index}",  # TODO translation
+            name=f"{self._preset_index}",
             distance=0,
             rotation=0,
         )
