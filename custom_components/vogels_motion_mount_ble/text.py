@@ -69,8 +69,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             NameText(coordinator),
-            AuthorisedUserPinText(coordinator),
-            SupervisiorPinText(coordinator),
         ]
         + [PresetNameText(coordinator, preset_index) for preset_index in range(7)]
     )
@@ -110,7 +108,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_translation_placeholders = {"name": self._prop_preset_index}
         self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
 
     @property
@@ -125,55 +122,3 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index, name=value
         )
-
-
-class AuthorisedUserPinText(VogelsMotionMountBleBaseEntity, TextEntity):
-    """Implementation of a the Name Text."""
-
-    _attr_unique_id = "authorised_user_pin"
-    _attr_translation_key = _attr_unique_id
-    _attr_native_min = 4
-    _attr_native_max = 4
-    _attr_icon = "mdi:lock"
-
-    @property
-    def native_value(self):
-        """Return the state of the entity."""
-        if self.coordinator.data is None:
-            return None
-        return "    "
-
-    async def async_set_value(self, value: str) -> None:
-        """Set the authoised user pin value from the UI."""
-        await self.coordinator.api.set_authorised_user_pin(value)
-
-
-class SupervisiorPinText(VogelsMotionMountBleBaseEntity, TextEntity):
-    """Implementation of a the Name Text."""
-
-    _attr_unique_id = "supervisior_pin"
-    _attr_translation_key = _attr_unique_id
-    _attr_native_min = 4
-    _attr_native_max = 4
-    _attr_icon = "mdi:shield-key"
-
-    @property
-    def native_value(self):
-        """Return the state of the entity."""
-        if self.coordinator.data is None:
-            return None
-        return "    "
-
-    @property
-    def available(self) -> bool:
-        """Set availability of this index of Preset entity based if the preset is available in the data."""
-        return (
-            self.coordinator.data is not None
-            and self.coordinator.data.pin_setting is not None
-            and self.coordinator.data.pin_setting
-            is not VogelsMotionMountPinSettings.Deactivated
-        )
-
-    async def async_set_value(self, value: str) -> None:
-        """Set the supervisior pin value from the UI."""
-        await self.coordinator.api.set_supervisior_pin(value)

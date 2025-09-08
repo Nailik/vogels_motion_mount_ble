@@ -170,24 +170,21 @@ class API:
         self._pin = pin
         self._callback = callback
         self._data = VogelsMotionMountData(connected=False)
-        self._device: BLEDevice = (
-            bluetooth.async_ble_device_from_address(  # TODO may return null
-                self._hass, self._mac, connectable=True
-            )
-        )
-        self._client: BleakClient = BleakClient(
-            self._device, disconnected_callback=self._handle_disconnect, timeout=120
-        )
-        self._load_task = None
+        self._device: BLEDevice | None = None
+        self._client: BleakClient | None = None
 
     # region Public api
 
     async def test_connection(self):
         """Test connection to the BLE device once using BleakClient and disconnects immediately."""
         self._logger.debug("Test connection")
+        if not self._initialize_device():
+            raise APIConnectionDeviceNotFoundError("Device not found.")
+
         try:
             # make sure we are disconnected before testing connection otherwise authentication might not be tested
             await self.disconnect()
+
             self._logger.debug("Device found attempting to connect")
             self._client = await establish_connection(
                 BleakClientWithServiceCache,
@@ -203,12 +200,13 @@ class API:
             raise APIConnectionDeviceNotFoundError("Device not found.") from err
         except Exception as err:
             self._logger.error("Failed to connect")
-            raise APIConnectionError("Error connecting to api.") from err
+            raise APIConnectionError(f"Error connecting to api due to {err}.") from err
 
     async def disconnect(self):
         """Disconnect from the BLE Device."""
         self._logger.debug("Diconnecting")
-        await self._client.disconnect()
+        if self._client is not None:
+            await self._client.disconnect()
         self._logger.debug("Diconnected!")
 
     async def unload(self):
@@ -221,7 +219,7 @@ class API:
 
     async def refreshData(self):
         """Read data from BLE device, connects if necessary."""
-        if self._client.is_connected:
+        if self._client and self._client.is_connected:
             # Authenticate in order to make it visible that authentication does not work
             await self._authenticate()
             await self._read_current_data()
@@ -688,6 +686,20 @@ class API:
     # endregion
     # region Private functions
 
+    # initializes device and returns true if found
+    def _initialize_device(self) -> bool:
+        self._logger.debug("Initialize device")
+        if self._device is None:
+            self._device: BLEDevice = bluetooth.async_ble_device_from_address(
+                self._hass, self._mac, connectable=True
+            )
+            self._client: BleakClient = BleakClient(
+                self._device, disconnected_callback=self._handle_disconnect, timeout=120
+            )
+        result = self._device is not None and self._client is not None
+        self._logger.debug("Initialisation was %s", result)
+        return result
+
     # connect and load data if new connection
     # checks authentication for this action type else raises an APIAuthenticationError error
     async def _connect(
@@ -697,6 +709,9 @@ class API:
         *args,
         **kwargs,
     ):
+        if not self._initialize_device():
+            raise APIConnectionDeviceNotFoundError("Device not found.")
+
         self._logger.debug("Connect")
 
         if self._client.is_connected:

@@ -166,9 +166,6 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_translation_placeholders = {
-            "name": self._preset_name,
-        }
         self._attr_unique_id = f"preset_{preset_index}_distance"
         self._attr_translation_key = "preset_distance_custom"
 
@@ -200,9 +197,6 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_translation_placeholders = {
-            "name": self._preset_name,
-        }
         self._attr_unique_id = f"preset_{preset_index}_rotation"
         self._attr_translation_key = "preset_rotation_custom"
 

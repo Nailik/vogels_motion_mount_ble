@@ -163,9 +163,6 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_translation_placeholders = {
-            "name": self._preset_name,
-        }
         self._attr_unique_id = f"select_preset_id_{preset_index}"
 
     async def async_press(self):
@@ -184,7 +181,6 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_translation_placeholders = {"name": self._prop_preset_index}
         self._attr_unique_id = f"delete_preset_{self._prop_preset_index}"
 
     async def async_press(self):
@@ -203,7 +199,6 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_translation_placeholders = {"name": self._prop_preset_index}
         self._attr_unique_id = f"add_preset_{self._prop_preset_index}"
 
     async def async_press(self):

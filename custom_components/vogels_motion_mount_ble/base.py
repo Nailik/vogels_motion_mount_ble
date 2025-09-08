@@ -45,18 +45,12 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
         """Initialise entity."""
         super().__init__(coordinator)
         self._preset_index = preset_index
+        self._attr_translation_placeholders = {"preset": self._prop_preset_index}
 
     @property
     def available(self) -> bool:
         """Set availability of this index of Preset entity based if the preset is available in the data."""
         return self._preset is not None
-
-    @property
-    def _preset_name(self) -> str:
-        """Name of the preset or it's index if no name is available."""
-        if self._preset:
-            return f"{self._preset.name}"
-        return f"{self._preset_index}"
 
     @property
     def _prop_preset_index(self) -> str:

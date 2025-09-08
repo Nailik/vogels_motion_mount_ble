@@ -53,13 +53,13 @@
         "name": "Select default preset"
       },
       "select_preset_custom": {
-        "name": "Select preset {name}"
+        "name": "Select preset {preset}"
       },
       "delete_preset_custom": {
-        "name": "Delete preset {name}"
+        "name": "Delete preset {preset}"
       },
       "add_preset_custom": {
-        "name": "Add preset {name}"
+        "name": "Add preset {preset}"
       }
     },
     "number": {
@@ -73,10 +73,10 @@
         "name": "TV width"
       },
       "preset_distance_custom": {
-        "name": "Preset {name} distance"
+        "name": "Preset {preset} distance"
       },
       "preset_rotation_custom": {
-        "name": "Preset {name} rotation"
+        "name": "Preset {preset} rotation"
       }
     },
     "select": {
@@ -184,7 +184,7 @@
         "name": "Name"
       },
       "preset_name_custom": {
-        "name": "Preset {name} name"
+        "name": "Preset {preset} name"
       },
       "authorised_user_pin": {
         "name": "Authorised User pin"

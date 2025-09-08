@@ -132,4 +132,4 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
         """Return the current value."""
         if not self.coordinator.data:
             return None
-        return self.coordinator.data.pin_setting
+        return self.coordinator.data.pin_setting.value
