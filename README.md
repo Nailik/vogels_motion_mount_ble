@@ -95,9 +95,9 @@ When the integration is setup the integration tries to connect to the Vogel's Mo
 | `c005fa29-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
 | `c005fa2a-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Call Preset with id 0x00 - 0x06 |
 | `c005fa2b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | TV width in cm |
-| `c005fa2d-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Settings PIN to authenticate session |
+| `c005fa2d-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | authenticate for session |
 | `c005fa2e-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Check permission:<br>• Settings and Control (Supervisior): `0x80x80`<br>• Control only: `0x80` |
-| `c005fa2f-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Control PIN to authenticate session |
+| `c005fa2f-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | change PIN  |
 | `c005fa30-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
 | `c005fa32-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
 | `c005fa33-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Unknown |
