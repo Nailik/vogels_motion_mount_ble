@@ -23,7 +23,7 @@ select_preset:
       required: true
       selector:
         select:
-          translation_key: "preset"
+          translation_key: "preset_id"
           options:
             - "0"
             - "1"
@@ -43,7 +43,7 @@ delete_preset:
       required: true
       selector:
         select:
-          translation_key: "preset"
+          translation_key: "preset_id"
           options:
             - "0"
             - "1"
@@ -63,7 +63,7 @@ set_preset:
       required: true
       selector:
         select:
-          translation_key: "preset"
+          translation_key: "preset_id"
           options:
             - "0"
             - "1"

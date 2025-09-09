@@ -70,7 +70,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         """Refresh data async if no data is present."""
         if self.data is not None:
             return
-        await self.api.refreshData()
+        await self.api.refresh_data()
         self.update_interval = None
 
     async def unload(self):
