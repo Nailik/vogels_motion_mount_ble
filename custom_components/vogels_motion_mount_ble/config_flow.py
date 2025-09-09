@@ -17,10 +17,14 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 
-from .api import API, APIConnectionDeviceNotFoundError, APIConnectionError
+from .api import (
+    API,
+    APIConnectionDeviceNotFoundError,
+    APIConnectionError,
+    APIAuthenticationError,
+)
 from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,7 +103,7 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
         except APIConnectionDeviceNotFoundError as err:
             _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
             errors[CONF_ERROR] = "error_device_not_found"
-        except ConfigEntryAuthFailed as err:
+        except APIAuthenticationError as err:
             _LOGGER.error("Setting APIAuthenticationError: %s", err)
             errors[CONF_ERROR] = "error_invalid_athentication"
         except APIConnectionError as err:

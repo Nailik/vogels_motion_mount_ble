@@ -19,7 +19,7 @@ select_preset:
       selector:
         device:
           integration: vogels_motion_mount_ble
-    preset:
+    preset_id:
       required: true
       selector:
         select:
@@ -39,7 +39,7 @@ delete_preset:
       selector:
         device:
           integration: vogels_motion_mount_ble
-    preset:
+    preset_id:
       required: true
       selector:
         select:
@@ -59,7 +59,7 @@ set_preset:
       selector:
         device:
           integration: vogels_motion_mount_ble
-    preset:
+    preset_id:
       required: true
       selector:
         select:
@@ -161,7 +161,7 @@ set_freeze_preset:
       selector:
         device:
           integration: vogels_motion_mount_ble
-    freeze_preset:
+    preset_id:
       required: true
       selector:
         select:

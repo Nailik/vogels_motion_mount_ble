@@ -12,8 +12,7 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_pin": "PIN",
-          "conf_preset_subdevice": "Use Preset Subdevices"
+          "conf_pin": "PIN"
         }
       }
     }
@@ -30,8 +29,7 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_pin": "PIN",
-          "conf_preset_subdevice": "Use Preset Subdevices"
+          "conf_pin": "PIN"
         }
       }
     }
@@ -89,29 +87,11 @@
           "hdmi_3": "HDMI 3",
           "hdmi_4": "HDMI 4",
           "hdmi_5": "HDMI 5"
-        },
-        "options": {
-          "off": "Off",
-          "hdmi_1": "HDMI 1",
-          "hdmi_2": "HDMI 2",
-          "hdmi_3": "HDMI 3",
-          "hdmi_4": "HDMI 4",
-          "hdmi_5": "HDMI 5"
         }
       },
       "freeze_preset": {
         "name": "Freeze preset",
         "state": {
-          "0": "Preset 0",
-          "1": "Preset 1",
-          "2": "Preset 2",
-          "3": "Preset 3",
-          "4": "Preset 4",
-          "5": "Preset 5",
-          "6": "Preset 6",
-          "7": "Preset 7"
-        },
-        "options": {
           "0": "Preset 0",
           "1": "Preset 1",
           "2": "Preset 2",
@@ -153,10 +133,10 @@
       "authentication": {
         "name": "Authentication",
         "state": {
-          "-2": "Wrong",
-          "-1": "Missing",
-          "1": "Control",
-          "2": "Full"
+          "0": "Wrong",
+          "1": "Missing",
+          "2": "Control",
+          "3": "Full"
         }
       }
     },
@@ -362,34 +342,6 @@
         "freeze_preset": {
           "name": "Freeze Preset",
           "description": "Preset to set as freeze position."
-        }
-      }
-    },
-    "set_authorised_user_pin": {
-      "name": "Set authorised user pin",
-      "description": "Sets the authorised user pin.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "pin": {
-          "name": "Pin",
-          "description": "4 digit pin for authorised users."
-        }
-      }
-    },
-    "set_supervisior_pin": {
-      "name": "Set supervisior pin",
-      "description": "Sets the supervisior pin.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "pin": {
-          "name": "Pin",
-          "description": "4 digit pin for supervisior."
         }
       }
     }

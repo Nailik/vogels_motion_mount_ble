@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _refresh_data_service(call: ServiceCall) -> None:
     _LOGGER.debug("Refresh data service called with data: %s", call.data)
-    await get_coordinator(call).api.refreshData()
+    await get_coordinator(call).api.refresh_data()
 
 
 async def _disconnect_service(call: ServiceCall) -> None:
@@ -118,7 +118,7 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 
     async def async_press(self):
         """Execute data refresh."""
-        await self.coordinator.api.refreshData()
+        await self.coordinator.api.refresh_data()
 
 
 class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):

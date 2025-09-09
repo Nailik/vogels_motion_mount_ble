@@ -64,6 +64,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             callback=self.async_set_updated_data,
         )
 
+        hass.loop.create_task(self._async_update_data())
+
     async def _async_update_data(self):
         """Refresh data async if no data is present."""
         if self.data is not None:
@@ -76,7 +78,3 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("unload coordinator")
         self._unsub_options_update_listener()
         await self.api.unload()
-
-    async def load_data(self):
-        """Refresh data async if no data is present."""
-        await self._async_update_data()

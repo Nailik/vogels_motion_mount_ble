@@ -1,7 +1,6 @@
 """Bluetooth api to connect to Vogels MotionMount."""
 
 import asyncio
-from collections.abc import Awaitable
 from dataclasses import dataclass, field, replace
 from enum import Enum
 import logging
@@ -12,7 +11,7 @@ from bleak_retry_connector import BleakClientWithServiceCache, establish_connect
 
 from homeassistant.components import bluetooth
 from homeassistant.core import Callable, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CHAR_AUTHENTICATE_UUID,
@@ -68,10 +67,10 @@ class VogelsMotionMountPinType(Enum):
 class VogelsMotionMountAuthenticationType(Enum):
     """Defines the authentication options."""
 
-    Wrong = -2
-    Missing = -1
-    Control = 1
-    Full = 2
+    Wrong = 0
+    Missing = 1
+    Control = 2
+    Full = 3
 
 
 class VogelsMotionMountAutoMoveType(Enum):
@@ -204,10 +203,10 @@ class API:
 
     async def disconnect(self):
         """Disconnect from the BLE Device."""
-        self._logger.debug("Diconnecting")
+        self._logger.debug("Disconnecting")
         if self._client is not None:
             await self._client.disconnect()
-        self._logger.debug("Diconnected!")
+        self._logger.debug("Disconnected!")
 
     async def unload(self):
         """Unload the api, disconnect and delete ble classes."""
@@ -217,7 +216,7 @@ class API:
         self._client = None
         bluetooth.async_rediscover_address(self._hass, self._mac)
 
-    async def refreshData(self):
+    async def refresh_data(self):
         """Read data from BLE device, connects if necessary."""
         if self._client and self._client.is_connected:
             # Authenticate in order to make it visible that authentication does not work
@@ -233,9 +232,9 @@ class API:
         """Set the distance to move the MotionMount to."""
         self._logger.debug("Set distance to %s", distance)
 
-        if distance in range(-100, 100):
+        if distance in range(0, 100):
             raise APISettingsChangeInvalidInputError(
-                f"Invalid distance {distance} must be in range(-100,100)."
+                f"Invalid distance {distance} must be in range(0,100)."
             )
 
         await self._connect(
@@ -422,7 +421,7 @@ class API:
                 f"Preset delete not saved on device. Expected None actual {self._data.presets[preset_index]}."
             )
 
-    async def set_width(self, width: int):
+    async def set_tv_width(self, width: int):
         """Select a preset index to move the MotionMount to."""
         self._logger.debug("Set width %s", width)
         await self._connect(
@@ -517,6 +516,7 @@ class API:
             raise APISettingsChangeNotStoredError(
                 f"Authorised user pin was not set removed. Expected pin settings {VogelsMotionMountPinSettings.Single} or {VogelsMotionMountPinSettings.Multi} actual  {self._data.pin_setting}."
             )
+        await self._authenticate(type)
 
     async def set_supervisior_pin(self, pin: str):
         """Set 4 digit pin for supervisior."""
@@ -560,10 +560,11 @@ class API:
 
         if not remove and self._data.pin_setting != VogelsMotionMountPinSettings.Multi:
             raise APISettingsChangeNotStoredError(
-                f"Supervisior pin was not set. Expected pin settings {VogelsMotionMountPinSettings.Multi} actual  {self._data.pin_setting}."
+                f"Supervisior pin was not set. Expected pin settings {VogelsMotionMountPinSettings.Multi} actual {self._data.pin_setting}."
             )
+        await self._authenticate(type)
 
-    async def set_freeze(self, preset_index: int):
+    async def set_freeze_preset(self, preset_index: int):
         """Set preset that is used for auto move freeze position."""
         self._logger.debug("Set freeze preset index to %s", preset_index)
 
@@ -640,7 +641,7 @@ class API:
 
         await self._connect(
             type=VogelsMotionActionType.Settings,
-            char_uuid=CHAR_PIN_SETTINGS_UUID,
+            char_uuid=CHAR_MULTI_PIN_FEATURES_UUID,
             data=bytes([value]),
         )
         self._read_multi_pin_features()
@@ -819,7 +820,7 @@ class API:
         self._logger.debug("Device disconnected!")
         self._update(connected=self._client.is_connected)
 
-    # Notifications in order to get udpates from device via ble notify.
+    # Notifications in order to get updates from device via ble notify.
     async def _setup_notifications(self):
         self._logger.debug("Setup notifications")
         await self._client.start_notify(

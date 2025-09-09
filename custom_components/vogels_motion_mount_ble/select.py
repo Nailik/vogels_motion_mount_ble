@@ -29,7 +29,7 @@ async def _set_automove_service(call: ServiceCall) -> None:
 
 async def _set_freeze_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set freeze service called with data: %s", call.data)
-    await get_coordinator(call).api.set_freeze(call.data[HA_SERVICE_PRESET_ID])
+    await get_coordinator(call).api.set_freeze_preset(call.data[HA_SERVICE_PRESET_ID])
 
 
 async def async_setup_entry(
@@ -106,4 +106,4 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         index = self._attr_options.index(option)
-        await self.coordinator.api.set_freeze(index)
+        await self.coordinator.api.set_freeze_preset(index)

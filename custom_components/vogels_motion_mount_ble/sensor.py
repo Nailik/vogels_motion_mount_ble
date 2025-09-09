@@ -55,7 +55,7 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Return the state of the roration or None."""
+        """Return the state of the rotation or None."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.rotation
@@ -131,7 +131,7 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
+        if not self.coordinator.data or not self.coordinator.data.pin_setting:
             return None
         return self.coordinator.data.pin_setting.value
 
@@ -146,6 +146,6 @@ class AuthenticationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
+        if not self.coordinator.data or not self.coordinator.data.auth_type:
             return None
         return self.coordinator.data.auth_type.value

@@ -1,11 +1,14 @@
+
+
+supervisior : 1111
+authorised user: 2222
+
+# todo setting supervisior pin is broken (updates authorised user instead)
 # todo width input is not validated
 # todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings
 # todo authentication wait time
-# check all errors during setup for translation
-# check all "normal" api errors for translation
-# todo ask data on initial setup (no width set up - run configuration test?)
 # freeze preset 0 does it mean wall?
-
+# what is permission for start calibration
 
 # test services:
 authorised user pin change
@@ -21,7 +24,7 @@ preset
     delete
 
 select default preset
-freez position
+freeze position
 hdmi detection mode
 tv on off detectio
 name
@@ -43,7 +46,7 @@ preset
     delete
 
 select default preset
-freez position
+freeze position
 hdmi detection mode
 tv on off detectio
 name

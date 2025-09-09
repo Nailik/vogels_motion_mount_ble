@@ -1,18 +1,17 @@
 {
-  "codeowners": ["@Nailik"],
-  "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/Nailik/vogels_motion_mount_ble",
-  "domain": "vogels_motion_mount_ble",
-  "iot_class": "local_polling",
-  "name": "Vogels MotionMount (BLE)",
   "bluetooth": [
     {
       "service_uuid": "030013ac-4202-2d8e-ea11-3959c46ca10e"
     }
   ],
-  "requirements": ["bleak>=0.21.1"],
-  "version": "0.0.3-alpha",
+  "codeowners": ["@Nailik"],
+  "config_flow": true,
+  "dependencies": ["bluetooth"],
+  "documentation": "https://github.com/Nailik/vogels_motion_mount_ble",
+  "domain": "vogels_motion_mount_ble",
+  "iot_class": "local_polling",
   "integration_type": "device",
-  "translations": ["en"]
+  "name": "Vogels MotionMount (BLE)",
+  "requirements": ["bleak>=0.21.1"],
+  "version": "0.0.3-alpha"
 }

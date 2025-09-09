@@ -35,7 +35,7 @@ async def _set_rotation_service(call: ServiceCall) -> None:
 
 async def _set_tv_width_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set tv width called with data: %s", call.data)
-    await get_coordinator(call).api.set_width(call.data[HA_SERVICE_TV_WIDTH_ID])
+    await get_coordinator(call).api.set_tv_width(call.data[HA_SERVICE_TV_WIDTH_ID])
 
 
 async def async_setup_entry(
@@ -149,7 +149,7 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_width(int(value))
+        await self.coordinator.api.set_tv_width(int(value))
 
 
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
