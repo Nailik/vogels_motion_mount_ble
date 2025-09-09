@@ -2,6 +2,8 @@
 
 Allows you to control the Vogel's MotionMount TVM 7675 non PRO device.
 
+Project is still in heavy development, some features are missing and there are no unit tests yet.
+
 ## Setup
 
 Use HACS to add this repository or copy the contents in the custom_integrations folder.
