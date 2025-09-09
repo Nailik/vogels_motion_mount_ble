@@ -1,6 +1,6 @@
-# Vogels MotionMount (BLE) for Home Assistant - Alpha
+# Vogels MotionMount (TVM 7675) for Home Assistant
 
-Under heavy development, no integration tests yet.
+Allows you to control the Vogel's MotionMount TVM 7675 non PRO device.
 
 ## Setup
 
