@@ -1,6 +1,5 @@
 import logging
 
-from vogels_motion_mount_ble import VogelsMotionMountBleConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from .const import (
     DOMAIN,
@@ -37,11 +36,9 @@ from .utils import get_coordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_services(
-    hass: HomeAssistant, config: VogelsMotionMountBleConfigEntry
-) -> bool:
+async def async_setup_services(hass: HomeAssistant):
     """Set up my integration services."""
-    _LOGGER.debug("async_setup called with config_entry: %s", config)
+    _LOGGER.debug("async_setup_services called ")
     hass.services.async_register(
         DOMAIN,
         HA_SERVICE_REFRESH_DATA,
@@ -217,3 +214,4 @@ async def _set_authorised_user_pin(call: ServiceCall) -> None:
 async def _set_supervisior_pin(call: ServiceCall) -> None:
     _LOGGER.debug("Set supervisior pin service called with data: %s", call.data)
     await get_coordinator(call).api.set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
+    

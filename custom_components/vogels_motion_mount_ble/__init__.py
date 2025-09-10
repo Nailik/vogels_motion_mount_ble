@@ -39,15 +39,16 @@ class RuntimeData:
 async def async_setup(
     hass: HomeAssistant, config: VogelsMotionMountBleConfigEntry
 ) -> bool:
-    """Set up my integration services."""
+    """Set up Vogels Motion Mount integration services."""
     _LOGGER.debug("async_setup called with config_entry: %s", config)
-    async_setup_services(hass, config)
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
 ) -> bool:
-    """Set up VogelsMotionMount Integration from a config entry."""
+    """Set up Vogels Motion Mount Integration from a config entry."""
     _LOGGER.debug("async_setup_entry called with config_entry: %s", config_entry)
 
     # Registers update listener to update config entry when options are updated.

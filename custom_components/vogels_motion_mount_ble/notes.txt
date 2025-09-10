@@ -1,9 +1,13 @@
+# TODO use config entry not ready if device cannot connect (yet), remove polling?
+https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-setup
 
 
 supervisior : 1111
 authorised user: 2222
 
 # todo setting supervisior pin is broken (updates authorised user instead)
+
+
 # todo width input is not validated
 # todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings
 # todo authentication wait time
