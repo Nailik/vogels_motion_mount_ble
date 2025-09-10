@@ -1,48 +1,13 @@
 """Button entities to define actions for Vogels Motion Mount BLE entities."""
 
-import logging
-
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .api import VogelsMotionMountPinSettings
 from .base import VogelsMotionMountBleBaseEntity
-from .const import (
-    DOMAIN,
-    HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_DEFAULT_PRESET_ID,
-    HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_NAME_ID,
-    HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_PRESET_ID,
-    HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_TV_ON_OFF_DETECTION_ID,
-    HA_SERVICE_MULTI_PIN_FEATURE_DISABLE_CHANNEL_ID,
-    HA_SERVICE_MULTI_PIN_FEATURE_START_CALIBRATION_ID,
-    HA_SERVICE_SET_MULTI_PIN_FEATURES,
-)
 from .coordinator import VogelsMotionMountBleCoordinator
-from .utils import get_coordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def _set_multi_pin_features(call: ServiceCall) -> None:
-    _LOGGER.debug(
-        "Set multi pin features change presets service called with data: %s", call.data
-    )
-    await get_coordinator(call).api.set_multi_pin_features(
-        change_presets=call.data.get(HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_PRESET_ID),
-        change_name=call.data.get(HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_NAME_ID),
-        disable_channel=call.data.get(HA_SERVICE_MULTI_PIN_FEATURE_DISABLE_CHANNEL_ID),
-        change_tv_on_off_detection=call.data.get(
-            HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_TV_ON_OFF_DETECTION_ID
-        ),
-        change_default_position=call.data.get(
-            HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_DEFAULT_PRESET_ID
-        ),
-        start_calibration=call.data.get(
-            HA_SERVICE_MULTI_PIN_FEATURE_START_CALIBRATION_ID
-        ),
-    )
 
 
 async def async_setup_entry(
@@ -52,12 +17,6 @@ async def async_setup_entry(
 ):
     """Set up the RefreshData and SelectPreset buttons."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_MULTI_PIN_FEATURES,
-        _set_multi_pin_features,
-    )
 
     async_add_entities(
         [

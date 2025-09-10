@@ -1,41 +1,12 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-import logging
-
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
-from .const import (
-    DOMAIN,
-    HA_SERVICE_DISTANCE_ID,
-    HA_SERVICE_ROTATION_ID,
-    HA_SERVICE_SET_DISTANCE,
-    HA_SERVICE_SET_ROTATION,
-    HA_SERVICE_SET_TV_WIDTH,
-    HA_SERVICE_TV_WIDTH_ID,
-)
 from .coordinator import VogelsMotionMountBleCoordinator
-from .utils import get_coordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def _set_distance_service(call: ServiceCall) -> None:
-    _LOGGER.debug("Set distance service called with data: %s", call.data)
-    await get_coordinator(call).api.set_distance(call.data[HA_SERVICE_DISTANCE_ID])
-
-
-async def _set_rotation_service(call: ServiceCall) -> None:
-    _LOGGER.debug("Set rotation service called with data: %s", call.data)
-    await get_coordinator(call).api.set_rotation(call.data[HA_SERVICE_ROTATION_ID])
-
-
-async def _set_tv_width_service(call: ServiceCall) -> None:
-    _LOGGER.debug("Set tv width called with data: %s", call.data)
-    await get_coordinator(call).api.set_tv_width(call.data[HA_SERVICE_TV_WIDTH_ID])
 
 
 async def async_setup_entry(
@@ -45,24 +16,6 @@ async def async_setup_entry(
 ):
     """Set up the Numbers for distance, rotation, tv width and preset (distance, rotation)."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_DISTANCE,
-        _set_distance_service,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_ROTATION,
-        _set_rotation_service,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_TV_WIDTH,
-        _set_tv_width_service,
-    )
 
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.

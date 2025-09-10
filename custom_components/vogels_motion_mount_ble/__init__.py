@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .services import async_setup_services
 from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +34,14 @@ class RuntimeData:
     """Holds coordinator for access in hass domain."""
 
     coordinator: DataUpdateCoordinator
+
+
+async def async_setup(
+    hass: HomeAssistant, config: VogelsMotionMountBleConfigEntry
+) -> bool:
+    """Set up my integration services."""
+    _LOGGER.debug("async_setup called with config_entry: %s", config)
+    async_setup_services(hass, config)
 
 
 async def async_setup_entry(
