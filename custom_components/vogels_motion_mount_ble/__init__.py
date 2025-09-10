@@ -6,15 +6,14 @@ from dataclasses import dataclass
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, CONF_OPTIONS_UPDATE_LISTENER
+from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-from homeassistant.const import Platform
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -22,10 +21,10 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.TEXT,
 ]
 
-#TODO setup async_on_unload according to https://developers.home-assistant.io/docs/config_entries_options_flow_handler/
 type VogelsMotionMountBleConfigEntry = ConfigEntry[RuntimeData]
 
 
@@ -43,40 +42,29 @@ async def async_setup_entry(
     _LOGGER.debug("async_setup_entry called with config_entry: %s", config_entry)
 
     # Registers update listener to update config entry when options are updated.
-    unsub_options_update_listener = config_entry.add_update_listener(async_reload_entry)
+    unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
 
-        # TODO use this until ble device can be reached raise ConfigEntryNotReady
     # Initialise the coordinator that manages data updates from your api.
     coordinator = VogelsMotionMountBleCoordinator(
-        hass, config_entry, unsub_options_update_listener
+        hass, config_entry, unsub_update_listener
     )
+
     # Creates initial dictionary for the DOMAIN in hass.data
     hass.data.setdefault(DOMAIN, {})
     # Store coordinator
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     config_entry.runtime_data = RuntimeData(coordinator)
+
+    # Create entries
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    config_entry: VogelsMotionMountBleConfigEntry,
-    device_entry: DeviceEntry,
-) -> bool:
-    """Delete device if selected from UI."""
-    _LOGGER.debug("async_remove_config_entry_device")
-    # TODO: Implement your logic to remove the device.
-    # bluetooth.async_rediscover_address(hass, "44:44:33:11:23:42")
-    return True
-
-async def async_reload_entry(hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
+) -> None:
     """Reload config entry."""
-    await async_unload_entry(hass, config_entry)
-    await async_setup_entry(hass, config_entry)
-
-async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Handle options update."""
-    _LOGGER.debug("options_update_listener async_reload")
+    _LOGGER.debug("async_reload_entry async_reload")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
@@ -90,7 +78,9 @@ async def async_unload_entry(
     ):
         _LOGGER.debug("async_unload_entry pop")
         # Remove config entry from domain.
-        coordinator: VogelsMotionMountBleCoordinator = hass.data[DOMAIN].pop(config_entry.entry_id)
+        coordinator: VogelsMotionMountBleCoordinator = hass.data[DOMAIN].pop(
+            config_entry.entry_id
+        )
         # Disconnect and remove options_update_listener.
         await coordinator.unload()
 

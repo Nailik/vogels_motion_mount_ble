@@ -1,6 +1,7 @@
 """Base entity to define common properties and methods for Vogels Motion Mount BLE entities."""
 
 import logging
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -10,6 +11,7 @@ from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
     """Base Entity Class for all Entities."""
@@ -22,7 +24,7 @@ class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
         """Return device information."""
         return DeviceInfo(
             name=self.coordinator.name,
-            manufacturer="Vogels",
+            manufacturer="Vogel's",
             model="Motion Mount",
             identifiers={(DOMAIN, self.coordinator.mac)},
         )
@@ -35,38 +37,14 @@ class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
 
 class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     """Base Entity Class For Preset Entities."""
-    #TODO name doesn't update yet directly
+
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
         """Initialise entity."""
         super().__init__(coordinator)
         self._preset_index = preset_index
-        self._attr_translation_placeholders = {
-            "name": self._preset_name,
-            "index": self._preset_index,
-        }
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update sensor with latest data from coordinator."""
-        self._attr_translation_placeholders = {
-            "name": self._preset_name,
-        }
-        self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        if not self.coordinator.preset_subdevice:
-            return super().device_info
-        return DeviceInfo(
-            name=f"Preset {self._preset_name}",
-            manufacturer="Vogels",
-            model="Motion Mount",
-            identifiers={(DOMAIN, f"{self.coordinator.mac}_{self._preset_index}")},
-            via_device=(DOMAIN, self.coordinator.mac),
-        )
+        self._attr_translation_placeholders = {"preset": self._prop_preset_index}
 
     @property
     def available(self) -> bool:
@@ -74,10 +52,11 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
         return self._preset is not None
 
     @property
-    def _preset_name(self) -> str:
-        """Name of the preset or it's index if no name is available."""
+    def _prop_preset_index(self) -> str:
+        """Index of the preset."""
+        # Note: seems to be required to use _preset, when using _preset_index it is not correctly working and will change it's entity id when recreating entities
         if self._preset:
-            return f"{self._preset.name}"
+            return f"{self._preset.index}"
         return f"{self._preset_index}"
 
     @property

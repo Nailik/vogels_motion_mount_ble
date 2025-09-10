@@ -12,8 +12,7 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_pin": "PIN",
-          "conf_preset_subdevices": "Use Preset Subdevices"
+          "conf_pin": "PIN"
         }
       }
     }
@@ -30,8 +29,7 @@
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
-          "conf_pin": "PIN",
-          "conf_preset_subdevices": "Use Preset Subdevices"
+          "conf_pin": "PIN"
         }
       }
     }
@@ -53,13 +51,13 @@
         "name": "Select default preset"
       },
       "select_preset_custom": {
-        "name": "Select preset {name}"
+        "name": "Select preset {preset}"
       },
       "delete_preset_custom": {
-        "name": "Delete preset {name}"
+        "name": "Delete preset {preset}"
       },
       "add_preset_custom": {
-        "name": "Add preset {index}"
+        "name": "Add preset {preset}"
       }
     },
     "number": {
@@ -73,10 +71,10 @@
         "name": "TV width"
       },
       "preset_distance_custom": {
-        "name": "Preset {name} distance"
+        "name": "Preset {preset} distance"
       },
       "preset_rotation_custom": {
-        "name": "Preset {name} rotation"
+        "name": "Preset {preset} rotation"
       }
     },
     "select": {
@@ -89,28 +87,12 @@
           "hdmi_3": "HDMI 3",
           "hdmi_4": "HDMI 4",
           "hdmi_5": "HDMI 5"
-        },
-        "options": {
-          "off": "Off",
-          "hdmi_1": "HDMI 1",
-          "hdmi_2": "HDMI 2",
-          "hdmi_3": "HDMI 3",
-          "hdmi_4": "HDMI 4",
-          "hdmi_5": "HDMI 5"
         }
       },
       "freeze_preset": {
         "name": "Freeze preset",
         "state": {
-          "1": "Preset 1",
-          "2": "Preset 2",
-          "3": "Preset 3",
-          "4": "Preset 4",
-          "5": "Preset 5",
-          "6": "Preset 6",
-          "7": "Preset 7"
-        },
-        "options": {
+          "0": "Preset 0",
           "1": "Preset 1",
           "2": "Preset 2",
           "3": "Preset 3",
@@ -147,6 +129,43 @@
           "13": "Single",
           "15": "Multi"
         }
+      },
+      "authentication": {
+        "name": "Authentication",
+        "state": {
+          "0": "Wrong",
+          "1": "Missing",
+          "2": "Control",
+          "3": "Full"
+        }
+      }
+    },
+    "switch": {
+      "change_presets": {
+        "name": "Change presets",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "change_name": {
+        "name": "Change name"
+      },
+      "disable_channel": {
+        "name": "Disable channel"
+      },
+      "change_tv_on_off_detection": {
+        "name": "Change tv on off detection"
+      },
+      "change_default_position": {
+        "name": "Change default position"
+      },
+      "start_calibration": {
+        "name": "Start calibration",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
       }
     },
     "text": {
@@ -154,18 +173,23 @@
         "name": "Name"
       },
       "preset_name_custom": {
-        "name": "Preset {index} name"
-      },
-      "authorised_user_pin": {
-        "name": "Authorised User pin"
-      },
-      "supervisior_pin": {
-        "name": "Supervisior pin"
+        "name": "Preset {preset} name"
       }
     }
   },
   "selector": {
-    "set_automove": {
+    "preset": {
+      "options": {
+        "0": "Preset 0",
+        "1": "Preset 1",
+        "2": "Preset 2",
+        "3": "Preset 3",
+        "4": "Preset 4",
+        "5": "Preset 5",
+        "6": "Preset 6"
+      }
+    },
+    "automove": {
       "options": {
         "off": "Off",
         "hdmi_1": "HDMI 1",
@@ -177,41 +201,147 @@
     }
   },
   "services": {
-    "set_automove": {
-      "name": "Select Automove Mode",
-      "description": "Automove Mode determines if and how TV turn on/off action is recognized.",
+    "refresh_data": {
+      "name": "Refresh Data",
+      "description": "Refreshes the data from the device.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        }
+      }
+    },
+    "disconnect": {
+      "name": "Disconnect",
+      "description": "Disconnects from the device.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        }
+      }
+    },
+    "select_preset": {
+      "name": "Select preset",
+      "description": "Selects a preset position on the device.",
       "fields": {
         "device_id": {
           "name": "Target Device",
           "description": "What should this action use as targeted device."
         },
-        "automove_id": {
-          "name": "Automove setting",
-          "description": "HDMI mode or OFF."
+        "preset": {
+          "name": "Preset",
+          "description": "Target Prest to select."
         }
       }
     },
-    "set_name": {
-      "name": "Set Name",
-      "description": "Set Name of device.",
+    "delete_preset": {
+      "name": "Delete preset",
+      "description": "Delete a preset from the device.",
       "fields": {
         "device_id": {
           "name": "Target Device",
           "description": "What should this action use as targeted device."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Target Prest to remove."
+        }
+      }
+    },
+    "set_preset": {
+      "name": "Set preset",
+      "description": "Update or add preset data.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Preset to update or add."
         },
         "name": {
           "name": "Name",
-          "description": "Text with max 20 characters."
+          "description": "Name of the preset."
+        },
+        "distance": {
+          "name": "Distance",
+          "description": "Distance value of the preset."
+        },
+        "rotation": {
+          "name": "Rotation",
+          "description": "Rotation percentage of the preset."
         }
       }
     },
-    "set_mode": {
-      "name": "Set Mode",
-      "description": "Set the operating mode.",
+    "set_distance": {
+      "name": "Set distance",
+      "description": "Sets the distance from the wall.",
       "fields": {
-        "mode": {
-          "name": "Mode",
-          "description": "The mode to set"
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "distance": {
+          "name": "Distance",
+          "description": "Distance value to set."
+        }
+      }
+    },
+    "set_rotation": {
+      "name": "Set rotation",
+      "description": "Sets the rotation percentage.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "rotation": {
+          "name": "Rotation",
+          "description": "Rotation percentage to set."
+        }
+      }
+    },
+    "set_tv_width": {
+      "name": "Set TV width",
+      "description": "Sets the width of the TV.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "tv_width": {
+          "name": "TV width",
+          "description": "Width of the TV in cm."
+        }
+      }
+    },
+    "set_automove": {
+      "name": "Set automove",
+      "description": "Sets the automove setting.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "automove": {
+          "name": "Automove",
+          "description": "Automove setting to set."
+        }
+      }
+    },
+    "set_freeze_preset": {
+      "name": "Set freeze preset",
+      "description": "Sets the freeze preset.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        },
+        "freeze_preset": {
+          "name": "Freeze Preset",
+          "description": "Preset to set as freeze position."
         }
       }
     }

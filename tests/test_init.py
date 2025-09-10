@@ -1,4 +1,5 @@
 """Test component setup."""
+
 from homeassistant.setup import async_setup_component
 
 from custom_components.vogels_motion_mount_ble.const import DOMAIN

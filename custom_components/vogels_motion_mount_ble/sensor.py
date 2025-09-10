@@ -21,11 +21,12 @@ async def async_setup_entry(
         [
             DistanceSensor(coordinator),
             RotationSensor(coordinator),
-            PinSettingsSensor(coordinator),
             CEBBLSensor(coordinator),
             MCPHWSensor(coordinator),
             MCPBLSensor(coordinator),
             MCPFWSensor(coordinator),
+            PinSettingsSensor(coordinator),
+            AuthenticationSensor(coordinator),
         ]
     )
 
@@ -35,6 +36,7 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     _attr_unique_id = "current_distance"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:ruler"
 
     @property
     def native_value(self):
@@ -49,10 +51,11 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     _attr_unique_id = "current_rotation"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:angle-obtuse"
 
     @property
     def native_value(self):
-        """Return the state of the roration or None."""
+        """Return the state of the rotation or None."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.rotation
@@ -63,6 +66,7 @@ class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     _attr_unique_id = "ceb_bl_version"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:alpha-v"
 
     @property
     def native_value(self):
@@ -77,6 +81,7 @@ class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     _attr_unique_id = "mcp_hw_version"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:alpha-v"
 
     @property
     def native_value(self):
@@ -91,6 +96,7 @@ class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     _attr_unique_id = "mcp_bl_version"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:alpha-v"
 
     @property
     def native_value(self):
@@ -105,6 +111,7 @@ class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     _attr_unique_id = "mcp_fw_version"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:alpha-v"
 
     @property
     def native_value(self):
@@ -119,10 +126,26 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
 
     _attr_unique_id = "pin_settings"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:cloud-key"
 
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
+        if not self.coordinator.data or not self.coordinator.data.pin_setting:
             return None
-        return self.coordinator.data.pin_setting
+        return self.coordinator.data.pin_setting.value
+
+
+class AuthenticationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
+    """Sensor for current Authentication level."""
+
+    _attr_unique_id = "authentication"
+    _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:server-security"
+
+    @property
+    def native_value(self):
+        """Return the current value."""
+        if not self.coordinator.data or not self.coordinator.data.auth_type:
+            return None
+        return self.coordinator.data.auth_type.value

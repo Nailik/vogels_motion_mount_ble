@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
+from .api import VogelsMotionMountAutoMoveType
 from .base import VogelsMotionMountBleBaseEntity
 from .const import (
     DOMAIN,
@@ -28,7 +29,7 @@ async def _set_automove_service(call: ServiceCall) -> None:
 
 async def _set_freeze_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set freeze service called with data: %s", call.data)
-    await get_coordinator(call).api.set_freeze(call.data[HA_SERVICE_PRESET_ID])
+    await get_coordinator(call).api.set_freeze_preset(call.data[HA_SERVICE_PRESET_ID])
 
 
 async def async_setup_entry(
@@ -60,21 +61,18 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_unique_id = "auto_move"
     _attr_translation_key = _attr_unique_id
     _attr_options = ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
+    _attr_icon = "mdi:autorenew"
 
     @property
     def current_option(self):
         """Return the current active automove option."""
-        if self.coordinator.data is None or self.coordinator.data.automove_id is None:
+        if self.coordinator.data is None or self.coordinator.data.automove_type is None:
             return None
-        if self.coordinator.data.automove_on:
-            return self._attr_options[self.coordinator.data.automove_id + 1]
-        return self._attr_options[0]
+        return self.coordinator.data.automove_type.value
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        index = self._attr_options.index(option)
-        # Set index -1 of option or None for "Off"
-        await self.coordinator.api.set_automove(index - 1 if (index != 0) else None)
+        await self.coordinator.api.set_automove(option)
 
 
 class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
@@ -83,6 +81,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_unique_id = "freeze_preset"
     _attr_translation_key = _attr_unique_id
     _attr_options = ["0", "1", "2", "3", "4", "5", "6", "7"]
+    _attr_icon = "mdi:snowflake"
 
     @property
     def current_option(self):
@@ -96,11 +95,15 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Set availability if automove is turned on."""
-        if self.coordinator.data and self.coordinator.data.automove_on:
+        if (
+            self.coordinator.data
+            and self.coordinator.data.automove_type
+            is not VogelsMotionMountAutoMoveType.Off
+        ):
             return True
         return False
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         index = self._attr_options.index(option)
-        await self.coordinator.api.set_freeze(index)
+        await self.coordinator.api.set_freeze_preset(index)

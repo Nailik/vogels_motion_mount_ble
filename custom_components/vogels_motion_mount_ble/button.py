@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _refresh_data_service(call: ServiceCall) -> None:
     _LOGGER.debug("Refresh data service called with data: %s", call.data)
-    await get_coordinator(call).api.refreshData()
+    await get_coordinator(call).api.refresh_data()
 
 
 async def _disconnect_service(call: ServiceCall) -> None:
@@ -100,12 +100,12 @@ async def async_setup_entry(
             DisconnectButton(coordinator),
             SelectPresetDefaultButton(coordinator),
         ]
-        # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
-        + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
-        # Add one DeletePresetButton for each preset_id from 0 to 7 inclusive
-        + [DeletePresetButton(coordinator, preset_index) for preset_index in range(7)]
         # Add one AddPresetButton for each preset_id from 0 to 7 inclusive
         + [AddPresetButton(coordinator, preset_index) for preset_index in range(7)]
+        # Add one DeletePresetButton for each preset_id from 0 to 7 inclusive
+        + [DeletePresetButton(coordinator, preset_index) for preset_index in range(7)]
+        # Add one SelectPresetButton for each preset_id from 0 to 7 inclusive
+        + [SelectPresetButton(coordinator, preset_index) for preset_index in range(7)]
     )
 
 
@@ -114,10 +114,11 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 
     _attr_unique_id = "refresh_data"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:refresh"
 
     async def async_press(self):
         """Execute data refresh."""
-        await self.coordinator.api.refreshData()
+        await self.coordinator.api.refresh_data()
 
 
 class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
@@ -125,6 +126,7 @@ class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 
     _attr_unique_id = "disconnect"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:power-plug-off"
 
     @property
     def available(self) -> bool:
@@ -143,6 +145,7 @@ class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 
     _attr_unique_id = "select_preset_default"
     _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:wall"
 
     async def async_press(self):
         """Select the default preset with id 0."""
@@ -152,13 +155,15 @@ class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     """Set up the Buttons to select the custom presets."""
 
+    _attr_translation_key = "select_preset_custom"
+    _attr_icon = "mdi:rotate-3d"
+
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"select_preset_{preset_index}"
-        self._attr_translation_key = "select_preset_custom"
+        self._attr_unique_id = f"select_preset_id_{preset_index}"
 
     async def async_press(self):
         """Select a custom preset by it's index."""
@@ -168,13 +173,15 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
 class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     """Set up the Buttons to delete the custom presets."""
 
+    _attr_translation_key = "delete_preset_custom"
+    _attr_icon = "mdi:delete"
+
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"delete_preset_{preset_index}"
-        self._attr_translation_key = "delete_preset_custom"
+        self._attr_unique_id = f"delete_preset_{self._prop_preset_index}"
 
     async def async_press(self):
         """Delete a custom preset by it's index."""
@@ -184,19 +191,21 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
 class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     """Set up the Buttons to add the custom presets."""
 
+    _attr_translation_key = "add_preset_custom"
+    _attr_icon = "mdi:plus"
+
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"add_preset_{preset_index}"
-        self._attr_translation_key = "add_preset_custom"
+        self._attr_unique_id = f"add_preset_{self._prop_preset_index}"
 
     async def async_press(self):
         """Add a custom preset by it's index with empty data."""
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index,
-            name=f"Preset {self._preset_index}",  # TODO translation
+            name=f"{self._preset_index}",
             distance=0,
             rotation=0,
         )
@@ -207,3 +216,5 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         if self.coordinator.data and self.coordinator.data.presets and not self._preset:
             return True
         return False
+
+    # TODO button to run diagonse or calibration?
