@@ -179,7 +179,6 @@
   },
   "selector": {
     "preset": {
-      "name": "Preset",
       "options": {
         "0": "Preset 0",
         "1": "Preset 1",
@@ -191,7 +190,6 @@
       }
     },
     "automove": {
-      "name": "Automove",
       "options": {
         "off": "Off",
         "hdmi_1": "HDMI 1",
@@ -232,7 +230,8 @@
           "description": "What should this action use as targeted device."
         },
         "preset": {
-          "name": "Preset"
+          "name": "Preset",
+          "description": "Target Prest to select."
         }
       }
     },
@@ -245,7 +244,8 @@
           "description": "What should this action use as targeted device."
         },
         "preset": {
-          "name": "Preset"
+          "name": "Preset",
+          "description": "Target Prest to remove."
         }
       }
     },
