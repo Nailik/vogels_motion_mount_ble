@@ -36,7 +36,7 @@ from .utils import get_coordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_services(hass: HomeAssistant):
+def async_setup_services(hass: HomeAssistant):
     """Set up my integration services."""
     _LOGGER.debug("async_setup_services called ")
     hass.services.async_register(
@@ -214,4 +214,3 @@ async def _set_authorised_user_pin(call: ServiceCall) -> None:
 async def _set_supervisior_pin(call: ServiceCall) -> None:
     _LOGGER.debug("Set supervisior pin service called with data: %s", call.data)
     await get_coordinator(call).api.set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
-    

@@ -54,7 +54,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_distance(value)
+        await self.coordinator.api.set_distance(int(value))
 
 
 class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
@@ -79,7 +79,7 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_rotation(value)
+        await self.coordinator.api.set_rotation(int(value))
 
 
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
@@ -132,7 +132,7 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_preset(
-            preset_index=self._preset_index, distance=value
+            preset_index=self._preset_index, distance=(int(value))
         )
 
 
@@ -163,5 +163,5 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: int) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_preset(
-            preset_index=self._preset_index, rotation=value
+            preset_index=self._preset_index, rotation=(int(value))
         )

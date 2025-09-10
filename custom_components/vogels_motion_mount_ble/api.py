@@ -476,7 +476,7 @@ class API:
 
     async def set_authorised_user_pin(self, pin: str):
         """Set 4 digit pin for authorised users."""
-        self._logger.debug("Set authorized user pin to %ss", pin)
+        self._logger.debug("Set authorized user pin to %s", pin)
         remove = pin == "0000"
 
         if remove and self._data.pin_setting == VogelsMotionMountPinSettings.Multi:
@@ -497,7 +497,7 @@ class API:
         await self._connect(
             type=VogelsMotionActionType.Settings,
             char_uuid=CHAR_CHANGE_PIN_UUID,
-            data=int(pin).to_bytes(2, byteorder="little"),
+            data=self._encode_pin(int(pin), VogelsMotionMountPinType.Authorized_user),
         )
         await self._read_pin_settings()
 
@@ -516,7 +516,9 @@ class API:
             raise APISettingsChangeNotStoredError(
                 f"Authorised user pin was not set removed. Expected pin settings {VogelsMotionMountPinSettings.Single} or {VogelsMotionMountPinSettings.Multi} actual  {self._data.pin_setting}."
             )
-        await self._authenticate(type)
+        # required to check if authentication is still valid
+        await self.disconnect()
+        await self.refresh_data()
 
     async def set_supervisior_pin(self, pin: str):
         """Set 4 digit pin for supervisior."""
@@ -549,7 +551,7 @@ class API:
         await self._connect(
             type=VogelsMotionActionType.Settings,
             char_uuid=CHAR_CHANGE_PIN_UUID,
-            data=int(pin).to_bytes(2, byteorder="little"),
+            data=self._encode_pin(int(pin), VogelsMotionMountPinType.Supervisior),
         )
         await self._read_pin_settings()
 
@@ -562,7 +564,9 @@ class API:
             raise APISettingsChangeNotStoredError(
                 f"Supervisior pin was not set. Expected pin settings {VogelsMotionMountPinSettings.Multi} actual {self._data.pin_setting}."
             )
-        await self._authenticate(type)
+        # required to check if authentication is still valid
+        await self.disconnect()
+        await self.refresh_data()
 
     async def set_freeze_preset(self, preset_index: int):
         """Set preset that is used for auto move freeze position."""
@@ -708,7 +712,7 @@ class API:
         await self._authenticate(type)
 
         if char_uuid is not None and data is not None:
-            self._logger.debug("Run function!")
+            self._logger.debug("Write data %s", data)
             # calls callback before loading data in order to run command with less delay
             await self._client.write_gatt_char(char_uuid, data, response=True)
 
@@ -718,14 +722,13 @@ class API:
             await self._read_current_data()
 
     # encodes the pin depending on type
-    def _encode_pin(self, mode: VogelsMotionMountPinType) -> bytes:
+    def _encode_pin(self, pin: int, mode: VogelsMotionMountPinType) -> bytes:
         """Encode a PIN into 2-byte sequence for API.
 
         mode = "auth"   -> direct little-endian
         mode = "change" -> little-endian, high byte + 0x40
         """
         # Convert to little-endian bytes
-        pin = int(self._pin)
         low = pin & 0xFF
         high = (pin >> 8) & 0xFF
 
@@ -757,7 +760,7 @@ class API:
     async def _authenticate_as(self, type: VogelsMotionMountPinType) -> bool:
         self._logger.debug("_authenticate_as %s", type)
         await self._client.write_gatt_char(
-            CHAR_AUTHENTICATE_UUID, self._encode_pin(type)
+            CHAR_AUTHENTICATE_UUID, self._encode_pin(self._pin, type)
         )
         for attempt in range(4):
             if await self._check_authentication():
