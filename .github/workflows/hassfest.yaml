@@ -1,8 +1,13 @@
 name: Validate with hassfest
 
 on:
-  push:
   pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - develop
 
 jobs:
   validate:
