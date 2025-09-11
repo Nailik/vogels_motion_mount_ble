@@ -13,5 +13,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "requirements": ["bleak>=0.21.1"],
-  "version": "0.0.4-alpha"
+  "version": "0.0.5-alpha"
 }
