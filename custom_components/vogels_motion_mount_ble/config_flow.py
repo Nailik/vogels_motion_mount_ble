@@ -3,42 +3,43 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryBaseFlow,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
 
 from .api import (
     API,
+    APIAuthenticationError,
     APIConnectionDeviceNotFoundError,
     APIConnectionError,
-    APIAuthenticationError,
 )
 from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
-    """Mixin to provide async_step_user for config and options flow."""
+class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle the config flow for Vogel's MotionMount Integration."""
 
-    discovery_info: BluetoothServiceInfoBleak | None = None
-    mac_fixed: bool = False
+    def _is_valid_mac(data: str) -> bool:
+        """Validate the provided MAC address."""
+
+        mac_regex = r"^[0-9A-Fa-f]{4}$"
+        return bool(re.match(mac_regex, data))
+
+    VERSION = 2
 
     def prefilledForm(
         self,
         data: dict[str, Any] | None = None,
+        mac_editable: bool = True,
+        name_editable: bool = True,
     ) -> vol.Schema:
         """Return a form schema with prefilled values from data."""
         # Setup Values
@@ -52,11 +53,6 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
             name = data.get(CONF_NAME, f"Vogel's MotionMount ({mac})")
             pin = data.get(CONF_PIN, UNDEFINED)
 
-        # If discovery_info is set, use its address as the MAC and for the name if not provided
-        if self.discovery_info is not None:
-            mac = self.discovery_info.address
-            name = f"Vogel's MotionMount ({mac})" if name == UNDEFINED else name
-
         # Provide Schema
         return vol.Schema(
             {
@@ -64,13 +60,14 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
                     selector.TextSelectorConfig(
                         type=selector.TextSelectorType.TEXT,
                         multiline=False,
-                        read_only=self.mac_fixed,
+                        read_only=not mac_editable,
                     )
                 ),
                 vol.Required(CONF_NAME, default=name): selector.TextSelector(
                     selector.TextSelectorConfig(
                         type=selector.TextSelectorType.TEXT,
                         multiline=False,
+                        read_only=not name_editable,
                     )
                 ),
                 vol.Optional(CONF_PIN, default=pin): vol.All(
@@ -92,6 +89,11 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
     ) -> dict[str, str] | None:
         """Set up the entry from user data."""
         errors: dict[str, str] = {}
+        if not self._is_valid_mac(user_input[CONF_MAC]):
+            _LOGGER.error("Invalid MAC code: %s", user_input[CONF_MAC].upper())
+            errors[CONF_ERROR] = "invalid_mac_code"
+            return errors
+
         try:
             await API(
                 hass=self.hass,
@@ -114,34 +116,18 @@ class VogelsMotionMountUserStepMixin(ConfigEntryBaseFlow):
             errors[CONF_ERROR] = "error_unknown"
         return errors
 
-
-class VogelsMotionMountConfigFlow(
-    ConfigFlow, VogelsMotionMountUserStepMixin, domain=DOMAIN
-):
-    """Handle the config flow for Vogel's MotionMount Integration."""
-
-    VERSION = 1
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> VogelsMotionMountOptionsFlowHandler:
-        """Create the options flow to change config later on."""
-        return VogelsMotionMountOptionsFlowHandler()
-
-    async def async_step_bluetooth(self, discovery_info):
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> ConfigFlowResult:
         """Handle a bluetooth device being discovered."""
         # Check if the device already exists.
+        _LOGGER.debug("async_step_bluetooth %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
-
-        self.discovery_info = discovery_info
-
         self.mac_fixed = True
         return self.async_show_form(
-            step_id="user",
-            data_schema=self.prefilledForm(),
+            step_id="bluetooth",
+            data_schema=self.prefilledForm(data={CONF_MAC: discovery_info.address}),
         )
 
     async def async_step_user(
@@ -163,43 +149,54 @@ class VogelsMotionMountConfigFlow(
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.prefilledForm(user_input),
+            data_schema=self.prefilledForm(data=user_input),
             errors=errors,
         )
 
-
-class VogelsMotionMountOptionsFlowHandler(OptionsFlow, VogelsMotionMountUserStepMixin):
-    """Update the options via UI."""
-
-    # mac cannot be changed in options flow
-    mac_fixed = True
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options update."""
+    async def async_step_reauth(self, user_input=None) -> ConfigFlowResult:
+        """Handle re-authentication."""
         errors: dict[str, str] = {}
+        config_entry = self._get_reauth_entry()
         if user_input is not None:
             errors = await self.validate_input(user_input)
             if not errors:
-                _LOGGER.debug("Update entry with %s", user_input)
-                self.hass.config_entries.async_update_entry(
-                    entry=self.config_entry,
-                    title=user_input[CONF_NAME],
-                    data=user_input,
+                await self.async_set_unique_id(user_input[CONF_MAC])
+                self._abort_if_unique_id_mismatch(
+                    reason="wrong_device"
+                )  # TODO translation?
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
                 )
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input,
-                )
-            return self.async_show_form(
-                step_id="init",
-                data_schema=self.prefilledForm(user_input),
-                errors=errors,
-            )
-
         return self.async_show_form(
-            step_id="init",
-            data_schema=self.prefilledForm(self.config_entry.data),
+            step_id="reauth",
+            data_schema=self.prefilledForm(
+                data=config_entry.data, mac_editable=False, name_editable=False
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        errors: dict[str, str] = {}
+        config_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            errors = await self.validate_input(user_input)
+            if not errors:
+                await self.async_set_unique_id(user_input[CONF_MAC])
+                self._abort_if_unique_id_mismatch(
+                    reason="wrong_device"
+                )  # TODO translation?
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.prefilledForm(
+                data=config_entry.data, mac_editable=False, name_editable=False
+            ),
             errors=errors,
         )

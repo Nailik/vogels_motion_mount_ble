@@ -4,28 +4,38 @@
       "error_cannot_connect": "Found device but unable to connect to the device.",
       "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
       "error_invalid_athentication": "Invalid Authentication, check or disable PIN.",
-      "error_unknown": "An unknown error occurred while trying to connect to the device."
+      "error_unknown": "An unknown error occurred while trying to connect to the device.",
+      "invalid_mac_code": "The inserted MAC address is not valid."
     },
+    "reauth_successful": "Update authentication successful!",
+    "reconfigure_successful": "Updated configuration successful!",
     "step": {
-      "user": {
-        "title": "Configure Options",
+      "bluetooth": {
+        "title": "Configure recognized device",
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",
           "conf_pin": "PIN"
         }
-      }
-    }
-  },
-  "options": {
-    "error": {
-      "error_cannot_connect": "Found device but unable to connect to the device.",
-      "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
-      "error_unknown": "An unknown error occurred while trying to connect to the device."
-    },
-    "step": {
-      "init": {
-        "title": "Configure Options",
+      },
+      "user": {
+        "title": "Add new device",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Device name",
+          "conf_pin": "PIN"
+        }
+      },
+      "reauth": {
+        "title": "Update auuthentication",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Device name",
+          "conf_pin": "PIN"
+        }
+      },
+      "reconfigure": {
+        "title": "Update configuration",
         "data": {
           "conf_mac": "MAC",
           "conf_name": "Device name",

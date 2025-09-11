@@ -12,6 +12,7 @@ from bleak_retry_connector import BleakClientWithServiceCache, establish_connect
 from homeassistant.components import bluetooth
 from homeassistant.core import Callable, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
     CHAR_AUTHENTICATE_UUID,
@@ -131,11 +132,11 @@ class APIConnectionError(HomeAssistantError):
     """Exception class for unknown connection error."""
 
 
-class APIConnectionDeviceNotFoundError(HomeAssistantError):
+class APIConnectionDeviceNotFoundError(ConfigEntryNotReady):
     """Exception class for connection error when device was not found."""
 
 
-class APIAuthenticationError(HomeAssistantError):
+class APIAuthenticationError(ConfigEntryAuthFailed):
     """Exception class if user is not authorized to do this action."""
 
 
@@ -790,6 +791,7 @@ class API:
         # authentication required but no pin set
         if self._pin is None:
             self._update(auth_type=VogelsMotionMountAuthenticationType.Missing)
+            await self.disconnect()
             raise APIAuthenticationError("Authentication missing.")
 
         authentication_types = (
@@ -816,6 +818,7 @@ class API:
                 return
 
         self._update(auth_type=VogelsMotionMountAuthenticationType.Wrong)
+        await self.disconnect()
         raise APIAuthenticationError("Invalid pin.")
 
     # disconnect from the client
