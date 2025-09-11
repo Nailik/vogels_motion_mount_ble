@@ -1,6 +1,5 @@
 """Coordinator for Vogels Motion Mount BLE integration in order to hold api."""
 
-from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -53,7 +52,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=config_entry.title,
             config_entry=config_entry,
-            update_interval=timedelta(minutes=1),
         )
 
         # Initialise your api here
@@ -63,15 +61,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             pin=self._pin,
             callback=self.async_set_updated_data,
         )
-
-        hass.loop.create_task(self._async_update_data())
-
-    async def _async_update_data(self):
-        """Refresh data async if no data is present."""
-        if self.data is not None:
-            return
-        await self.api.refresh_data()
-        self.update_interval = None
 
     async def unload(self):
         """Disconnect and unload."""

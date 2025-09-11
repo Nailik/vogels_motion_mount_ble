@@ -1,35 +1,13 @@
 """Select entities to define properties for Vogels Motion Mount BLE entities."""
 
-import logging
-
 from homeassistant.components.select import SelectEntity
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .api import VogelsMotionMountAutoMoveType
 from .base import VogelsMotionMountBleBaseEntity
-from .const import (
-    DOMAIN,
-    HA_SERVICE_AUTOMOVE_ID,
-    HA_SERVICE_PRESET_ID,
-    HA_SERVICE_SELECT_AUTOMOVE,
-    HA_SERVICE_SET_FREEZE_PRESET,
-)
 from .coordinator import VogelsMotionMountBleCoordinator
-from .utils import get_coordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def _set_automove_service(call: ServiceCall) -> None:
-    _LOGGER.debug("Set automove service called with data: %s", call.data)
-    await get_coordinator(call).api.set_automove(call.data[HA_SERVICE_AUTOMOVE_ID])
-
-
-async def _set_freeze_preset_service(call: ServiceCall) -> None:
-    _LOGGER.debug("Set freeze service called with data: %s", call.data)
-    await get_coordinator(call).api.set_freeze_preset(call.data[HA_SERVICE_PRESET_ID])
 
 
 async def async_setup_entry(
@@ -39,18 +17,6 @@ async def async_setup_entry(
 ):
     """Set up the Selectors for automove."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SELECT_AUTOMOVE,
-        _set_automove_service,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_FREEZE_PRESET,
-        _set_freeze_preset_service,
-    )
 
     async_add_entities([AutomoveSelect(coordinator), FreezePresetSelect(coordinator)])
 

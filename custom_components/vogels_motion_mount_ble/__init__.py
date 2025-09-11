@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
-from .const import DOMAIN
+from .api import APIAuthenticationError, APIConnectionDeviceNotFoundError
 from .coordinator import VogelsMotionMountBleCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,20 +29,22 @@ PLATFORMS: list[Platform] = [
     Platform.TEXT,
 ]
 
-type VogelsMotionMountBleConfigEntry = ConfigEntry[RuntimeData]
+type VogelsMotionMountBleConfigEntry = ConfigEntry[VogelsMotionMountBleCoordinator]
 
 
-@dataclass
-class RuntimeData:
-    """Holds coordinator for access in hass domain."""
-
-    coordinator: DataUpdateCoordinator
+async def async_setup(
+    hass: HomeAssistant, entry: VogelsMotionMountBleConfigEntry
+) -> bool:
+    """Set up Vogels Motion Mount integration services."""
+    _LOGGER.debug("async_setup called with config_entry: %s", entry)
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
 ) -> bool:
-    """Set up VogelsMotionMount Integration from a config entry."""
+    """Set up Vogels Motion Mount Integration from a config entry."""
     _LOGGER.debug("async_setup_entry called with config_entry: %s", config_entry)
 
     # Registers update listener to update config entry when options are updated.
@@ -49,13 +55,16 @@ async def async_setup_entry(
         hass, config_entry, unsub_update_listener
     )
 
-    # Creates initial dictionary for the DOMAIN in hass.data
-    hass.data.setdefault(DOMAIN, {})
-    # Store coordinator
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
-    config_entry.runtime_data = RuntimeData(coordinator)
+    try:
+        await coordinator.api.refresh_data()
+    except APIConnectionDeviceNotFoundError as err:
+        raise ConfigEntryNotReady("Device is offline") from err
+    except APIAuthenticationError as err:
+        raise ConfigEntryAuthFailed("Invalid authentication") from err
+    except Exception as err:
+        raise ConfigEntryError(f"Something went wrong {err}") from err
 
-    # Create entries
+    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
@@ -64,7 +73,9 @@ async def async_reload_entry(
     hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
 ) -> None:
     """Reload config entry."""
-    _LOGGER.debug("async_reload_entry async_reload")
+    _LOGGER.debug(
+        "async_reload_entry async_reload with pin %s", config_entry.data["conf_pin"]
+    )
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
@@ -78,9 +89,7 @@ async def async_unload_entry(
     ):
         _LOGGER.debug("async_unload_entry pop")
         # Remove config entry from domain.
-        coordinator: VogelsMotionMountBleCoordinator = hass.data[DOMAIN].pop(
-            config_entry.entry_id
-        )
+        coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
         # Disconnect and remove options_update_listener.
         await coordinator.unload()
 

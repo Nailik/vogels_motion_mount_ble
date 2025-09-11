@@ -1,42 +1,12 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-import logging
-
 from homeassistant.components.text import TextEntity
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
-from .const import (
-    DOMAIN,
-    HA_SERVICE_NAME_ID,
-    HA_SERVICE_PIN_ID,
-    HA_SERVICE_SET_AUTHORISED_USER_PIN,
-    HA_SERVICE_SET_NAME,
-    HA_SERVICE_SET_SUPERVISIOR_PIN,
-)
 from .coordinator import VogelsMotionMountBleCoordinator
-from .utils import get_coordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def _set_name(call: ServiceCall) -> None:
-    _LOGGER.debug("Set name service called with data: %s", call.data)
-    await get_coordinator(call).api.set_name(call.data[HA_SERVICE_NAME_ID])
-
-
-async def _set_authorised_user_pin(call: ServiceCall) -> None:
-    _LOGGER.debug("Set authorised user pin service called with data: %s", call.data)
-    await get_coordinator(call).api.set_authorised_user_pin(
-        call.data[HA_SERVICE_PIN_ID]
-    )
-
-
-async def _set_supervisior_pin(call: ServiceCall) -> None:
-    _LOGGER.debug("Set supervisior pin service called with data: %s", call.data)
-    await get_coordinator(call).api.set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
 
 
 async def async_setup_entry(
@@ -46,24 +16,6 @@ async def async_setup_entry(
 ):
     """Set up the TextEntities for name, preset names and pins."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_NAME,
-        _set_name,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_AUTHORISED_USER_PIN,
-        _set_authorised_user_pin,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        HA_SERVICE_SET_SUPERVISIOR_PIN,
-        _set_supervisior_pin,
-    )
 
     async_add_entities(
         [
