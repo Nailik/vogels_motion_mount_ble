@@ -9,8 +9,6 @@ https://github.com/home-assistant/core/blob/dev/homeassistant/components/motionm
 supervisior : 1111
 authorised user: 2222
 
-# todo setting supervisior pin is broken (updates authorised user instead)
-
 
 # todo width input is not validated
 # todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings
@@ -18,10 +16,17 @@ authorised user: 2222
 # freeze preset 0 does it mean wall?
 # what is permission for start calibration
 
+
+Translate:
+
+    "reauth_successful": "Update authentication successful!",
+          "reconfigure_successful": "Updated configuration successful!",
+
 # test services:
 authorised user pin change
 supervisior pin change
 authorised user permissions
+
 
 preset
     name

@@ -7,8 +7,6 @@
       "error_unknown": "An unknown error occurred while trying to connect to the device.",
       "invalid_mac_code": "The inserted MAC address is not valid."
     },
-    "reauth_successful": "Update authentication successful!",
-    "reconfigure_successful": "Updated configuration successful!",
     "step": {
       "bluetooth": {
         "title": "Configure recognized device",
