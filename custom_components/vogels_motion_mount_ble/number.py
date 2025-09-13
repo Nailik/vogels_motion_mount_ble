@@ -15,7 +15,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up the Numbers for distance, rotation, tv width and preset (distance, rotation)."""
-    coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
+    coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
 
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.

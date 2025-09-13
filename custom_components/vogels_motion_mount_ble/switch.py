@@ -16,7 +16,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up the RefreshData and SelectPreset buttons."""
-    coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data.coordinator
+    coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
 
     async_add_entities(
         [

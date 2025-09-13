@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
-from .const import DOMAIN
+from .coordinator import VogelsMotionMountBleCoordinator
 
 
 async def async_setup_entry(
@@ -18,7 +18,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up the connection Sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
     async_add_entities([ConnectionBinarySensor(coordinator)])
 
 

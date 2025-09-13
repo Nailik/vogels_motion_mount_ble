@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import re
 from typing import Any
@@ -24,12 +25,20 @@ from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class ValidationResult:
+    """Result of the validation, errors is empty if successful."""
+
+    errors: dict[str, str]
+    description_placeholders: dict[str, Any] | None = None
+
+
 class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Vogel's MotionMount Integration."""
 
     VERSION = 1
 
-    _discovery_info: BluetoothServiceInfoBleak
+    _discovery_info: BluetoothServiceInfoBleak | None = None
 
     def prefilledForm(
         self,
@@ -89,18 +98,15 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def validate_input(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, str] | None:
+    ) -> ValidationResult:
         """Set up the entry from user data."""
-        errors: dict[str, str] = {}
-
         if not bool(
             re.match(
                 r"^([0-9A-Fa-f]{2}([-:])){5}([0-9A-Fa-f]{2})$", user_input[CONF_MAC]
             )
         ):
             _LOGGER.error("Invalid MAC code: %s", user_input[CONF_MAC])
-            errors[CONF_ERROR] = "invalid_mac_code"
-            return errors
+            return ValidationResult(errors={CONF_ERROR: "invalid_mac_code"})
 
         try:
             await API(
@@ -112,23 +118,31 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
         except APIConnectionDeviceNotFoundError as err:
             _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
-            errors[CONF_ERROR] = "error_device_not_found"
+            return ValidationResult(errors={CONF_ERROR: "error_device_not_found"})
         except APIAuthenticationError as err:
             _LOGGER.error("Setting APIAuthenticationError: %s", err)
-            errors[CONF_ERROR] = "error_invalid_athentication"
+            if err.cooldown > 0:
+                return ValidationResult(
+                    errors={CONF_ERROR: "error_auth_cooldown"},
+                    description_placeholders={"cooldown": err.cooldown},
+                )
+            return ValidationResult(errors={CONF_ERROR: "error_invalid_authentication"})
         except APIConnectionError as err:
             _LOGGER.error("Setting APIConnectionError: %s", err)
-            errors[CONF_ERROR] = "error_cannot_connect"
+            return ValidationResult(errors={CONF_ERROR: "error_cannot_connect"})
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Setting Exception: %s", err)
-            errors[CONF_ERROR] = "error_unknown"
-        return errors
+            return ValidationResult(errors={CONF_ERROR: "error_unknown"})
+        return ValidationResult(errors={})
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle a bluetooth device being discovered."""
         # Check if the device already exists.
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+
         _LOGGER.debug("async_step_bluetooth %s", discovery_info)
         self._discovery_info = discovery_info
 
@@ -141,10 +155,10 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Create the entry with unique id if not already configured."""
         _LOGGER.debug("async_step_user %s", user_input)
-        errors: dict[str, str] = {}
+        result = ValidationResult(errors={})
         if user_input is not None:
-            errors = await self.validate_input(user_input)
-            if not errors:
+            result = await self.validate_input(user_input)
+            if not result.errors:
                 # Validation was successful, create a unique id and create the config entry.
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
@@ -157,21 +171,20 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.prefilledForm(data=user_input),
-            errors=errors,
+            errors=result.errors,
+            description_placeholders=result.description_placeholders,
         )
 
     async def async_step_reauth(self, user_input=None) -> ConfigFlowResult:
         """Handle re-authentication."""
         _LOGGER.debug("async_step_reauth %s", user_input)
-        errors: dict[str, str] = {}
+        result = ValidationResult(errors={})
         config_entry = self._get_reauth_entry()
         if user_input is not None:
-            errors = await self.validate_input(user_input)
-            if not errors:
+            result = await self.validate_input(user_input)
+            if not result.errors:
                 await self.async_set_unique_id(user_input[CONF_MAC])
-                self._abort_if_unique_id_mismatch(
-                    reason="wrong_device"
-                )  # TODO translation?
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
                     data_updates=user_input,
@@ -181,7 +194,8 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.prefilledForm(
                 data=config_entry.data, mac_editable=False, name_editable=False
             ),
-            errors=errors,
+            errors=result.errors,
+            description_placeholders=result.description_placeholders,
         )
 
     async def async_step_reconfigure(
@@ -189,15 +203,13 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-authentication."""
         _LOGGER.debug("async_step_reconfigure %s", user_input)
-        errors: dict[str, str] = {}
+        result = ValidationResult(errors={})
         config_entry = self._get_reconfigure_entry()
         if user_input is not None:
-            errors = await self.validate_input(user_input)
-            if not errors:
+            result = await self.validate_input(user_input)
+            if not result.errors:
                 await self.async_set_unique_id(user_input[CONF_MAC])
-                self._abort_if_unique_id_mismatch(
-                    reason="wrong_device"
-                )  # TODO translation?
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
                     data_updates=user_input,
@@ -207,5 +219,6 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.prefilledForm(
                 data=config_entry.data, mac_editable=False, name_editable=False
             ),
-            errors=errors,
+            errors=result.errors,
+            description_placeholders=result.description_placeholders,
         )
