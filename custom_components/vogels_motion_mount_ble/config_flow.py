@@ -27,13 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Vogel's MotionMount Integration."""
 
-    def _is_valid_mac(data: str) -> bool:
-        """Validate the provided MAC address."""
+    VERSION = 1
 
-        mac_regex = r"^[0-9A-Fa-f]{4}$"
-        return bool(re.match(mac_regex, data))
-
-    VERSION = 2
+    _discovery_info: BluetoothServiceInfoBleak
 
     def prefilledForm(
         self,
@@ -42,6 +38,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         name_editable: bool = True,
     ) -> vol.Schema:
         """Return a form schema with prefilled values from data."""
+        _LOGGER.debug("Load prefilled form with: %s", data)
         # Setup Values
         mac = UNDEFINED
         name = UNDEFINED
@@ -52,6 +49,12 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = data.get(CONF_MAC, UNDEFINED)
             name = data.get(CONF_NAME, f"Vogel's MotionMount ({mac})")
             pin = data.get(CONF_PIN, UNDEFINED)
+
+        # If discovery_info is set, use its address as the MAC and for the name if not provided
+        if self._discovery_info is not None:
+            mac_editable = False
+            mac = self._discovery_info.address
+            name = f"Vogel's MotionMount ({mac})" if name == UNDEFINED else name
 
         # Provide Schema
         return vol.Schema(
@@ -89,8 +92,13 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, str] | None:
         """Set up the entry from user data."""
         errors: dict[str, str] = {}
-        if not self._is_valid_mac(user_input[CONF_MAC]):
-            _LOGGER.error("Invalid MAC code: %s", user_input[CONF_MAC].upper())
+
+        if not bool(
+            re.match(
+                r"^([0-9A-Fa-f]{2}([-:])){5}([0-9A-Fa-f]{2})$", user_input[CONF_MAC]
+            )
+        ):
+            _LOGGER.error("Invalid MAC code: %s", user_input[CONF_MAC])
             errors[CONF_ERROR] = "invalid_mac_code"
             return errors
 
@@ -122,18 +130,17 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a bluetooth device being discovered."""
         # Check if the device already exists.
         _LOGGER.debug("async_step_bluetooth %s", discovery_info)
-        await self.async_set_unique_id(discovery_info.address)
-        self._abort_if_unique_id_configured()
-        self.mac_fixed = True
+        self._discovery_info = discovery_info
+
         return self.async_show_form(
-            step_id="bluetooth",
-            data_schema=self.prefilledForm(data={CONF_MAC: discovery_info.address}),
+            step_id="user",
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create the entry with unique id if not already configured."""
+        _LOGGER.debug("async_step_user %s", user_input)
         errors: dict[str, str] = {}
         if user_input is not None:
             errors = await self.validate_input(user_input)
@@ -155,6 +162,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None) -> ConfigFlowResult:
         """Handle re-authentication."""
+        _LOGGER.debug("async_step_reauth %s", user_input)
         errors: dict[str, str] = {}
         config_entry = self._get_reauth_entry()
         if user_input is not None:
@@ -180,6 +188,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle re-authentication."""
+        _LOGGER.debug("async_step_reconfigure %s", user_input)
         errors: dict[str, str] = {}
         config_entry = self._get_reconfigure_entry()
         if user_input is not None:
