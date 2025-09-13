@@ -140,6 +140,9 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a bluetooth device being discovered."""
         # Check if the device already exists.
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+
         _LOGGER.debug("async_step_bluetooth %s", discovery_info)
         self._discovery_info = discovery_info
 
