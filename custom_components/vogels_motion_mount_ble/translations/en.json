@@ -9,7 +9,9 @@
       "invalid_mac_code": "The inserted MAC address is not valid."
     },
     "abort": {
-      "already_configured": "The device is already configured."
+      "already_configured": "The device is already configured.",
+      "reconfigure_successful": "Reconfiguration successful!",
+      "reauth_successful": "Authentication successful!"
     },
     "step": {
       "bluetooth": {
