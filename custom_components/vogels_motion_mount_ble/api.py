@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass, field, replace
 from enum import Enum
 import logging
+import struct
 
 from bleak import BleakClient, BLEDevice
 from bleak.exc import BleakDeviceNotFoundError
@@ -11,8 +12,11 @@ from bleak_retry_connector import BleakClientWithServiceCache, establish_connect
 
 from homeassistant.components import bluetooth
 from homeassistant.core import Callable, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import (
     CHAR_AUTHENTICATE_UUID,
@@ -139,6 +143,11 @@ class APIConnectionDeviceNotFoundError(ConfigEntryNotReady):
 class APIAuthenticationError(ConfigEntryAuthFailed):
     """Exception class if user is not authorized to do this action."""
 
+    def __init__(self, message: str, cooldown: int = 0) -> None:
+        """Create Authentication error with information about cooldown time."""
+        super().__init__(message)
+        self.cooldown = cooldown
+
 
 class APISettingsChangeNotStoredError(HomeAssistantError):
     """Exception class if changed settings are not saved on vogels motion mount."""
@@ -173,6 +182,8 @@ class API:
         self._client: BleakClient | None = None
         # store last validated pin type to reuse
         self._pin_type: VogelsMotionMountPinType | None = None
+        # store authentication cooldown
+        self._authentication_cooldown: int = 0
 
     # region Public api
 
@@ -196,8 +207,11 @@ class API:
             self._logger.debug("Connected")
             await self.disconnect()
         except BleakDeviceNotFoundError as err:
-            self._logger.error("Failed to connect")
+            self._logger.error("Failed to connect, device not found")
             raise APIConnectionDeviceNotFoundError("Device not found.") from err
+        except APIAuthenticationError as err:
+            self._logger.error("Failed to connect wrong authentication")
+            raise err from err
         except Exception as err:
             self._logger.error("Failed to connect")
             raise APIConnectionError(f"Error connecting to api due to {err}.") from err
@@ -738,7 +752,7 @@ class API:
 
         return bytes([low, high])
 
-    # check if authentication is full or only control or none at all
+    # check if authentication is full or only control or none at all, returns true if any, stores the auth type
     async def _check_authentication(self) -> bool:
         _auth_info = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
         self._logger.debug("_check_authentication returns %s", _auth_info)
@@ -747,11 +761,11 @@ class API:
         elif _auth_info.startswith(b"\x80"):
             self._update(auth_type=VogelsMotionMountAuthenticationType.Control)
         else:
-            # little endian first 2 bytes are seconds * 100 (so to read /100 is required)
-            time_little = int.from_bytes(_auth_info[:2], "little")
-            time_big = int.from_bytes(_auth_info[:2], "big")
-            self._logger.debug(
-                "_check_authentication time little %s bit %s", time_little, time_big
+            code = struct.unpack("<I", _auth_info)[0]
+            self._authentication_cooldown = max(0, 3 * code - 10)
+            self._logger.warning(
+                "Authentication wrong, expected wait time %s seconds.",
+                self._authentication_cooldown,
             )
             return False
         return True
@@ -785,14 +799,19 @@ class API:
                 self._data.auth_type == VogelsMotionMountAuthenticationType.Control
                 and type == VogelsMotionActionType.Settings
             ):
-                raise APIAuthenticationError("Not authenticated for settings action.")
+                raise APIAuthenticationError(
+                    "Not authenticated for settings action.",
+                    self._authentication_cooldown,
+                )
             return
 
         # authentication required but no pin set
         if self._pin is None:
             self._update(auth_type=VogelsMotionMountAuthenticationType.Missing)
             await self.disconnect()
-            raise APIAuthenticationError("Authentication missing.")
+            raise APIAuthenticationError(
+                "Authentication missing.", self._authentication_cooldown
+            )
 
         authentication_types = (
             [
@@ -813,13 +832,14 @@ class API:
                     and type == VogelsMotionActionType.Settings
                 ):
                     raise APIAuthenticationError(
-                        "Not authenticated for settings action."
+                        "Not authenticated for settings action.",
+                        self._authentication_cooldown,
                     )
                 return
 
         self._update(auth_type=VogelsMotionMountAuthenticationType.Wrong)
         await self.disconnect()
-        raise APIAuthenticationError("Invalid pin.")
+        raise APIAuthenticationError("Invalid pin.", self._authentication_cooldown)
 
     # disconnect from the client
     def _handle_disconnect(self, _):
