@@ -1,7 +1,9 @@
 rules:
   # Bronze
   action-setup: done
-  appropriate-polling: todo
+  appropriate-polling:
+    status: exempt
+    comment: Integration does not poll data
   brands: todo
   common-modules: done
   config-flow-test-coverage: todo
