@@ -148,10 +148,10 @@ async def _delete_preset_service(call: ServiceCall) -> None:
 async def _set_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("Add preset service called with data: %s", call.data)
     await get_coordinator(call).api.set_preset(
-        call.data[HA_SERVICE_PRESET_ID],
-        call.data[HA_SERVICE_NAME_ID],
-        call.data[HA_SERVICE_DISTANCE_ID],
-        call.data[HA_SERVICE_ROTATION_ID],
+        preset_index=call.data[HA_SERVICE_PRESET_ID],
+        name=call.data[HA_SERVICE_NAME_ID],
+        distance=call.data[HA_SERVICE_DISTANCE_ID],
+        rotation=call.data[HA_SERVICE_ROTATION_ID],
     )
 
 

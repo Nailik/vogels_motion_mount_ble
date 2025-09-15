@@ -18,7 +18,12 @@ async def async_setup_entry(
     """Set up the Selectors for automove."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
 
-    async_add_entities([AutomoveSelect(coordinator), FreezePresetSelect(coordinator)])
+    async_add_entities(
+        [
+            AutomoveSelect(coordinator),
+            FreezePresetSelect(coordinator),
+        ]
+    )
 
 
 class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):

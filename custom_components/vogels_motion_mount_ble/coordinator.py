@@ -3,7 +3,6 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import Callable, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -11,16 +10,6 @@ from .api import API, VogelsMotionMountData
 from .const import CONF_MAC, CONF_NAME, CONF_PIN
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.TEXT,
-]
 
 
 class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):

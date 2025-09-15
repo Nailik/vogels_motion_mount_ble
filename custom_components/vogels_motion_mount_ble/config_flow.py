@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 import re
 from typing import Any
-from datetime import timedelta
-from homeassistant.util import dt
 
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
@@ -15,6 +14,7 @@ from voluptuous.schema_builder import UNDEFINED
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
+from homeassistant.util import dt_util
 
 from .api import (
     API,
@@ -108,7 +108,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         ):
             _LOGGER.error("Invalid MAC code: %s", user_input[CONF_MAC])
-            return ValidationResult(errors={CONF_ERROR: "invalid_mac_code"})
+            return ValidationResult({CONF_ERROR: "invalid_mac_code"})
 
         try:
             await API(
@@ -120,25 +120,28 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
         except APIConnectionDeviceNotFoundError as err:
             _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
-            return ValidationResult(errors={CONF_ERROR: "error_device_not_found"})
+            return ValidationResult({CONF_ERROR: "error_device_not_found"})
         except APIAuthenticationError as err:
             _LOGGER.error("Setting APIAuthenticationError: %s", err)
             if err.cooldown > 0:
-                retry_time = dt.now() + timedelta(seconds=err.cooldown)
+                retry_time = dt_util.now() + timedelta(seconds=err.cooldown)
                 return ValidationResult(
                     errors={CONF_ERROR: "error_auth_cooldown"},
                     description_placeholders={
                         "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
                     },
                 )
-            return ValidationResult(errors={CONF_ERROR: "error_invalid_authentication"})
+            return ValidationResult({CONF_ERROR: "error_invalid_authentication"})
         except APIConnectionError as err:
             _LOGGER.error("Setting APIConnectionError: %s", err)
-            return ValidationResult(errors={CONF_ERROR: "error_cannot_connect"})
+            return ValidationResult({CONF_ERROR: "error_cannot_connect"})
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Setting Exception: %s", err)
-            return ValidationResult(errors={CONF_ERROR: "error_unknown"})
-        return ValidationResult(errors={})
+            return ValidationResult(
+                errors={CONF_ERROR: "error_unknown"},
+                description_placeholders={"error": err},
+            )
+        return ValidationResult({})
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -191,13 +194,15 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
+                    entry=self._get_reauth_entry(),
                     data_updates=user_input,
                 )
         return self.async_show_form(
             step_id="reauth",
             data_schema=self.prefilledForm(
-                data=config_entry.data, mac_editable=False, name_editable=False
+                data=config_entry.data,
+                mac_editable=False,
+                name_editable=False,
             ),
             errors=result.errors,
             description_placeholders=result.description_placeholders,
@@ -216,7 +221,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
+                    entry=self._get_reconfigure_entry(),
                     data_updates=user_input,
                 )
         return self.async_show_form(

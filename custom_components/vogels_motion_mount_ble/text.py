@@ -20,8 +20,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             NameText(coordinator),
+            *[PresetNameText(coordinator, preset_index) for preset_index in range(7)],
         ]
-        + [PresetNameText(coordinator, preset_index) for preset_index in range(7)]
     )
 
 
@@ -71,5 +71,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     async def async_set_value(self, value: str) -> None:
         """Set the preset name value from the UI."""
         await self.coordinator.api.set_preset(
-            preset_index=self._preset_index, name=value
+            preset_index=self._preset_index,
+            name=value,
         )
