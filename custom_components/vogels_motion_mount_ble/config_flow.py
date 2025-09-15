@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import logging
 import re
 from typing import Any
+from datetime import timedelta
+from homeassistant.util import dt
 
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
@@ -122,9 +124,12 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         except APIAuthenticationError as err:
             _LOGGER.error("Setting APIAuthenticationError: %s", err)
             if err.cooldown > 0:
+                retry_time = dt.now() + timedelta(seconds=err.cooldown)
                 return ValidationResult(
                     errors={CONF_ERROR: "error_auth_cooldown"},
-                    description_placeholders={"cooldown": err.cooldown},
+                    description_placeholders={
+                        "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
+                    },
                 )
             return ValidationResult(errors={CONF_ERROR: "error_invalid_authentication"})
         except APIConnectionError as err:
@@ -217,7 +222,9 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.prefilledForm(
-                data=config_entry.data, mac_editable=False, name_editable=False
+                data=config_entry.data,
+                mac_editable=False,
+                name_editable=False,
             ),
             errors=result.errors,
             description_placeholders=result.description_placeholders,

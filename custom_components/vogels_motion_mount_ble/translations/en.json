@@ -4,7 +4,7 @@
       "error_cannot_connect": "Found device but unable to connect to the device.",
       "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
       "error_invalid_athentication": "Invalid Authentication, check or disable PIN.",
-      "error_auth_cooldown": "Authentication failed, please wait {cooldown} seconds.",
+      "error_auth_cooldown": "Authentication failed, too many attempts. You can try again at {retry_at}.",
       "error_unknown": "An unknown error occurred while trying to connect to the device.",
       "invalid_mac_code": "The inserted MAC address is not valid."
     },
