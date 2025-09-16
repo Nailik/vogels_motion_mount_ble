@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 import re
 from typing import Any
@@ -13,6 +14,7 @@ from voluptuous.schema_builder import UNDEFINED
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
+from homeassistant.util import dt as dt_util
 
 from .api import (
     API,
@@ -47,7 +49,9 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         name_editable: bool = True,
     ) -> vol.Schema:
         """Return a form schema with prefilled values from data."""
-        _LOGGER.debug("Load prefilled form with: %s", data)
+        _LOGGER.debug(
+            "Load prefilled form with: %s and info %s", data, self._discovery_info
+        )
         # Setup Values
         mac = UNDEFINED
         name = UNDEFINED
@@ -61,9 +65,10 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If discovery_info is set, use its address as the MAC and for the name if not provided
         if self._discovery_info is not None:
+            _LOGGER.debug("Set mac not editable")
             mac_editable = False
             mac = self._discovery_info.address
-            name = f"Vogel's MotionMount ({mac})" if name == UNDEFINED else name
+            name = self._discovery_info.name
 
         # Provide Schema
         return vol.Schema(
@@ -89,6 +94,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                             max=9999,
                             step=1,
                             mode=selector.NumberSelectorMode.BOX,
+                            read_only=False,
                         )
                     ),
                     vol.Coerce(int),
@@ -106,7 +112,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         ):
             _LOGGER.error("Invalid MAC code: %s", user_input[CONF_MAC])
-            return ValidationResult(errors={CONF_ERROR: "invalid_mac_code"})
+            return ValidationResult({CONF_ERROR: "invalid_mac_code"})
 
         try:
             await API(
@@ -118,22 +124,28 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
         except APIConnectionDeviceNotFoundError as err:
             _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
-            return ValidationResult(errors={CONF_ERROR: "error_device_not_found"})
+            return ValidationResult({CONF_ERROR: "error_device_not_found"})
         except APIAuthenticationError as err:
             _LOGGER.error("Setting APIAuthenticationError: %s", err)
             if err.cooldown > 0:
+                retry_time = dt_util.now() + timedelta(seconds=err.cooldown)
                 return ValidationResult(
                     errors={CONF_ERROR: "error_auth_cooldown"},
-                    description_placeholders={"cooldown": err.cooldown},
+                    description_placeholders={
+                        "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
+                    },
                 )
-            return ValidationResult(errors={CONF_ERROR: "error_invalid_authentication"})
+            return ValidationResult({CONF_ERROR: "error_invalid_authentication"})
         except APIConnectionError as err:
             _LOGGER.error("Setting APIConnectionError: %s", err)
-            return ValidationResult(errors={CONF_ERROR: "error_cannot_connect"})
+            return ValidationResult({CONF_ERROR: "error_cannot_connect"})
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Setting Exception: %s", err)
-            return ValidationResult(errors={CONF_ERROR: "error_unknown"})
-        return ValidationResult(errors={})
+            return ValidationResult(
+                errors={CONF_ERROR: "error_unknown"},
+                description_placeholders={"error": err},
+            )
+        return ValidationResult({})
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -148,6 +160,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=self.prefilledForm(),
         )
 
     async def async_step_user(
@@ -186,13 +199,15 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
+                    entry=self._get_reauth_entry(),
                     data_updates=user_input,
                 )
         return self.async_show_form(
             step_id="reauth",
             data_schema=self.prefilledForm(
-                data=config_entry.data, mac_editable=False, name_editable=False
+                data=config_entry.data,
+                mac_editable=False,
+                name_editable=False,
             ),
             errors=result.errors,
             description_placeholders=result.description_placeholders,
@@ -201,7 +216,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle re-authentication."""
+        """Handle re-configuration."""
         _LOGGER.debug("async_step_reconfigure %s", user_input)
         result = ValidationResult(errors={})
         config_entry = self._get_reconfigure_entry()
@@ -211,13 +226,14 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
+                    entry=self._get_reconfigure_entry(),
                     data_updates=user_input,
                 )
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.prefilledForm(
-                data=config_entry.data, mac_editable=False, name_editable=False
+                data=config_entry.data,
+                mac_editable=False,
             ),
             errors=result.errors,
             description_placeholders=result.description_placeholders,

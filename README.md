@@ -35,7 +35,7 @@ When the integration is set up the integration tries to connect to the Vogel's M
 | TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ | 
 | Authorized user Pin | Pin to controls or change the settings | set_authorised_user_pin | ❌ | 
 | Supervisor Pin | Pin to limit settings control for authorizes user | set_supervisior_pin | ❌ | 
-| Authorizes user features | Wich settings an authorized user can change | set_multi_pin_features | ✅ | 
+| Authorizes user features | Which settings an authorized user can change | set_multi_pin_features | ✅ | 
 | CEB BL, FW Version | Version of CEB |  | ✅ | 
 | MCP BL, FW Version | Version of MCP |  | ✅ | 
 | Refresh Data | read data from device | refresh_data | ✅ | 

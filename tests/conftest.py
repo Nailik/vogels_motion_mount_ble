@@ -1,6 +1,42 @@
 """Fixtures for testing."""
 
 import pytest
+import sys
+import types
+
+
+def pytest_configure():
+    # Fake `resource` for Windows
+    if sys.platform == "win32" and "resource" not in sys.modules:
+        sys.modules["resource"] = types.ModuleType("resource")
+
+    # Fake `aiousbwatcher` for Linux/WSL test env
+    if "aiousbwatcher" not in sys.modules:
+        fake = types.ModuleType("aiousbwatcher")
+
+        class AIOUSBWatcher:
+            def __init__(self, *args, **kwargs):
+                self._callbacks = []
+
+            async def async_start(self):
+                return
+
+            async def async_stop(self):
+                return
+
+            def async_register_callback(self, callback):
+                self._callbacks.append(callback)
+
+            def async_unregister_callback(self, callback):
+                if callback in self._callbacks:
+                    self._callbacks.remove(callback)
+
+        class InotifyNotAvailableError(Exception):
+            pass
+
+        fake.AIOUSBWatcher = AIOUSBWatcher
+        fake.InotifyNotAvailableError = InotifyNotAvailableError
+        sys.modules["aiousbwatcher"] = fake
 
 
 @pytest.fixture(autouse=True)

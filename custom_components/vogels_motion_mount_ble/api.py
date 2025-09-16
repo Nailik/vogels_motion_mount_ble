@@ -16,6 +16,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    ServiceValidationError,
 )
 
 from .const import (
@@ -39,10 +40,6 @@ from .const import (
     CHAR_WIDTH_UUID,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-# region Public data classes
-
 
 @dataclass
 class VogelsMotionMountPreset:
@@ -57,43 +54,43 @@ class VogelsMotionMountPreset:
 class VogelsMotionMountPinSettings(Enum):
     """Defines the possible pin settings."""
 
-    Deactivated = 12
-    Single = 13
-    Multi = 15
+    Deactivated: int = 12
+    Single: int = 13
+    Multi: int = 15
 
 
 class VogelsMotionMountPinType(Enum):
     """Defines the possible pin type."""
 
-    Authorized_user = 1
-    Supervisior = 2
+    Authorized_user: int = 1
+    Supervisior: int = 2
 
 
 class VogelsMotionMountAuthenticationType(Enum):
     """Defines the authentication options."""
 
-    Wrong = 0
-    Missing = 1
-    Control = 2
-    Full = 3
+    Wrong: int = 0
+    Missing: int = 1
+    Control: int = 2
+    Full: int = 3
 
 
 class VogelsMotionMountAutoMoveType(Enum):
     """Defines the authentication options."""
 
-    Off = "off"
-    Hdmi_1 = "hdmi_1"
-    Hdmi_2 = "hdmi_2"
-    Hdmi_3 = "hdmi_3"
-    Hdmi_4 = "hdmi_4"
-    Hdmi_5 = "hdmi_5"
+    Off: str = "off"
+    Hdmi_1: str = "hdmi_1"
+    Hdmi_2: str = "hdmi_2"
+    Hdmi_3: str = "hdmi_3"
+    Hdmi_4: str = "hdmi_4"
+    Hdmi_5: str = "hdmi_5"
 
 
 class VogelsMotionActionType(Enum):
     """Defines the possible actions."""
 
-    Control = 0  # control the device
-    Settings = 1  # change settings
+    Control: int = 0  # control the device
+    Settings: int = 1  # change settings
 
 
 @dataclass
@@ -153,10 +150,6 @@ class APISettingsChangeNotStoredError(HomeAssistantError):
     """Exception class if changed settings are not saved on vogels motion mount."""
 
 
-class APISettingsChangeInvalidInputError(HomeAssistantError):
-    """Exception class if changed settings input data is invalid."""
-
-
 # endregion
 
 
@@ -177,7 +170,7 @@ class API:
         self._mac = mac
         self._pin = pin
         self._callback = callback
-        self._data = VogelsMotionMountData(connected=False)
+        self._data = VogelsMotionMountData()
         self._device: BLEDevice | None = None
         self._client: BleakClient | None = None
         # store last validated pin type to reuse
@@ -191,7 +184,7 @@ class API:
         """Test connection to the BLE device once using BleakClient and disconnects immediately."""
         self._logger.debug("Test connection")
         if not self._initialize_device():
-            raise APIConnectionDeviceNotFoundError("Device not found.")
+            raise APIConnectionDeviceNotFoundError
 
         try:
             # make sure we are disconnected before testing connection otherwise authentication might not be tested
@@ -199,8 +192,8 @@ class API:
 
             self._logger.debug("Device found attempting to connect")
             self._client = await establish_connection(
-                BleakClientWithServiceCache,
-                self._device,
+                client_class=BleakClientWithServiceCache,
+                device=self._device,
                 name=self._device.name or "Unknown Device",
             )
             await self._authenticate()
@@ -208,13 +201,13 @@ class API:
             await self.disconnect()
         except BleakDeviceNotFoundError as err:
             self._logger.error("Failed to connect, device not found")
-            raise APIConnectionDeviceNotFoundError("Device not found.") from err
+            raise APIConnectionDeviceNotFoundError from err
         except APIAuthenticationError as err:
             self._logger.error("Failed to connect wrong authentication")
             raise err from err
         except Exception as err:
             self._logger.error("Failed to connect")
-            raise APIConnectionError(f"Error connecting to api due to {err}.") from err
+            raise APIConnectionError from err
 
     async def disconnect(self):
         """Disconnect from the BLE Device."""
@@ -247,8 +240,8 @@ class API:
         """Set the distance to move the MotionMount to."""
         self._logger.debug("Set distance to %s", distance)
 
-        if distance in range(0, 100):
-            raise APISettingsChangeInvalidInputError(
+        if distance in range(100):
+            raise ServiceValidationError(
                 f"Invalid distance {distance} must be in range(0,100)."
             )
 
@@ -264,7 +257,7 @@ class API:
         self._logger.debug("Set rotation to %s", rotation)
 
         if rotation in range(-100, 100):
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Invalid rotation {rotation} must be in range(-100,100)."
             )
 
@@ -293,21 +286,20 @@ class API:
         self._logger.debug("Select preset %s", preset_index)
 
         if preset_index in range(7) and self._data.presets[preset_index] is not None:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Invalid preset index {preset_index} should be in range(7)."
             )
 
         if self._data.presets[preset_index] is None:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Preset at index {preset_index} doesn't exist."
             )
 
         await self._connect(
             type=VogelsMotionActionType.Control,
             char_uuid=CHAR_PRESET_UUID,
-            data=bytes(
-                [preset_index + 1]
-            ),  # Preset IDs are 1-based because 0 is the default preset
+            # Preset IDs are 1-based because 0 is the default preset
+            data=bytes([preset_index + 1]),
         )
 
     # endregion
@@ -317,7 +309,7 @@ class API:
         """Set the bluetooth name for the deice."""
         self._logger.debug("Change name to %s", name)
         if len(name) > 20:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Name {name} too long, max length is 20 characters."
             )
 
@@ -329,7 +321,7 @@ class API:
         )
         await self._read_name()
         if self._data.name != name:
-            raise APISettingsChangeNotStoredError(
+            raise ServiceValidationError(
                 f"Name change not saved on device. Expected {name} actual {self._data.name}."
             )
 
@@ -359,7 +351,7 @@ class API:
         )
 
         if len(new_name) > 32:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Name {name} too long, max length is 32 characters."
             )
 
@@ -405,7 +397,7 @@ class API:
             rotation=new_rotation,
         )
         if self._data.presets[preset_index] != expected_data:
-            raise APISettingsChangeNotStoredError(
+            raise ServiceValidationError(
                 f"Preset change not saved on device. Expected {expected_data} actual {self._data.presets[preset_index]}."
             )
 
@@ -414,12 +406,12 @@ class API:
         self._logger.debug("Delete preset %s", preset_index)
 
         if preset_index in range(7) and self._data.presets[preset_index] is not None:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Invalid preset index {preset_index} should be in range(7)."
             )
 
         if self._data.presets[preset_index] is None:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Preset at index {preset_index} doesn't exist."
             )
 
@@ -457,7 +449,7 @@ class API:
         try:
             automove_type = VogelsMotionMountAutoMoveType(id)
         except ValueError as err:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f'AutoMove type {id} does not exist, must be any of "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5".'
             ) from err
 
@@ -495,17 +487,17 @@ class API:
         remove = pin == "0000"
 
         if remove and self._data.pin_setting == VogelsMotionMountPinSettings.Multi:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 "Authorised user pin cannot be deactivated when supervisior pin is set."
             )
 
         if len(pin) != 4:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 "Authorised user pin is too long, max length 4 digits."
             )
 
         if not pin.isdigit():
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 "Authorised user pin contains non digit characters."
             )
 
@@ -541,22 +533,22 @@ class API:
         remove = pin == "0000"
 
         if remove and self._data.pin_setting == VogelsMotionMountPinSettings.Single:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 "Supervisior pin cannot be deactivated when supervisior pin is not set."
             )
 
         if self._data.pin_setting == VogelsMotionMountPinSettings.Deactivated:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 "Supervisior pin cannot be set when authorized user pin is not set."
             )
 
         if len(pin) != 4:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 "Supervisior pin is too long, max length 4 digits."
             )
 
         if not pin.isdigit():
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 "Supervisior pin contains non digit characters."
             )
 
@@ -588,12 +580,12 @@ class API:
         self._logger.debug("Set freeze preset index to %s", preset_index)
 
         if preset_index in range(7) and self._data.presets[preset_index] is not None:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Invalid preset index {preset_index} should be in range(7)."
             )
 
         if self._data.presets[preset_index] is None:
-            raise APISettingsChangeInvalidInputError(
+            raise ServiceValidationError(
                 f"Preset at index {preset_index} doesn't exist."
             )
 
@@ -686,10 +678,14 @@ class API:
         self._logger.debug("Initialize device")
         if self._device is None:
             self._device: BLEDevice = bluetooth.async_ble_device_from_address(
-                self._hass, self._mac, connectable=True
+                hass=self._hass,
+                address=self._mac,
+                connectable=True,
             )
             self._client: BleakClient = BleakClient(
-                self._device, disconnected_callback=self._handle_disconnect, timeout=120
+                device=self._device,
+                disconnected_callback=self._handle_disconnect,
+                timeout=120,
             )
         result = self._device is not None and self._client is not None
         self._logger.debug("Initialisation was %s", result)
@@ -715,8 +711,8 @@ class API:
             should_read_data = True
             self._logger.debug("Connecting")
             self._client = await establish_connection(
-                BleakClientWithServiceCache,
-                self._device,
+                client_class=BleakClientWithServiceCache,
+                device=self._device,
                 name=self._device.name or "Unknown Device",
                 disconnected_callback=self._handle_disconnect,
             )
@@ -729,7 +725,11 @@ class API:
         if char_uuid is not None and data is not None:
             self._logger.debug("Write data %s", data)
             # calls callback before loading data in order to run command with less delay
-            await self._client.write_gatt_char(char_uuid, data, response=True)
+            await self._client.write_gatt_char(
+                characteristic=char_uuid,
+                data=data,
+                response=True,
+            )
 
         if should_read_data:
             # only read data and setup notifications if this was a new connection

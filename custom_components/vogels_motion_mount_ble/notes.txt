@@ -1,20 +1,7 @@
-# TODO use config entry not ready if device cannot connect (yet), remove polling?
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-setup
-https://github.com/home-assistant/core/blob/dev/homeassistant/components/motionmount/quality_scale.yaml
-
-
-
-
 # todo width input is not validated
 # todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings
 # freeze preset 0 does it mean wall?
 # what is permission for start calibration
-
-
-Translate:
-
-# todo use async_show_progress to wait for authentication timeout and also for connection (connecting - authentication - loading data)
-
 
 # test services:
 authorised user pin change

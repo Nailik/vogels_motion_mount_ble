@@ -52,17 +52,22 @@ async def async_setup_entry(
 
     # Initialise the coordinator that manages data updates from your api.
     coordinator = VogelsMotionMountBleCoordinator(
-        hass, config_entry, unsub_update_listener
+        hass=hass,
+        config_entry=config_entry,
+        unsub_update_listener=unsub_update_listener,
     )
 
     try:
         await coordinator.api.refresh_data()
     except APIConnectionDeviceNotFoundError as err:
-        raise ConfigEntryNotReady("Device is offline") from err
+        raise ConfigEntryNotReady("error_device_not_found") from err
     except APIAuthenticationError as err:
-        raise ConfigEntryAuthFailed("Invalid authentication") from err
+        raise ConfigEntryAuthFailed("error_invalid_athentication") from err
     except Exception as err:
-        raise ConfigEntryError(f"Something went wrong {err}") from err
+        raise ConfigEntryError(
+            translation_key=f"Something went wrong {err}",
+            translation_placeholders={"error": err},
+        ) from err
 
     config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -88,9 +93,7 @@ async def async_unload_entry(
         config_entry, PLATFORMS
     ):
         _LOGGER.debug("async_unload_entry pop")
-        # Remove config entry from domain.
         coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
-        # Disconnect and remove options_update_listener.
         await coordinator.unload()
 
     return unload_ok

@@ -1,7 +1,5 @@
 """Base entity to define common properties and methods for Vogels Motion Mount BLE entities."""
 
-import logging
-
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -10,14 +8,12 @@ from .api import VogelsMotionMountPreset
 from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
     """Base Entity Class for all Entities."""
 
     coordinator: VogelsMotionMountBleCoordinator
-    _attr_has_entity_name = True
+    _attr_has_entity_name: bool = True
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -39,10 +35,12 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     """Base Entity Class For Preset Entities."""
 
     def __init__(
-        self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
+        self,
+        coordinator: VogelsMotionMountBleCoordinator,
+        preset_index: int,
     ) -> None:
         """Initialise entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator=coordinator)
         self._preset_index = preset_index
         self._attr_translation_placeholders = {"preset": self._prop_preset_index}
 
