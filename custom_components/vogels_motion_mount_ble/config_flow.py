@@ -14,7 +14,7 @@ from voluptuous.schema_builder import UNDEFINED
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
-from homeassistant.util import dt_util
+from homeassistant.util import dt as dt_util
 
 from .api import (
     API,
