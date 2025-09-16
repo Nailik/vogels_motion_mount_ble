@@ -351,13 +351,18 @@ async def test_prefilled_discovery_form(hass, mock_discovery):
     schema: vol.Schema = flow_result["data_schema"]
     mac_field = schema.schema[CONF_MAC]
     name_field = schema.schema[CONF_NAME]
+    pin_field = schema.schema[CONF_PIN]
 
     assert isinstance(mac_field, selector.TextSelector)
     assert isinstance(name_field, selector.TextSelector)
+    assert hasattr(pin_field, "validators") or isinstance(
+        pin_field, selector.NumberSelector
+    )
 
     # Check read_only flags
     assert mac_field.config["read_only"] is True
     assert name_field.config["read_only"] is False
+    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
 
     # Check defaults
     validated = schema({})
@@ -395,6 +400,7 @@ async def test_prefilled_reauth_flow_form(hass, mock_api):
     # Read-only flags
     assert mac_field.config["read_only"] is True  # MAC not editable
     assert name_field.config["read_only"] is True  # Name not editable
+    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
 
 
 @pytest.mark.asyncio
@@ -428,6 +434,7 @@ async def test_prefilled_reconfigure_flow_form(hass, mock_api):
     # Read-only flags
     assert mac_field.config["read_only"] is True  # MAC editable
     assert name_field.config["read_only"] is False  # Name editable
+    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
 
     # Defaults
     validated = schema({})

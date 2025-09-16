@@ -94,6 +94,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                             max=9999,
                             step=1,
                             mode=selector.NumberSelectorMode.BOX,
+                            read_only=False,
                         )
                     ),
                     vol.Coerce(int),
