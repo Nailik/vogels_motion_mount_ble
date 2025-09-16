@@ -40,10 +40,6 @@ from .const import (
     CHAR_WIDTH_UUID,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-# region Public data classes
-
 
 @dataclass
 class VogelsMotionMountPreset:

@@ -49,7 +49,9 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         name_editable: bool = True,
     ) -> vol.Schema:
         """Return a form schema with prefilled values from data."""
-        _LOGGER.debug("Load prefilled form with: %s", data)
+        _LOGGER.debug(
+            "Load prefilled form with: %s and info %s", data, self._discovery_info
+        )
         # Setup Values
         mac = UNDEFINED
         name = UNDEFINED
@@ -63,9 +65,10 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If discovery_info is set, use its address as the MAC and for the name if not provided
         if self._discovery_info is not None:
+            _LOGGER.debug("Set mac not editable")
             mac_editable = False
             mac = self._discovery_info.address
-            name = f"Vogel's MotionMount ({mac})" if name == UNDEFINED else name
+            name = self._discovery_info.name
 
         # Provide Schema
         return vol.Schema(
@@ -91,6 +94,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                             max=9999,
                             step=1,
                             mode=selector.NumberSelectorMode.BOX,
+                            read_only=False,
                         )
                     ),
                     vol.Coerce(int),
@@ -156,6 +160,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=self.prefilledForm(),
         )
 
     async def async_step_user(
@@ -211,7 +216,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle re-authentication."""
+        """Handle re-configuration."""
         _LOGGER.debug("async_step_reconfigure %s", user_input)
         result = ValidationResult(errors={})
         config_entry = self._get_reconfigure_entry()
@@ -229,7 +234,6 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.prefilledForm(
                 data=config_entry.data,
                 mac_editable=False,
-                name_editable=False,
             ),
             errors=result.errors,
             description_placeholders=result.description_placeholders,
