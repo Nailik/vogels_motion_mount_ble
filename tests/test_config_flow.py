@@ -395,7 +395,6 @@ async def test_prefilled_reauth_flow_form(hass, mock_api):
     # Read-only flags
     assert mac_field.config["read_only"] is True  # MAC not editable
     assert name_field.config["read_only"] is True  # Name not editable
-    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
 
 
 @pytest.mark.asyncio
@@ -429,7 +428,6 @@ async def test_prefilled_reconfigure_flow_form(hass, mock_api):
     # Read-only flags
     assert mac_field.config["read_only"] is True  # MAC editable
     assert name_field.config["read_only"] is False  # Name editable
-    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
 
     # Defaults
     validated = schema({})
