@@ -1,4 +1,15 @@
 {
+  "exceptions": {
+        "device_id_not_specified": {
+            "message": "Required device_id not specified."
+        },
+        "device_missing_entry": {
+            "message": "Device for id {device_id} not found."
+        },
+        "device_missing_coordinator": {
+            "message": "No coordinator in runtime data found for device {device_id}."
+        }
+  },
   "config": {
     "error": {
       "error_cannot_connect": "Found device but unable to connect to the device.",

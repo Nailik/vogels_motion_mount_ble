@@ -75,7 +75,7 @@ async def async_setup_entry(
     except Exception as err:
         raise ConfigEntryError(
             translation_key=f"Something went wrong {err}",
-            translation_placeholders={"error": err},
+            translation_placeholders={"error": str(err)},
         ) from err
 
     config_entry.runtime_data = coordinator

@@ -3,7 +3,8 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Callable, HomeAssistant
+from collections.abc import Callable
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import API, VogelsMotionMountData
@@ -12,7 +13,7 @@ from .const import CONF_MAC, CONF_NAME, CONF_PIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
+class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountData]):
     """Vogels Motion Mount BLE coordinator."""
 
     data: VogelsMotionMountData = VogelsMotionMountData()

@@ -5,13 +5,13 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 import logging
 import struct
-
-from bleak import BleakClient, BLEDevice
+from bleak.backends.device import BLEDevice
+from bleak import BleakClient
 from bleak.exc import BleakDeviceNotFoundError
 from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
-
+from collections.abc import Callable
 from homeassistant.components import bluetooth
-from homeassistant.core import Callable, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -54,36 +54,36 @@ class VogelsMotionMountPreset:
 class VogelsMotionMountPinSettings(Enum):
     """Defines the possible pin settings."""
 
-    Deactivated: int = 12
-    Single: int = 13
-    Multi: int = 15
+    Deactivated = 12
+    Single = 13
+    Multi = 15
 
 
 class VogelsMotionMountPinType(Enum):
     """Defines the possible pin type."""
 
-    Authorized_user: int = 1
-    Supervisior: int = 2
+    Authorized_user = 1
+    Supervisior = 2
 
 
 class VogelsMotionMountAuthenticationType(Enum):
     """Defines the authentication options."""
 
-    Wrong: int = 0
-    Missing: int = 1
-    Control: int = 2
-    Full: int = 3
+    Wrong = 0
+    Missing = 1
+    Control = 2
+    Full = 3
 
 
 class VogelsMotionMountAutoMoveType(Enum):
     """Defines the authentication options."""
 
-    Off: str = "off"
-    Hdmi_1: str = "hdmi_1"
-    Hdmi_2: str = "hdmi_2"
-    Hdmi_3: str = "hdmi_3"
-    Hdmi_4: str = "hdmi_4"
-    Hdmi_5: str = "hdmi_5"
+    Off = "off"
+    Hdmi_1 = "hdmi_1"
+    Hdmi_2 = "hdmi_2"
+    Hdmi_3 = "hdmi_3"
+    Hdmi_4 = "hdmi_4"
+    Hdmi_5 = "hdmi_5"
 
 
 @dataclass
@@ -152,19 +152,19 @@ class APISettingsChangeNotStoredError(HomeAssistantError):
 class _ChangeSettingsRequestType(Enum):
     """Defines types for changing settings request in order to check if user is authenticated."""
 
-    change_presets: int = 0
-    change_name: int = 1
-    disable_channel: int = 2
-    change_tv_on_off_detection: int = 3
-    change_default_position: int = 4
-    start_calibration: int = 5
+    change_presets = 0
+    change_name = 1
+    disable_channel = 2
+    change_tv_on_off_detection = 3
+    change_default_position = 4
+    start_calibration = 5
 
 
 class _VogelsMotionMountActionType(Enum):
     """Defines the possible actions."""
 
-    Control: int = 0  # control the device
-    Settings: int = 1  # change settingsVogelsMotionActionType(Enum):
+    Control = 0  # control the device
+    Settings = 1  # change settingsVogelsMotionActionType(Enum):
 
 
 # endregion
@@ -205,7 +205,7 @@ class API:
         try:
             # make sure we are disconnected before testing connection otherwise authentication might not be tested
             await self.disconnect()
-
+            assert self._device is not None
             self._logger.debug("Device found attempting to connect")
             self._client = await establish_connection(
                 client_class=BleakClientWithServiceCache,
@@ -607,9 +607,6 @@ class API:
                 "Supervisior pin contains non digit characters."
             )
 
-        self._logger.debug(
-            "Set supervisior pin to %s for device %s", pin, self._device.name
-        )
         await self._connect(
             type=_VogelsMotionMountActionType.Settings,
             char_uuid=CHAR_CHANGE_PIN_UUID,
@@ -738,12 +735,13 @@ class API:
     def _initialize_device(self) -> bool:
         self._logger.debug("Initialize device")
         if self._device is None:
-            self._device: BLEDevice = bluetooth.async_ble_device_from_address(
+            self._device = bluetooth.async_ble_device_from_address(
                 hass=self._hass,
                 address=self._mac,
                 connectable=True,
             )
-            self._client: BleakClient = BleakClient(
+            assert self._device is not None
+            self._client = BleakClient(
                 address_or_ble_device=self._device,
                 disconnected_callback=self._handle_disconnect,
                 timeout=120,
@@ -764,6 +762,9 @@ class API:
         if not self._initialize_device():
             raise APIConnectionDeviceNotFoundError("Device not found.")
 
+        assert self._device is not None
+        assert self._client is not None
+
         self._logger.debug("Connect")
 
         if self._client.is_connected:
@@ -772,6 +773,7 @@ class API:
         else:
             should_read_data = True
             self._logger.debug("Connecting")
+
             self._client = await establish_connection(
                 client_class=BleakClientWithServiceCache,
                 device=self._device,
@@ -819,6 +821,9 @@ class API:
 
     # check if authentication is full or only control or none at all, returns true if any, stores the auth type
     async def _check_authentication(self) -> bool:
+        self._logger.debug("_check_authentication")
+        assert self._client is not None
+
         _auth_info = await self._client.read_gatt_char(CHAR_PIN_CHECK_UUID)
         self._logger.debug("_check_authentication returns %s", _auth_info)
         if _auth_info.startswith(b"\x80\x80"):
@@ -839,8 +844,12 @@ class API:
     # stores the pin_type if successful
     async def _authenticate_as(self, type: VogelsMotionMountPinType) -> bool:
         self._logger.debug("_authenticate_as %s", type)
+        assert self._client is not None
+
+        if self._pin is None:
+            return False
         await self._client.write_gatt_char(
-            CHAR_AUTHENTICATE_UUID, self._encode_pin(self._pin, type)
+            CHAR_AUTHENTICATE_UUID, self._encode_pin(int(self._pin), type)
         )
         for attempt in range(4):
             if await self._check_authentication():
@@ -872,6 +881,9 @@ class API:
                 await self._read_multi_pin_features()
                 allowed = False
                 # check if authorized user (control) has permission
+                if self._data.multi_pin_features is None:
+                    self._logger.warning("Unable to check multi pin features.")
+                    return
                 if change_type == _ChangeSettingsRequestType.change_presets:
                     self._logger.debug(
                         "change_type %s allowed %s!",
@@ -938,11 +950,13 @@ class API:
     # disconnect from the client
     def _handle_disconnect(self, _):
         self._logger.debug("Device disconnected!")
-        self._update(connected=self._client.is_connected)
+        if self._client is not None:
+            self._update(connected=self._client.is_connected)
 
     # Notifications in order to get updates from device via ble notify.
     async def _setup_notifications(self):
         self._logger.debug("Setup notifications")
+        assert self._client is not None
         await self._client.start_notify(
             char_specifier=CHAR_DISTANCE_UUID,
             callback=self._handle_distance_change,
@@ -955,6 +969,7 @@ class API:
     # Read all data from device.
     async def _read_current_data(self):
         self._logger.debug("Read current data")
+        assert self._client is not None
         await self._read_name()
         await self._read_distance()
         self._handle_rotation_change(
@@ -984,21 +999,25 @@ class API:
         self._update(rotation=int.from_bytes(data, "big"))
 
     async def _read_name(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_NAME_UUID)
         self._logger.debug("Read name %s", data)
         self._update(name=data.decode("utf-8").rstrip("\x00"))
 
     async def _read_distance(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_DISTANCE_UUID)
         self._logger.debug("Read distance %s", data)
         self._handle_distance_change(None, data)
 
     async def _read_rotation(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_ROTATION_UUID)
         self._logger.debug("Read rotation %s", data)
         self._handle_distance_change(None, data)
 
     async def _read_preset(self, preset_index):
+        assert self._client is not None
         data1 = await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index])
         data2 = await self._client.read_gatt_char(CHAR_PRESET_NAMES_UUIDS[preset_index])
         data = data1 + data2
@@ -1020,16 +1039,19 @@ class API:
         self._update(presets=new_presets)
 
     async def _read_width(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_WIDTH_UUID)
         self._logger.debug("Read width %s", data)
         self._update(width=data[0])
 
     async def _read_freeze_preset(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_FREEZE_UUID)
         self._logger.debug("Read Freeze %s", data)
         self._update(freeze_preset_index=data[0])
 
     async def _read_automove(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_AUTOMOVE_UUID)
         self._logger.debug("Read automove %s", data)
         automove_id = int.from_bytes(data, "big")
@@ -1055,6 +1077,7 @@ class API:
             )
 
     async def _read_pin_settings(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_PIN_SETTINGS_UUID)
         self._logger.debug("Read Pin Settings %s", data)
         try:
@@ -1068,6 +1091,7 @@ class API:
             self._update(pin_setting=None)
 
     async def _read_multi_pin_features(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_MULTI_PIN_FEATURES_UUID)
         self._logger.debug("Read Multi Pin Features %s", data)
         value = data[0]
@@ -1083,11 +1107,13 @@ class API:
         )
 
     async def _read_version_ceb(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_VERSIONS_CEB_UUID)
         self._logger.debug("Read CEB Version %s", data)
         self._update(ceb_bl_version=".".join(str(b) for b in data))
 
     async def _read_version_mcp(self):
+        assert self._client is not None
         data = await self._client.read_gatt_char(CHAR_VERSIONS_MCP_UUID)
         self._logger.debug("Read MCP Version %s", data)
         self._update(

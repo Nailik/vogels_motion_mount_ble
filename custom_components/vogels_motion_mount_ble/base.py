@@ -9,10 +9,11 @@ from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
 
 
-class VogelsMotionMountBleBaseEntity(CoordinatorEntity):
+class VogelsMotionMountBleBaseEntity(
+    CoordinatorEntity[VogelsMotionMountBleCoordinator]
+):
     """Base Entity Class for all Entities."""
 
-    coordinator: VogelsMotionMountBleCoordinator
     _attr_has_entity_name: bool = True
 
     @property

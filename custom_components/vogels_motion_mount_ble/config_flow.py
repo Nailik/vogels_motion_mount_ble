@@ -102,9 +102,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def validate_input(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ValidationResult:
+    async def validate_input(self, user_input: dict[str, Any]) -> ValidationResult:
         """Set up the entry from user data."""
         if not bool(
             re.match(
@@ -205,7 +203,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth",
             data_schema=self.prefilledForm(
-                data=config_entry.data,
+                data=dict(config_entry.data),
                 mac_editable=False,
                 name_editable=False,
             ),
@@ -232,7 +230,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.prefilledForm(
-                data=config_entry.data,
+                data=dict(config_entry.data),
                 mac_editable=False,
             ),
             errors=result.errors,
