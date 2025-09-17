@@ -2,7 +2,6 @@
 # todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings
 # freeze preset 0 does it mean wall?
 # what is permission for start calibration
-
 # test services:
 authorised user pin change
 supervisior pin change

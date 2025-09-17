@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-
+from homeassistant.const import __version__ as ha_version
+from packaging import version
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -30,6 +31,14 @@ PLATFORMS: list[Platform] = [
 ]
 
 type VogelsMotionMountBleConfigEntry = ConfigEntry[VogelsMotionMountBleCoordinator]
+
+# for this version read_only was added to config selectors
+MIN_HA_VERSION = "2025.6.0"
+
+if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
+    raise RuntimeError(
+        f"Vogels Motion Mount BLE requires Home Assistant {MIN_HA_VERSION}+"
+    )
 
 
 async def async_setup(

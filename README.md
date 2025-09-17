@@ -6,6 +6,8 @@ Project is still in heavy development, some features are missing and there are n
 
 ## Setup
 
+This integration requires HomeAssistant 2025.6.0 or newer.
+
 Use HACS to add this repository or copy the contents in the custom_integrations folder.
 
 During Setup the following options appear:
