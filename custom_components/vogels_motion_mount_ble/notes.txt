@@ -1,9 +1,6 @@
-# todo width input is not validated
-# todo authentication does not take into account that sometimes control user (authorised user) is also allowed to change more settings
-# what is permission for start calibration
-# todo change options if it uses presets (only available presets)
-# tv max width: 243 cm
-# todo what does start diagnosis do
+# what is permission for start calibration - todo what does start diagnosis do
+# todo change options according to permission
+# todo how to control disable channel
 
 # test services:
 authorised user pin change

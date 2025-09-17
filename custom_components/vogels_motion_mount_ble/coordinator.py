@@ -51,6 +51,10 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator):
             callback=self.async_set_updated_data,
         )
 
+    def _handle_coordinator_update(self) -> None:
+        # Always write state so options refresh
+        self.async_write_ha_state()
+
     async def unload(self):
         """Disconnect and unload."""
         _LOGGER.debug("unload coordinator")
