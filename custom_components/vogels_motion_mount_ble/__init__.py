@@ -33,7 +33,7 @@ PLATFORMS: list[Platform] = [
 type VogelsMotionMountBleConfigEntry = ConfigEntry[VogelsMotionMountBleCoordinator]
 
 # for this version read_only was added to config selectors
-MIN_HA_VERSION = "2025.9.0"
+MIN_HA_VERSION = "2025.6.0"
 
 if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
     raise RuntimeError(
