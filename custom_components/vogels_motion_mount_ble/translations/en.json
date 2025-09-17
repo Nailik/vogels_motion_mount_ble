@@ -355,7 +355,7 @@
         },
         "freeze_preset": {
           "name": "Freeze Preset",
-          "description": "Preset to set as freeze position."
+          "description": "Preset to set as freeze position, 0 is default preset custom presets are offset by 1."
         }
       }
     }

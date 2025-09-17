@@ -63,7 +63,7 @@ async def async_setup_entry(
     coordinator = VogelsMotionMountBleCoordinator(
         hass=hass,
         config_entry=config_entry,
-        unsub_update_listener=unsub_update_listener,
+        unsub_options_update_listener=unsub_update_listener,
     )
 
     try:
