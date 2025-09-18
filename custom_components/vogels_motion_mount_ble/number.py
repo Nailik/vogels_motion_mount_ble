@@ -4,6 +4,11 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from custom_components.vogels_motion_mount_ble.api import (
+    SettingsRequestType,
+    VogelsMotionMountActionType,
+)
+
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
@@ -44,7 +49,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_icon = "mdi:ruler"
 
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
@@ -52,7 +57,14 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
             return self.coordinator.data.requested_distance
         return self.coordinator.data.distance
 
-    async def async_set_native_value(self, value: int) -> None:
+    @property
+    def available(self) -> bool:  # type: ignore
+        """Set availability if preset exists and user has permission."""
+        return super().available and self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Control,
+        )
+
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_distance(int(value))
 
@@ -69,7 +81,7 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_icon = "mdi:angle-obtuse"
 
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
@@ -77,7 +89,14 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
             return self.coordinator.data.requested_rotation
         return self.coordinator.data.rotation
 
-    async def async_set_native_value(self, value: int) -> None:
+    @property
+    def available(self) -> bool:  # type: ignore
+        """Set availability if preset exists and user has permission."""
+        return super().available and self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Control,
+        )
+
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_rotation(int(value))
 
@@ -94,13 +113,20 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_icon = "mdi:television-box"
 
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.width
 
-    async def async_set_native_value(self, value: int) -> None:
+    @property
+    def available(self) -> bool:  # type: ignore
+        """Set availability if preset exists and user has permission."""
+        return super().available and self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Settings,
+        )
+
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_tv_width(int(value))
 
@@ -123,13 +149,21 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         self._attr_translation_key = "preset_distance_custom"
 
     @property
-    def native_value(self):
+    def available(self) -> bool:  # type: ignore
+        """Set availability if preset exists and user has permission."""
+        return super().available and self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_presets,
+        )
+
+    @property
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if self._preset:
             return self._preset.distance
         return None
 
-    async def async_set_native_value(self, value: int) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index, distance=(int(value))
@@ -154,13 +188,21 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         self._attr_translation_key = "preset_rotation_custom"
 
     @property
-    def native_value(self):
+    def available(self) -> bool:  # type: ignore
+        """Set availability if preset exists and user has permission."""
+        return super().available and self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_presets,
+        )
+
+    @property
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if self._preset:
             return self._preset.rotation
         return None
 
-    async def async_set_native_value(self, value: int) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
         await self.coordinator.api.set_preset(
             preset_index=self._preset_index,

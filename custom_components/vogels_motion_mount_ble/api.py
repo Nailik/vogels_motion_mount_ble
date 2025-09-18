@@ -98,6 +98,24 @@ class MultiPinFeatures:
     start_calibration: bool
 
 
+class SettingsRequestType(Enum):
+    """Defines types for changing settings request in order to check if user is authenticated."""
+
+    change_presets = 0
+    change_name = 1
+    disable_channel = 2
+    change_tv_on_off_detection = 3
+    change_default_position = 4
+    start_calibration = 5
+
+
+class VogelsMotionMountActionType(Enum):
+    """Defines the possible actions."""
+
+    Control = 0  # control the device
+    Settings = 1  # change settingsVogelsMotionActionType(Enum):
+
+
 @dataclass
 class VogelsMotionMountData:
     """Holds the data of the device."""
@@ -147,24 +165,6 @@ class APISettingsChangeNotStoredError(HomeAssistantError):
 
 
 # internal classes
-
-
-class _ChangeSettingsRequestType(Enum):
-    """Defines types for changing settings request in order to check if user is authenticated."""
-
-    change_presets = 0
-    change_name = 1
-    disable_channel = 2
-    change_tv_on_off_detection = 3
-    change_default_position = 4
-    start_calibration = 5
-
-
-class _VogelsMotionMountActionType(Enum):
-    """Defines the possible actions."""
-
-    Control = 0  # control the device
-    Settings = 1  # change settingsVogelsMotionActionType(Enum):
 
 
 # endregion
@@ -262,7 +262,7 @@ class API:
             )
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Control,
+            type=VogelsMotionMountActionType.Control,
             char_uuid=CHAR_DISTANCE_UUID,
             data=int(distance).to_bytes(2, byteorder="big"),
         )
@@ -278,7 +278,7 @@ class API:
             )
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Control,
+            type=VogelsMotionMountActionType.Control,
             char_uuid=CHAR_ROTATION_UUID,
             data=int(rotation).to_bytes(2, byteorder="big", signed=True),
         )
@@ -292,7 +292,7 @@ class API:
         """Select a preset index to move the MotionMount to."""
         self._logger.debug("Select default preset")
         await self._connect(
-            type=_VogelsMotionMountActionType.Control,
+            type=VogelsMotionMountActionType.Control,
             char_uuid=CHAR_PRESET_UUID,
             data=bytes([0]),
         )
@@ -315,7 +315,7 @@ class API:
             )
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Control,
+            type=VogelsMotionMountActionType.Control,
             char_uuid=CHAR_PRESET_UUID,
             # Preset IDs are 1-based because 0 is the default preset
             data=bytes([preset_index + 1]),
@@ -323,6 +323,40 @@ class API:
 
     # endregion
     # region Settings
+
+    def has_permission(
+        self,
+        action_type: VogelsMotionMountActionType,
+        settings_request_type: SettingsRequestType | None = None,
+    ) -> bool:
+        if self._data.auth_type == VogelsMotionMountAuthenticationType.Full:
+            return True
+        if (
+            self._data.auth_type == VogelsMotionMountAuthenticationType.Control
+            and action_type == VogelsMotionMountActionType.Control
+        ):
+            return True
+
+        if self._data.auth_type == VogelsMotionMountAuthenticationType.Control:
+            if self._data.multi_pin_features is None:
+                self._logger.warning("Unable to check multi pin features.")
+                return False
+            if settings_request_type == SettingsRequestType.change_presets:
+                return self._data.multi_pin_features.change_presets
+            elif settings_request_type == SettingsRequestType.change_name:
+                return self._data.multi_pin_features.change_name
+            elif settings_request_type == SettingsRequestType.disable_channel:
+                return self._data.multi_pin_features.disable_channel
+            elif (
+                settings_request_type == SettingsRequestType.change_tv_on_off_detection
+            ):
+                return self._data.multi_pin_features.change_tv_on_off_detection
+            elif settings_request_type == SettingsRequestType.change_default_position:
+                return self._data.multi_pin_features.change_default_position
+            elif settings_request_type == SettingsRequestType.start_calibration:
+                return self._data.multi_pin_features.start_calibration
+
+        return False
 
     async def set_name(self, name: str):
         """Set the bluetooth name for the deice."""
@@ -334,8 +368,8 @@ class API:
 
         newname = bytearray(name.encode("utf-8"))[:20].ljust(20, b"\x00")
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
-            change_type=_ChangeSettingsRequestType.change_name,
+            type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_name,
             char_uuid=CHAR_NAME_UUID,
             data=newname,
         )
@@ -417,15 +451,15 @@ class API:
 
         # write first 20 bytes, distance, rotation and beginning of name
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
-            change_type=_ChangeSettingsRequestType.change_presets,
+            type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_presets,
             char_uuid=CHAR_PRESET_UUIDS[preset_index],
             data=data[:20].ljust(20, b"\x00"),
         )
         # write rest of name
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
-            change_type=_ChangeSettingsRequestType.change_presets,
+            type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_presets,
             char_uuid=CHAR_PRESET_NAMES_UUIDS[preset_index],
             data=data[20:].ljust(17, b"\x00"),
         )
@@ -462,8 +496,8 @@ class API:
         newpresets = dict(self._data.presets)
         newpresets[preset_index] = None
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
-            change_type=_ChangeSettingsRequestType.change_presets,
+            type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_presets,
             char_uuid=CHAR_PRESET_UUIDS[preset_index],
             data=bytes(0x01).ljust(20, b"\x00"),
         )
@@ -482,7 +516,7 @@ class API:
             raise ServiceValidationError(f"Tv width {width} must be in range(1, 244).")
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
+            type=VogelsMotionMountActionType.Settings,
             char_uuid=CHAR_WIDTH_UUID,
             data=bytes([width]),
         )
@@ -519,8 +553,8 @@ class API:
             new_id = CHAR_AUTOMOVE_ON_OPTIONS[automove_types.index(automove_type)]
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
-            change_type=_ChangeSettingsRequestType.change_tv_on_off_detection,
+            type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_tv_on_off_detection,
             char_uuid=CHAR_AUTOMOVE_UUID,
             data=int(new_id).to_bytes(2, byteorder="big"),
         )
@@ -555,7 +589,7 @@ class API:
             )
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
+            type=VogelsMotionMountActionType.Settings,
             char_uuid=CHAR_CHANGE_PIN_UUID,
             data=self._encode_pin(int(pin), VogelsMotionMountPinType.Authorized_user),
         )
@@ -608,7 +642,7 @@ class API:
             )
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
+            type=VogelsMotionMountActionType.Settings,
             char_uuid=CHAR_CHANGE_PIN_UUID,
             data=self._encode_pin(int(pin), VogelsMotionMountPinType.Supervisior),
         )
@@ -645,8 +679,8 @@ class API:
             )
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
-            change_type=_ChangeSettingsRequestType.change_default_position,
+            type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_default_position,
             char_uuid=CHAR_FREEZE_UUID,
             data=bytes([preset_index]),
         )
@@ -708,7 +742,7 @@ class API:
         value |= int(new_start_calibration) << 7
 
         await self._connect(
-            type=_VogelsMotionMountActionType.Settings,
+            type=VogelsMotionMountActionType.Settings,
             char_uuid=CHAR_MULTI_PIN_FEATURES_UUID,
             data=bytes([value]),
         )
@@ -754,8 +788,8 @@ class API:
     # checks authentication for this action type else raises an APIAuthenticationError error
     async def _connect(
         self,
-        type: _VogelsMotionMountActionType | None = None,
-        change_type: _ChangeSettingsRequestType | None = None,
+        type: VogelsMotionMountActionType | None = None,
+        settings_request_type: SettingsRequestType | None = None,
         char_uuid: str | None = None,
         data: bytes | None = None,
     ):
@@ -786,7 +820,7 @@ class API:
 
         await self._authenticate(
             type=type,
-            change_type=change_type,
+            settings_request_type=settings_request_type,
         )
 
         if char_uuid is not None and data is not None:
@@ -866,47 +900,24 @@ class API:
     # else tries to authenticate for supervisior first and then for authorized user
     async def _authenticate(
         self,
-        type: _VogelsMotionMountActionType | None = None,
-        change_type: _ChangeSettingsRequestType | None = None,
+        type: VogelsMotionMountActionType | None = None,
+        settings_request_type: SettingsRequestType | None = None,
     ):
         self._logger.debug("Authenticate")
 
         if await self._check_authentication():
             self._logger.debug("already authenticated!")
-            if (
-                self._data.auth_type == VogelsMotionMountAuthenticationType.Control
-                and type == _VogelsMotionMountActionType.Settings
-            ):
-                # make sure multi pin features are up to date
-                await self._read_multi_pin_features()
-                allowed = False
-                # check if authorized user (control) has permission
-                if self._data.multi_pin_features is None:
-                    self._logger.warning("Unable to check multi pin features.")
-                    return
-                if change_type == _ChangeSettingsRequestType.change_presets:
-                    self._logger.debug(
-                        "change_type %s allowed %s!",
-                        change_type,
-                        self._data.multi_pin_features.change_presets,
-                    )
-                    allowed = self._data.multi_pin_features.change_presets
-                elif change_type == _ChangeSettingsRequestType.change_name:
-                    allowed = self._data.multi_pin_features.change_name
-                elif change_type == _ChangeSettingsRequestType.disable_channel:
-                    allowed = self._data.multi_pin_features.disable_channel
-                elif (
-                    change_type == _ChangeSettingsRequestType.change_tv_on_off_detection
-                ):
-                    allowed = self._data.multi_pin_features.change_tv_on_off_detection
-                elif change_type == _ChangeSettingsRequestType.change_default_position:
-                    allowed = self._data.multi_pin_features.change_default_position
-                elif change_type == _ChangeSettingsRequestType.start_calibration:
-                    allowed = self._data.multi_pin_features.start_calibration
 
-                if not allowed:
+            # make sure multi pin features are up to date
+            await self._read_multi_pin_features()
+            # check for settings request permission
+            if type is not None:
+                if not self.has_permission(
+                    action_type=type,
+                    settings_request_type=settings_request_type,
+                ):
                     raise APIAuthenticationError(
-                        "Not authenticated for settings action.",
+                        "Not authenticated for this settings action.",
                         self._authentication_cooldown,
                     )
             return
@@ -935,12 +946,18 @@ class API:
             if await self._authenticate_as(type=auth_type):
                 if (
                     auth_type == VogelsMotionMountAuthenticationType.Control
-                    and type == _VogelsMotionMountActionType.Settings
+                    and type == VogelsMotionMountActionType.Settings
                 ):
-                    raise APIAuthenticationError(
-                        "Not authenticated for settings action.",
-                        self._authentication_cooldown,
-                    )
+                    # make sure multi pin features are up to date
+                    await self._read_multi_pin_features()
+                    if not self.has_permission(
+                        action_type=type,
+                        settings_request_type=settings_request_type,
+                    ):
+                        raise APIAuthenticationError(
+                            "Not authenticated for this settings action.",
+                            self._authentication_cooldown,
+                        )
                 return
 
         self._update(auth_type=VogelsMotionMountAuthenticationType.Wrong)

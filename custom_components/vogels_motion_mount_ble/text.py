@@ -4,6 +4,11 @@ from homeassistant.components.text import TextEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from custom_components.vogels_motion_mount_ble.api import (
+    SettingsRequestType,
+    VogelsMotionMountActionType,
+)
+
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
@@ -35,11 +40,19 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     _attr_icon = "mdi:rename-box-outline"
 
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the state of the entity."""
         if self.coordinator.data is None:
             return None
         return self.coordinator.data.name
+
+    @property
+    def available(self) -> bool:  # type: ignore
+        """Set availability if user has permission."""
+        return self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_name,
+        )
 
     async def async_set_value(self, value: str) -> None:
         """Set the name value from the UI."""
@@ -62,7 +75,15 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
 
     @property
-    def native_value(self):
+    def available(self) -> bool:  # type: ignore
+        """Set availability if preset exists and user has permission."""
+        return super().available and self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_presets,
+        )
+
+    @property
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if self._preset:
             return self._preset.name

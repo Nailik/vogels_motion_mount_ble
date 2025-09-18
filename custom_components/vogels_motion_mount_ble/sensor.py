@@ -1,5 +1,6 @@
 """Sensor entities to define properties for Vogels Motion Mount BLE entities."""
 
+from functools import cached_property
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -10,7 +11,7 @@ from .coordinator import VogelsMotionMountBleCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
@@ -38,8 +39,13 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:ruler"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -53,8 +59,13 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:angle-obtuse"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the state of the rotation or None."""
         if not self.coordinator.data:
             return None
@@ -68,8 +79,13 @@ class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -83,8 +99,13 @@ class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -98,8 +119,13 @@ class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -113,8 +139,13 @@ class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -128,8 +159,13 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:cloud-key"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data or not self.coordinator.data.pin_setting:
             return None
@@ -143,8 +179,13 @@ class AuthenticationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:server-security"
 
+    @cached_property
+    def available(self) -> bool:  # type: ignore
+        """Per default always true."""
+        return True
+
     @property
-    def native_value(self):
+    def native_value(self):  # type: ignore
         """Return the current value."""
         if not self.coordinator.data or not self.coordinator.data.auth_type:
             return None
