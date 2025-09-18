@@ -12,6 +12,7 @@ from .api import (
 )
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
+from typing import cast
 
 
 async def async_setup_entry(
@@ -68,9 +69,10 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:  # type: ignore
         """Return the current selected freeze preset."""
-        if self.coordinator.data.freeze_preset_index is None:
+        index = self.coordinator.data.freeze_preset_index
+        if index is None or index not in self.options:
             return None
-        return self.options[self.coordinator.data.freeze_preset_index]
+        return cast(str, self.options[index])
 
     @property
     def options(self) -> list[str]:  # type: ignore
@@ -99,5 +101,5 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        index = self.options[option]
+        index = self.options.index(option)
         await self.coordinator.api.set_freeze_preset(index)
