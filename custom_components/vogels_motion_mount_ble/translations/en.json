@@ -12,18 +12,87 @@
     "invalid_distance": {
       "message": "Invalid distance {actual}, must be in {expected}."
     },
+    "invalid_tv_width": {
+      "message": "Invalid tv width {actual}, must be in {expected}."
+    },
     "invalid_rotation": {
       "message": "Invalid rotation {actual}, must be in {expected}."
+    },
+    "invalid_preset_index": {
+      "message": "Invalid preset index {actual}, must be in {expected}."
+    },
+    "invalid_preset_index_not_exists": {
+      "message": "Invalid preset index, preset at {preset_index} does not exist."
+    },
+    "invalid_name": {
+      "message": "Invalid name {name} with length {actual}, max length is {expected}."
+    },
+    "invalid_status_remove_authorised_user_supervisior_set": {
+      "message": "Authorised user pin cannot be removed when supervisior pin is set."
+    },
+    "invalid_status_remove_supervisior_not_set": {
+      "message": "Supervisior pin cannot be activated when supervisior pin is not set."
+    },
+    "invalid_status_supervisior_requires_authorised_user": {
+      "message": "Supervisior pin cannot be set when authorized user pin is not set."
+    },
+    "invalid_auto_move_type": {
+      "message": "Invalid auto move type {actual}, must be one of {expected}."
+    },
+    "invalid_pin_length": {
+      "message": "Invalid pin length {actual}, length must be {expected}."
+    },
+    "invalid_pin_characters": {
+      "message": "All pin characters must be in [0-9]."
+    },
+    "not_saved_name": {
+      "message": "Name change not saved on device. Expected {expected} actual {actual}."
+    },
+    "not_saved_preset": {
+      "message": "Preset change not saved on device. Expected {expected} actual {actual}."
+    },
+    "not_saved_tv_width": {
+      "message": "Tv width change not saved on device. Expected {expected} actual {actual}."
+    },
+    "not_saved_remove_authorised_user_pin": {
+      "message": "Pin removale not saved on device. Expected type {expected} for pin settings actual type {actual}."
+    },
+    "not_saved_authorised_user_pin": {
+      "message": "Pin not saved on device. Expected not type {expected} for pin settings actual type {actual}."
+    },
+    "not_saved_remove_supervisior_pin": {
+      "message": "Pin removale not saved on device. Expected type {expected} for pin settings actual type {actual}."
+    },
+    "not_saved_supervisior_pin": {
+      "message": "Pin not saved on device. Expected type {expected} for pin settings actual type {actual}."
+    },
+    "not_saved_freeze_preset_index": {
+      "message": "Freeze preset index change not saved on device. Expected {expected} actual {actual}."
+    },
+    "not_saved_multi_pin_features": {
+      "message": "Multi pin features change not saved on device. Expected {expected} actual {actual}."
+    },
+    "device_not_found_while_connecting": {
+      "message": "Device with {mac} not found while trying to connect."
+    },
+    "calibration_timeout_status": {
+      "message": "Calibration timed out while waiting for status, took longer than {seconds} seconds."
+    },
+    "calibration_timeout_homeing": {
+      "message": "Calibration timed out while homeing, stuck at distance {distance} with rotation {rotation}, took longer than {seconds} seconds."
     }
   },
   "config": {
     "error": {
       "error_cannot_connect": "Found device but unable to connect to the device.",
       "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
-      "error_invalid_athentication": "Invalid Authentication, check or disable PIN.",
+      "error_invalid_authentication": "Invalid Authentication, check or disable PIN.",
       "error_auth_cooldown": "Authentication failed, too many attempts. You can try again at {retry_at}.",
       "error_unknown": "An unknown error occurred while trying to connect to the device. {error}",
-      "invalid_mac_code": "The inserted MAC address is not valid."
+      "invalid_mac_code": "The inserted MAC address is not valid.",
+      "invalid_authentication_for_action": "Invalid authentication for action {type} with settings type {settings_request_type}, cooldown of {cooldown} seconds.",
+      "invalid_authentication_missing_for_action": "Invalid authentication missing for action {type} with settings type {settings_request_type}.",
+      "error_missing_permission": "User has no permission for action {type} with settings type {settings_request_type}."
     },
     "abort": {
       "already_configured": "The device is already configured.",

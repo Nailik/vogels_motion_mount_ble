@@ -58,7 +58,7 @@ rules:
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: Integration does not support icon states

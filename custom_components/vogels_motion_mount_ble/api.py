@@ -159,9 +159,20 @@ class APIConnectionDeviceNotFoundError(ConfigEntryNotReady):
 class APIAuthenticationError(ConfigEntryAuthFailed):
     """Exception class if user is not authorized to do this action."""
 
-    def __init__(self, message: str, cooldown: int = 0) -> None:
+    def __init__(
+        self,
+        cooldown: int = 0,
+        translation_domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
         """Create Authentication error with information about cooldown time."""
-        super().__init__(message)
+        super().__init__(
+            translation_domain=translation_domain,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+        # used in config flow
         self.cooldown = cooldown
 
 
@@ -212,6 +223,7 @@ class API:
         """Test connection to the BLE device once using BleakClient and disconnects immediately."""
         self._logger.debug("Test connection")
         if not self._initialize_device():
+            # translated in config flow
             raise APIConnectionDeviceNotFoundError
 
         try:
@@ -229,12 +241,15 @@ class API:
             await self.disconnect()
         except BleakDeviceNotFoundError as err:
             self._logger.error("Failed to connect, device not found")
+            # translated in config flow
             raise APIConnectionDeviceNotFoundError from err
         except APIAuthenticationError as err:
             self._logger.error("Failed to connect wrong authentication")
+            # translated in config flow
             raise err from err
         except Exception as err:
             self._logger.error("Failed to connect")
+            # translated in config flow
             raise APIConnectionError from err
 
     async def disconnect(self):
@@ -323,17 +338,23 @@ class API:
         """Select a preset index to move the MotionMount to."""
         self._logger.debug("Select preset %s", preset_index)
 
-        if (
-            preset_index not in range(7)
-            and self._data.presets[preset_index] is not None
-        ):
+        if preset_index not in range(7):
             raise ServiceValidationError(
-                f"Invalid preset index {preset_index} should be in range(7)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset_index",
+                translation_placeholders={
+                    "actual": str(preset_index),
+                    "expected": str(range(101)),
+                },
             )
 
         if self._data.presets[preset_index] is None:
             raise ServiceValidationError(
-                f"Preset at index {preset_index} doesn't exist."
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset_index_not_exists",
+                translation_placeholders={
+                    "preset_index": str(preset_index),
+                },
             )
 
         await self._connect(
@@ -403,7 +424,11 @@ class API:
             self._logger.debug("_read_calibration_status %s", calibration_status)
             if time.time() - start_time > timeout:
                 raise APISettingsTimeoutError(
-                    "Calibration timed out while waiting for calibration status."
+                    translation_domain=DOMAIN,
+                    translation_key="calibration_timeout_status",
+                    translation_placeholders={
+                        "seconds": str(timeout),
+                    },
                 )
             await sleep(1)
 
@@ -412,7 +437,13 @@ class API:
             await self._connect(skip_authentication=True)
             if time.time() - start_time > timeout:
                 raise APISettingsTimeoutError(
-                    "Calibration timed out while waiting for distance and rotation to home."
+                    translation_domain=DOMAIN,
+                    translation_key="calibration_timeout_homeing",
+                    translation_placeholders={
+                        "distance": str(self._data.distance),
+                        "rotation": str(self._data.rotation),
+                        "seconds": str(timeout),
+                    },
                 )
             await sleep(1)
         await self.disconnect()
@@ -422,7 +453,13 @@ class API:
         self._logger.debug("Change name to %s", name)
         if len(name) > 20:
             raise ServiceValidationError(
-                f"Name {name} too long, max length is 20 characters."
+                translation_domain=DOMAIN,
+                translation_key="invalid_name",
+                translation_placeholders={
+                    "name": str(name),
+                    "actual": str(len(name)),
+                    "expected": str(20),
+                },
             )
 
         newname = bytearray(name.encode("utf-8"))[:20].ljust(20, b"\x00")
@@ -435,7 +472,12 @@ class API:
         await self._read_name()
         if self._data.name != name:
             raise ServiceValidationError(
-                f"Name change not saved on device. Expected {name} actual {self._data.name}."
+                translation_domain=DOMAIN,
+                translation_key="not_saved_name",
+                translation_placeholders={
+                    "actual": str(name),
+                    "expected": str(20),
+                },
             )
 
     async def set_preset(
@@ -459,17 +501,32 @@ class API:
             and self._data.presets[preset_index] is not None
         ):
             raise ServiceValidationError(
-                f"Invalid preset index {preset_index} should be in range(7)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset_index",
+                translation_placeholders={
+                    "actual": str(preset_index),
+                    "expected": str(range(101)),
+                },
             )
 
         if distance not in range(101):
             raise ServiceValidationError(
-                f"Invalid distance {distance} must be in range(101)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_distance",
+                translation_placeholders={
+                    "actual": str(distance),
+                    "expected": str(range(101)),
+                },
             )
 
         if rotation not in range(-100, 101):
             raise ServiceValidationError(
-                f"Invalid rotation {rotation} must be in range(-100,101)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_rotation",
+                translation_placeholders={
+                    "actual": str(rotation),
+                    "expected": str(range(-100, 101)),
+                },
             )
 
         preset = self._data.presets[preset_index]
@@ -484,7 +541,13 @@ class API:
 
         if len(new_name) > 32:
             raise ServiceValidationError(
-                f"Name {name} too long, max length is 32 characters."
+                translation_domain=DOMAIN,
+                translation_key="invalid_name",
+                translation_placeholders={
+                    "name": str(new_name),
+                    "actual": str(len(new_name)),
+                    "expected": str(32),
+                },
             )
 
         new_distance = (
@@ -530,26 +593,38 @@ class API:
             distance=new_distance,
             rotation=new_rotation,
         )
-        if self._data.presets[preset_index] != expected_data:
+        actual_data = self._data.presets[preset_index]
+        if actual_data != expected_data:
             raise ServiceValidationError(
-                f"Preset change not saved on device. Expected {expected_data} actual {self._data.presets[preset_index]}."
+                translation_domain=DOMAIN,
+                translation_key="not_saved_preset",
+                translation_placeholders={
+                    "actual": str(actual_data),
+                    "expected": str(expected_data),
+                },
             )
 
     async def delete_preset(self, preset_index: int):
         """Delete a preset by index to move the MotionMount to."""
         self._logger.debug("Delete preset %s", preset_index)
 
-        if (
-            preset_index not in range(7)
-            and self._data.presets[preset_index] is not None
-        ):
+        if preset_index not in range(7):
             raise ServiceValidationError(
-                f"Invalid preset index {preset_index} should be in range(7)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset_index",
+                translation_placeholders={
+                    "actual": str(preset_index),
+                    "expected": str(range(7)),
+                },
             )
 
         if self._data.presets[preset_index] is None:
             raise ServiceValidationError(
-                f"Preset at index {preset_index} doesn't exist."
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset_index_not_exists",
+                translation_placeholders={
+                    "preset_index": str(preset_index),
+                },
             )
 
         newpresets = dict(self._data.presets)
@@ -561,10 +636,15 @@ class API:
             data=bytes(0x01).ljust(20, b"\x00"),
         )
         await self._read_preset(preset_index)
-        if self._data.presets[preset_index] is not None:
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Preset delete not saved on device. Expected None actual {self._data.presets[preset_index]}."
+        actual_data = self._data.presets[preset_index]
+        if actual_data is not None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_preset",
+                translation_placeholders={
+                    "actual": str(actual_data),
+                    "expected": str(None),
+                },
             )
 
     async def set_tv_width(self, width: int):
@@ -572,7 +652,14 @@ class API:
         self._logger.debug("Set width %s", width)
 
         if width not in range(1, 244):
-            raise ServiceValidationError(f"Tv width {width} must be in range(1, 244).")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_tv_width",
+                translation_placeholders={
+                    "actual": str(width),
+                    "expected": str(range(1, 244)),
+                },
+            )
 
         await self._connect(
             type=VogelsMotionMountActionType.Settings,
@@ -580,10 +667,15 @@ class API:
             data=bytes([width]),
         )
         await self._read_width()
-        if self._data.width != width:
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Width data not saved on device. Expected {width} actual {self._data.width}."
+        actual_width = self._data.width
+        if actual_width != width:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_tv_width",
+                translation_placeholders={
+                    "actual": str(actual_width),
+                    "expected": str(width),
+                },
             )
 
     async def set_automove(self, id: str):
@@ -594,7 +686,14 @@ class API:
             automove_type = VogelsMotionMountAutoMoveType(id)
         except ValueError as err:
             raise ServiceValidationError(
-                f'AutoMove type {id} does not exist, must be any of "off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5".'
+                translation_domain=DOMAIN,
+                translation_key="invalid_auto_move_type",
+                translation_placeholders={
+                    "actual": str(len(id)),
+                    "expected": str(
+                        ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
+                    ),
+                },
             ) from err
 
         if automove_type == VogelsMotionMountAutoMoveType.Off:
@@ -618,13 +717,18 @@ class API:
             data=int(new_id).to_bytes(2, byteorder="big"),
         )
         await self._read_automove()
-        if (
-            self._data.automove_id != new_id
-            or self._data.automove_type != automove_type
-        ):
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Automove data not saved on device. Expected id {new_id} actual {self._data.automove_id}, expected type {automove_type} actual {self._data.automove_type}."
+        actual_id = self._data.automove_id
+        actual_type = self._data.automove_type
+        if actual_id != new_id or actual_type != automove_type:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_tv_width",
+                translation_placeholders={
+                    "actual_id": str(actual_id),
+                    "expected_id": str(new_id),
+                    "actual_type": str(actual_type),
+                    "expected_type": str(automove_type),
+                },
             )
 
     async def set_authorised_user_pin(self, pin: str):
@@ -634,17 +738,28 @@ class API:
 
         if remove and self._data.pin_setting == VogelsMotionMountPinSettings.Multi:
             raise ServiceValidationError(
-                "Authorised user pin cannot be deactivated when supervisior pin is set."
+                translation_domain=DOMAIN,
+                translation_key="invalid_pin_length",
+                translation_placeholders={
+                    "actual": str(len(pin)),
+                    "expected": str(4),
+                },
             )
 
         if len(pin) != 4:
             raise ServiceValidationError(
-                "Authorised user pin is too long, max length 4 digits."
+                translation_domain=DOMAIN,
+                translation_key="invalid_pin_length",
+                translation_placeholders={
+                    "actual": str(len(pin)),
+                    "expected": str(4),
+                },
             )
 
         if not pin.isdigit():
             raise ServiceValidationError(
-                "Authorised user pin contains non digit characters."
+                translation_domain=DOMAIN,
+                translation_key="invalid_pin_characters",
             )
 
         await self._connect(
@@ -654,23 +769,30 @@ class API:
         )
         await self._read_pin_settings()
 
-        if (
-            remove
-            and self._data.pin_setting != VogelsMotionMountPinSettings.Deactivated
-        ):
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Authorised user pin was not set removed. Expected pin settings {VogelsMotionMountPinSettings.Deactivated} actual  {self._data.pin_setting}."
+        actual_pin_setting = self._data.pin_setting
+        if remove and actual_pin_setting != VogelsMotionMountPinSettings.Deactivated:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_remove_authorised_user_pin",
+                translation_placeholders={
+                    "actual": str(actual_pin_setting),
+                    "expected": str(VogelsMotionMountPinSettings.Deactivated),
+                },
             )
 
         if (
             not remove
-            and self._data.pin_setting == VogelsMotionMountPinSettings.Deactivated
+            and actual_pin_setting == VogelsMotionMountPinSettings.Deactivated
         ):
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Authorised user pin was not set removed. Expected pin settings {VogelsMotionMountPinSettings.Single} or {VogelsMotionMountPinSettings.Multi} actual  {self._data.pin_setting}."
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_authorised_user_pin",
+                translation_placeholders={
+                    "actual": str(actual_pin_setting),
+                    "expected": str(VogelsMotionMountPinSettings.Deactivated),
+                },
             )
+
         # required to check if authentication is still valid
         await self.disconnect()
         await self.refresh_data()
@@ -682,22 +804,30 @@ class API:
 
         if remove and self._data.pin_setting == VogelsMotionMountPinSettings.Single:
             raise ServiceValidationError(
-                "Supervisior pin cannot be deactivated when supervisior pin is not set."
+                translation_domain=DOMAIN,
+                translation_key="invalid_status_remove_supervisior_not_set",
             )
 
         if self._data.pin_setting == VogelsMotionMountPinSettings.Deactivated:
             raise ServiceValidationError(
-                "Supervisior pin cannot be set when authorized user pin is not set."
+                translation_domain=DOMAIN,
+                translation_key="invalid_status_remove_supervisior_not_set",
             )
 
         if len(pin) != 4:
             raise ServiceValidationError(
-                "Supervisior pin is too long, max length 4 digits."
+                translation_domain=DOMAIN,
+                translation_key="invalid_pin_length",
+                translation_placeholders={
+                    "actual": str(len(pin)),
+                    "expected": str(4),
+                },
             )
 
         if not pin.isdigit():
             raise ServiceValidationError(
-                "Supervisior pin contains non digit characters."
+                translation_domain=DOMAIN,
+                translation_key="invalid_pin_characters",
             )
 
         await self._connect(
@@ -707,16 +837,25 @@ class API:
         )
         await self._read_pin_settings()
 
-        if remove and self._data.pin_setting != VogelsMotionMountPinSettings.Single:
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Authorised user pin was not set removed. Expected pin settings {VogelsMotionMountPinSettings.Single} actual {self._data.pin_setting}."
+        actual_pin_setting = self._data.pin_setting
+        if remove and actual_pin_setting != VogelsMotionMountPinSettings.Single:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_remove_supervisior_pin",
+                translation_placeholders={
+                    "actual": str(actual_pin_setting),
+                    "expected": str(VogelsMotionMountPinSettings.Single),
+                },
             )
 
-        if not remove and self._data.pin_setting != VogelsMotionMountPinSettings.Multi:
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Supervisior pin was not set. Expected pin settings {VogelsMotionMountPinSettings.Multi} actual {self._data.pin_setting}."
+        if not remove and actual_pin_setting != VogelsMotionMountPinSettings.Multi:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_supervisior_pin",
+                translation_placeholders={
+                    "actual": str(actual_pin_setting),
+                    "expected": str(VogelsMotionMountPinSettings.Multi),
+                },
             )
         # required to check if authentication is still valid
         await self.disconnect()
@@ -729,12 +868,21 @@ class API:
         # take into account that there is a default preset
         if preset_index not in range(8):
             raise ServiceValidationError(
-                f"Invalid preset index {preset_index} should be in range(8)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset_index",
+                translation_placeholders={
+                    "actual": str(preset_index),
+                    "expected": str(range(8)),
+                },
             )
 
         if preset_index == 0 or self._data.presets[preset_index - 1] is None:
             raise ServiceValidationError(
-                f"Preset at index {preset_index} doesn't exist."
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset_index_not_exists",
+                translation_placeholders={
+                    "preset_index": str(preset_index - 1),
+                },
             )
 
         await self._connect(
@@ -744,10 +892,15 @@ class API:
             data=bytes([preset_index]),
         )
         await self._read_freeze_preset()
-        if self._data.freeze_preset_index != preset_index:
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Freeze preset data not saved on device. Expected {preset_index} actual {self._data.freeze_preset_index}."
+        actual_freeze_preset_index = self._data.freeze_preset_index
+        if actual_freeze_preset_index != preset_index:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_freeze_preset_index",
+                translation_placeholders={
+                    "actual": str(actual_freeze_preset_index),
+                    "expected": str(preset_index),
+                },
             )
 
     async def set_multi_pin_features(
@@ -815,9 +968,13 @@ class API:
             start_calibration=new_start_calibration,
         )
         if self._data.multi_pin_features != new_multi_pin_features:
-            self._update()
-            raise APISettingsChangeNotStoredError(
-                f"Multi pin features data not saved on device. Expected {new_multi_pin_features} actual {self._data.multi_pin_features}."
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_saved_multi_pin_features",
+                translation_placeholders={
+                    "actual": str(self._data.multi_pin_features),
+                    "expected": str(new_multi_pin_features),
+                },
             )
 
     # endregion
@@ -855,7 +1012,13 @@ class API:
         skip_authentication: bool = False,
     ):
         if not self._initialize_device():
-            raise APIConnectionDeviceNotFoundError("Device not found.")
+            raise APIConnectionDeviceNotFoundError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found_while_connecting",
+                translation_placeholders={
+                    "mac": str(self._mac),
+                },
+            )
 
         assert self._device is not None
         assert self._client is not None
@@ -978,17 +1141,28 @@ class API:
                     settings_request_type=settings_request_type,
                 ):
                     raise APIAuthenticationError(
-                        "Not authenticated for this settings action.",
-                        self._authentication_cooldown,
+                        cooldown=self._authentication_cooldown,
+                        translation_domain=DOMAIN,
+                        translation_key="error_invalid_authentication",
+                        translation_placeholders={
+                            "type": str(type),
+                            "settings_request_type": str(settings_request_type),
+                            "cooldown": str(self._authentication_cooldown),
+                        },
                     )
             return
-
         # authentication required but no pin set
         if self._pin is None:
             self._update(auth_type=VogelsMotionMountAuthenticationType.Missing)
             await self.disconnect()
             raise APIAuthenticationError(
-                "Authentication missing.", self._authentication_cooldown
+                cooldown=self._authentication_cooldown,
+                translation_domain=DOMAIN,
+                translation_key="error_invalid_authentication",
+                translation_placeholders={
+                    "type": str(type),
+                    "settings_request_type": str(settings_request_type),
+                },
             )
 
         authentication_types = (
@@ -1016,14 +1190,28 @@ class API:
                         settings_request_type=settings_request_type,
                     ):
                         raise APIAuthenticationError(
-                            "Not authenticated for this settings action.",
-                            self._authentication_cooldown,
+                            cooldown=self._authentication_cooldown,
+                            translation_domain=DOMAIN,
+                            translation_key="error_missing_permission",
+                            translation_placeholders={
+                                "type": str(type),
+                                "settings_request_type": str(settings_request_type),
+                            },
                         )
                 return
 
         self._update(auth_type=VogelsMotionMountAuthenticationType.Wrong)
         await self.disconnect()
-        raise APIAuthenticationError("Invalid pin.", self._authentication_cooldown)
+        raise APIAuthenticationError(
+            cooldown=self._authentication_cooldown,
+            translation_domain=DOMAIN,
+            translation_key="error_invalid_authentication",
+            translation_placeholders={
+                "type": str(type),
+                "settings_request_type": str(settings_request_type),
+                "cooldown": str(self._authentication_cooldown),
+            },
+        )
 
     # disconnect from the client
     def _handle_disconnect(self, _: BleakClient):
