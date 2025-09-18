@@ -66,7 +66,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_icon = "mdi:snowflake"
 
     @property
-    def current_option(self):  # type: ignore
+    def current_option(self) -> str | None:  # type: ignore
         """Return the current selected freeze preset."""
         if self.coordinator.data.freeze_preset_index is None:
             return None
@@ -99,5 +99,5 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        index = self._attr_options.index(option)
+        index = self.options[option]
         await self.coordinator.api.set_freeze_preset(index)
