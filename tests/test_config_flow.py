@@ -102,7 +102,7 @@ async def test_user_flow_invalid_mac(hass, mock_api):
 
 async def test_user_flow_authentication_error(hass, mock_api):
     mock_api.return_value.test_connection = AsyncMock(
-        side_effect=APIAuthenticationError("bad pin", cooldown=0)
+        side_effect=APIAuthenticationError(cooldown=0)
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -130,7 +130,7 @@ async def test_user_flow_authentication_cooldown_positive(hass):
         from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 
         mock_api.return_value.test_connection.side_effect = APIAuthenticationError(
-            "auth error", cooldown=30
+            cooldown=30
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -156,7 +156,7 @@ async def test_user_flow_authentication_cooldown_zero(hass):
         from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 
         mock_api.return_value.test_connection = AsyncMock(
-            side_effect=APIAuthenticationError("auth error", cooldown=0)
+            side_effect=APIAuthenticationError(cooldown=0)
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -181,7 +181,7 @@ async def test_user_flow_authentication_cooldown_negative(hass):
         from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 
         mock_api.return_value.test_connection = AsyncMock(
-            side_effect=APIAuthenticationError("auth error", cooldown=-5)
+            side_effect=APIAuthenticationError(cooldown=-5)
         )
 
         result = await hass.config_entries.flow.async_init(
