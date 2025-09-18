@@ -3,11 +3,8 @@
 import logging
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    InvalidEntityFormatError,
-    InvalidStateError,
-    NoEntitySpecifiedError,
-)
+from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.helpers import device_registry
 
 from .const import (
     DOMAIN,
@@ -149,24 +146,28 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
             translation_domain=DOMAIN,
             translation_key="device_id_not_specified",
         )
-    entry = call.hass.config_entries.async_get_entry(device_id)
-    if not entry:
-        raise InvalidEntityFormatError(
+    registry = device_registry.async_get(call.hass)
+    device = registry.async_get(device_id)
+    if not device:
+        raise NoEntitySpecifiedError(
             translation_domain=DOMAIN,
             translation_key="device_missing_entry",
             translation_placeholders={
                 "device_id": str(device_id),
             },
         )
-    if not hasattr(entry, "runtime_data"):
-        raise InvalidStateError(
+    entry_id = next(iter(device.config_entries))
+    runtime_data = call.hass.config_entries.async_get_entry(entry_id).runtime_data
+    if not isinstance(runtime_data, VogelsMotionMountBleCoordinator):
+        raise NoEntitySpecifiedError(
             translation_domain=DOMAIN,
-            translation_key="device_missing_coordinator",
+            translation_key="device_invalid_runtime_data",
             translation_placeholders={
                 "device_id": str(device_id),
+                "runtime_data": str(runtime_data),
             },
         )
-    return entry.runtime_data
+    return runtime_data
 
 
 async def _start_calibration_service(call: ServiceCall) -> None:

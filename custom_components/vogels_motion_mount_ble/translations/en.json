@@ -1,14 +1,20 @@
 {
   "exceptions": {
-        "device_id_not_specified": {
-            "message": "Required device_id not specified."
-        },
-        "device_missing_entry": {
-            "message": "Device for id {device_id} not found."
-        },
-        "device_missing_coordinator": {
-            "message": "No coordinator in runtime data found for device {device_id}."
-        }
+    "device_id_not_specified": {
+      "message": "Required device_id not specified."
+    },
+    "device_missing_entry": {
+      "message": "Device for id {device_id} not found."
+    },
+    "device_invalid_runtime_data": {
+      "message": "Device width id {device_id} has an invalid runtime data object {runtime_data}."
+    },
+    "invalid_distance": {
+      "message": "Invalid distance {actual}, must be in {expected}."
+    },
+    "invalid_rotation": {
+      "message": "Invalid rotation {actual}, must be in {expected}."
+    }
   },
   "config": {
     "error": {

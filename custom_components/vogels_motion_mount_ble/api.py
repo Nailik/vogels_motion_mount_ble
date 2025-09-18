@@ -26,6 +26,7 @@ from homeassistant.exceptions import (
 )
 
 from .const import (
+    DOMAIN,
     CHAR_AUTHENTICATE_UUID,
     CHAR_AUTOMOVE_OFF_OPTIONS,
     CHAR_AUTOMOVE_ON_OPTIONS,
@@ -269,7 +270,12 @@ class API:
 
         if distance not in range(101):
             raise ServiceValidationError(
-                f"Invalid distance {distance} must be in range(101)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_distance",
+                translation_placeholders={
+                    "actual": str(distance),
+                    "expected": str(range(101)),
+                },
             )
 
         await self._connect(
@@ -285,7 +291,12 @@ class API:
 
         if rotation not in range(-100, 101):
             raise ServiceValidationError(
-                f"Invalid rotation {rotation} must be in range(-100,101)."
+                translation_domain=DOMAIN,
+                translation_key="invalid_rotation",
+                translation_placeholders={
+                    "actual": str(rotation),
+                    "expected": str(range(-100, 101)),
+                },
             )
 
         await self._connect(
