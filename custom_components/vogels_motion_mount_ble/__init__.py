@@ -63,8 +63,9 @@ async def async_setup_entry(
     coordinator = VogelsMotionMountBleCoordinator(
         hass=hass,
         config_entry=config_entry,
-        unsub_update_listener=unsub_update_listener,
+        unsub_options_update_listener=unsub_update_listener,
     )
+    config_entry.runtime_data = coordinator
 
     try:
         await coordinator.api.refresh_data()
@@ -75,10 +76,9 @@ async def async_setup_entry(
     except Exception as err:
         raise ConfigEntryError(
             translation_key=f"Something went wrong {err}",
-            translation_placeholders={"error": err},
+            translation_placeholders={"error": str(err)},
         ) from err
 
-    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 

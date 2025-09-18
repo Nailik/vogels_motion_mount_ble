@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data  # type: ignore
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_PIN, CONF_MAC
@@ -15,7 +15,7 @@ TO_REDACT = {CONF_PIN, CONF_MAC}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
+    _: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data

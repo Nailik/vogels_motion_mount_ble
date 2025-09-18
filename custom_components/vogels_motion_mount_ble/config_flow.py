@@ -13,7 +13,14 @@ from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers import selector
+from homeassistant.helpers.selector import (
+    NumberSelector,  # pyright: ignore[reportUnknownVariableType]
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,  # pyright: ignore[reportUnknownVariableType]
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.util import dt as dt_util
 
 from .api import (
@@ -73,27 +80,27 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         # Provide Schema
         return vol.Schema(
             {
-                vol.Required(CONF_MAC, default=mac): selector.TextSelector(
-                    selector.TextSelectorConfig(
-                        type=selector.TextSelectorType.TEXT,
+                vol.Required(CONF_MAC, default=mac): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.TEXT,
                         multiline=False,
                         read_only=not mac_editable,
                     )
                 ),
-                vol.Required(CONF_NAME, default=name): selector.TextSelector(
-                    selector.TextSelectorConfig(
-                        type=selector.TextSelectorType.TEXT,
+                vol.Required(CONF_NAME, default=name): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.TEXT,
                         multiline=False,
                         read_only=not name_editable,
                     )
                 ),
                 vol.Optional(CONF_PIN, default=pin): vol.All(
-                    selector.NumberSelector(
-                        selector.NumberSelectorConfig(
+                    NumberSelector(
+                        NumberSelectorConfig(
                             min=0,
                             max=9999,
                             step=1,
-                            mode=selector.NumberSelectorMode.BOX,
+                            mode=NumberSelectorMode.BOX,
                             read_only=False,
                         )
                     ),
@@ -102,9 +109,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def validate_input(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ValidationResult:
+    async def validate_input(self, user_input: dict[str, Any]) -> ValidationResult:
         """Set up the entry from user data."""
         if not bool(
             re.match(
@@ -119,7 +124,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 hass=self.hass,
                 mac=user_input[CONF_MAC],
                 pin=user_input.get(CONF_PIN),
-                callback=lambda *_, **__: None,
+                callback=None,
             ).test_connection()
             _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
         except APIConnectionDeviceNotFoundError as err:
@@ -188,7 +193,9 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=result.description_placeholders,
         )
 
-    async def async_step_reauth(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle re-authentication."""
         _LOGGER.debug("async_step_reauth %s", user_input)
         result = ValidationResult(errors={})
@@ -205,7 +212,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth",
             data_schema=self.prefilledForm(
-                data=config_entry.data,
+                data=dict(config_entry.data),
                 mac_editable=False,
                 name_editable=False,
             ),
@@ -232,7 +239,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.prefilledForm(
-                data=config_entry.data,
+                data=dict(config_entry.data),
                 mac_editable=False,
             ),
             errors=result.errors,

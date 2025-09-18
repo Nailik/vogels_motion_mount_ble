@@ -1,11 +1,16 @@
+"""Home Assistant services provided by the Vogels Motion Mount integration."""
+
 import logging
 
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.helpers import device_registry
 
 from .const import (
     DOMAIN,
     HA_SERVICE_AUTOMOVE_ID,
     HA_SERVICE_DELETE_PRESET,
+    HA_SERVICE_DEVICE_ID,
     HA_SERVICE_DISCONNECT,
     HA_SERVICE_DISTANCE_ID,
     HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_DEFAULT_PRESET_ID,
@@ -30,9 +35,10 @@ from .const import (
     HA_SERVICE_SET_ROTATION,
     HA_SERVICE_SET_SUPERVISIOR_PIN,
     HA_SERVICE_SET_TV_WIDTH,
+    HA_SERVICE_START_CALIBRATION,
     HA_SERVICE_TV_WIDTH_ID,
 )
-from .utils import get_coordinator
+from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +46,13 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_services(hass: HomeAssistant):
     """Set up my integration services."""
     _LOGGER.debug("async_setup_services called ")
+
+    hass.services.async_register(
+        DOMAIN,
+        HA_SERVICE_START_CALIBRATION,
+        _start_calibration_service,
+    )
+
     hass.services.async_register(
         DOMAIN,
         HA_SERVICE_REFRESH_DATA,
@@ -125,29 +138,66 @@ def async_setup_services(hass: HomeAssistant):
     )
 
 
+def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
+    """Extract device_ids from service call and return list of coordinators."""
+    device_id = call.data.get(HA_SERVICE_DEVICE_ID)
+    if not device_id:
+        raise NoEntitySpecifiedError(
+            translation_domain=DOMAIN,
+            translation_key="device_id_not_specified",
+        )
+    registry = device_registry.async_get(call.hass)
+    device = registry.async_get(device_id)
+    if not device:
+        raise NoEntitySpecifiedError(
+            translation_domain=DOMAIN,
+            translation_key="device_missing_entry",
+            translation_placeholders={
+                "device_id": str(device_id),
+            },
+        )
+    entry_id = next(iter(device.config_entries))
+    runtime_data = call.hass.config_entries.async_get_entry(entry_id).runtime_data
+    if not isinstance(runtime_data, VogelsMotionMountBleCoordinator):
+        raise NoEntitySpecifiedError(
+            translation_domain=DOMAIN,
+            translation_key="device_invalid_runtime_data",
+            translation_placeholders={
+                "device_id": str(device_id),
+                "runtime_data": str(runtime_data),
+            },
+        )
+    return runtime_data
+
+
+async def _start_calibration_service(call: ServiceCall) -> None:
+    _LOGGER.debug("Start calibration service called with data: %s", call.data)
+    await _get_coordinator(call).api.start_calibration()
+
+
 async def _refresh_data_service(call: ServiceCall) -> None:
     _LOGGER.debug("Refresh data service called with data: %s", call.data)
-    await get_coordinator(call).api.refresh_data()
+    await _get_coordinator(call).api.refresh_data()
 
 
 async def _disconnect_service(call: ServiceCall) -> None:
     _LOGGER.debug("Disconnect service called with data: %s", call.data)
-    await get_coordinator(call).api.disconnect()
+    await _get_coordinator(call).api.disconnect()
 
 
 async def _select_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("Select preset service called with data: %s", call.data)
-    await get_coordinator(call).api.select_preset(call.data[HA_SERVICE_PRESET_ID])
+    await _get_coordinator(call).api.select_preset(call.data[HA_SERVICE_PRESET_ID])
 
 
 async def _delete_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("Delete preset service called with data: %s", call.data)
-    await get_coordinator(call).api.delete_preset(call.data[HA_SERVICE_PRESET_ID])
+    await _get_coordinator(call).api.delete_preset(call.data[HA_SERVICE_PRESET_ID])
 
 
 async def _set_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("Add preset service called with data: %s", call.data)
-    await get_coordinator(call).api.set_preset(
+    await _get_coordinator(call).api.set_preset(
         preset_index=call.data[HA_SERVICE_PRESET_ID],
         name=call.data[HA_SERVICE_NAME_ID],
         distance=call.data[HA_SERVICE_DISTANCE_ID],
@@ -157,34 +207,34 @@ async def _set_preset_service(call: ServiceCall) -> None:
 
 async def _set_distance_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set distance service called with data: %s", call.data)
-    await get_coordinator(call).api.set_distance(call.data[HA_SERVICE_DISTANCE_ID])
+    await _get_coordinator(call).api.set_distance(call.data[HA_SERVICE_DISTANCE_ID])
 
 
 async def _set_rotation_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set rotation service called with data: %s", call.data)
-    await get_coordinator(call).api.set_rotation(call.data[HA_SERVICE_ROTATION_ID])
+    await _get_coordinator(call).api.set_rotation(call.data[HA_SERVICE_ROTATION_ID])
 
 
 async def _set_tv_width_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set tv width called with data: %s", call.data)
-    await get_coordinator(call).api.set_tv_width(call.data[HA_SERVICE_TV_WIDTH_ID])
+    await _get_coordinator(call).api.set_tv_width(call.data[HA_SERVICE_TV_WIDTH_ID])
 
 
 async def _set_automove_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set automove service called with data: %s", call.data)
-    await get_coordinator(call).api.set_automove(call.data[HA_SERVICE_AUTOMOVE_ID])
+    await _get_coordinator(call).api.set_automove(call.data[HA_SERVICE_AUTOMOVE_ID])
 
 
 async def _set_freeze_preset_service(call: ServiceCall) -> None:
     _LOGGER.debug("Set freeze service called with data: %s", call.data)
-    await get_coordinator(call).api.set_freeze_preset(call.data[HA_SERVICE_PRESET_ID])
+    await _get_coordinator(call).api.set_freeze_preset(call.data[HA_SERVICE_PRESET_ID])
 
 
 async def _set_multi_pin_features(call: ServiceCall) -> None:
     _LOGGER.debug(
         "Set multi pin features change presets service called with data: %s", call.data
     )
-    await get_coordinator(call).api.set_multi_pin_features(
+    await _get_coordinator(call).api.set_multi_pin_features(
         change_presets=call.data.get(HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_PRESET_ID),
         change_name=call.data.get(HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_NAME_ID),
         disable_channel=call.data.get(HA_SERVICE_MULTI_PIN_FEATURE_DISABLE_CHANNEL_ID),
@@ -202,16 +252,16 @@ async def _set_multi_pin_features(call: ServiceCall) -> None:
 
 async def _set_name(call: ServiceCall) -> None:
     _LOGGER.debug("Set name service called with data: %s", call.data)
-    await get_coordinator(call).api.set_name(call.data[HA_SERVICE_NAME_ID])
+    await _get_coordinator(call).api.set_name(call.data[HA_SERVICE_NAME_ID])
 
 
 async def _set_authorised_user_pin(call: ServiceCall) -> None:
     _LOGGER.debug("Set authorised user pin service called with data: %s", call.data)
-    await get_coordinator(call).api.set_authorised_user_pin(
+    await _get_coordinator(call).api.set_authorised_user_pin(
         call.data[HA_SERVICE_PIN_ID]
     )
 
 
 async def _set_supervisior_pin(call: ServiceCall) -> None:
     _LOGGER.debug("Set supervisior pin service called with data: %s", call.data)
-    await get_coordinator(call).api.set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
+    await _get_coordinator(call).api.set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])

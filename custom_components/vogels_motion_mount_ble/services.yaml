@@ -135,6 +135,13 @@ set_tv_width:
       selector:
         text:
           multiline: false
+start_calibration:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: vogels_motion_mount_ble
 set_automove:
   fields:
     device_id:
@@ -142,7 +149,7 @@ set_automove:
       selector:
         device:
           integration: vogels_motion_mount_ble
-    automove_id:
+    automove:
       required: true
       selector:
         select:

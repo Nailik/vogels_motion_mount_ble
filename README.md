@@ -42,6 +42,7 @@ When the integration is set up the integration tries to connect to the Vogel's M
 | MCP BL, FW Version | Version of MCP |  | ✅ | 
 | Refresh Data | read data from device | refresh_data | ✅ | 
 | Disconnect | disconnect device | disconnect | ✅ | 
+| Calibrate | Start Calibration | start_calibration | ✅ | 
 
 # Bluetooth GATT Services and Characteristics
 
@@ -56,7 +57,7 @@ Encoding is usually Big Endian, noted when otherwise.
 | `c005fa00-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Movement (forward/backward), range: `0` - `100` |
 | `c005fa01-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Rotation (left/right), range `-100` - `100` |
 | `c005fa02-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Auto Move HDMI:<br>• 1: off `1` / on `00`<br>• 2: off `5` / on `4`<br>• 3: off `9` / on `8`<br>• 4: off `13` / on `12`<br>• 5: off `17` / on `16` |
-| `c005fa03-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
+| `c005fa03-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Calibration `1` to start calibration, returns increasing numbers until it ends with `0`, notify doesn't sent data |
 | `c005fa07-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
 | `c005fa08-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | CEB BL Version |
 | `c005fa09-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |

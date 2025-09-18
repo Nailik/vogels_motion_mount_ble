@@ -5,13 +5,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
-from .api import VogelsMotionMountAutoMoveType
+from .api import (
+    SettingsRequestType,
+    VogelsMotionMountActionType,
+    VogelsMotionMountAutoMoveType,
+)
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     config_entry: VogelsMotionMountBleConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
@@ -35,9 +39,17 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_icon = "mdi:autorenew"
 
     @property
-    def current_option(self):
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Set availability if preset exists and user has permission."""
+        return self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.change_tv_on_off_detection,
+        )
+
+    @property
+    def current_option(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current active automove option."""
-        if self.coordinator.data is None or self.coordinator.data.automove_type is None:
+        if self.coordinator.data.automove_type is None:
             return None
         return self.coordinator.data.automove_type.value
 
@@ -51,30 +63,42 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
 
     _attr_unique_id = "freeze_preset"
     _attr_translation_key = _attr_unique_id
-    _attr_options = ["0", "1", "2", "3", "4", "5", "6", "7"]
     _attr_icon = "mdi:snowflake"
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current selected freeze preset."""
-        if self.coordinator.data is None:
+        index = self.coordinator.data.freeze_preset_index
+        if index is None or not (0 <= index < len(self.options)):
             return None
-        if self.coordinator.data.freeze_preset_index is None:
-            return None
-        return self._attr_options[self.coordinator.data.freeze_preset_index]
+        return self.options[index]
 
     @property
-    def available(self) -> bool:
+    def options(self) -> list[str]:  # pyright: ignore[reportIncompatibleVariableOverride]
+        """Return the possible options."""
+        # Dynamically generated based on coordinator data
+        return ["0"] + [
+            str(preset.name)
+            for _, preset in self.coordinator.data.presets.items()
+            if preset is not None
+        ]
+
+    @property
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if automove is turned on."""
         if (
             self.coordinator.data
             and self.coordinator.data.automove_type
             is not VogelsMotionMountAutoMoveType.Off
+            and self.coordinator.api.has_permission(
+                action_type=VogelsMotionMountActionType.Settings,
+                settings_request_type=SettingsRequestType.change_default_position,
+            )
         ):
             return True
         return False
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        index = self._attr_options.index(option)
+        index = self.options.index(option)
         await self.coordinator.api.set_freeze_preset(index)
