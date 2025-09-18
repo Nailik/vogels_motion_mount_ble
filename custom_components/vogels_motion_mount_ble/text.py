@@ -42,8 +42,6 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     @property
     def native_value(self):  # type: ignore
         """Return the state of the entity."""
-        if self.coordinator.data is None:
-            return None
         return self.coordinator.data.name
 
     @property

@@ -25,16 +25,21 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    numbers = [
-        DistanceNumber(coordinator),
-        RotationNumber(coordinator),
-        TVWidthNumber(coordinator),
-        *[PresetDistanceNumber(coordinator, preset_index) for preset_index in range(7)],
-        *[PresetRotationNumber(coordinator, preset_index) for preset_index in range(7)],
-    ]
-
-    # Create the sensors.
-    async_add_entities(numbers)
+    async_add_entities(
+        [
+            DistanceNumber(coordinator),
+            RotationNumber(coordinator),
+            TVWidthNumber(coordinator),
+            *[
+                PresetDistanceNumber(coordinator, preset_index)
+                for preset_index in range(7)
+            ],
+            *[
+                PresetRotationNumber(coordinator, preset_index)
+                for preset_index in range(7)
+            ],
+        ]
+    )
 
 
 class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):

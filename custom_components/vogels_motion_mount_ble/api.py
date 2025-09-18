@@ -6,6 +6,7 @@ from enum import Enum
 import logging
 import struct
 from bleak.backends.device import BLEDevice
+from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak import BleakClient
 from bleak.exc import BleakDeviceNotFoundError
 from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
@@ -18,6 +19,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
+from typing import Any
 
 from .const import (
     CHAR_AUTHENTICATE_UUID,
@@ -126,7 +128,9 @@ class VogelsMotionMountData:
     rotation: int | None = None
     requested_distance: int | None = None
     requested_rotation: int | None = None
-    presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)
+    presets: dict[int, VogelsMotionMountPreset | None] = field(
+        default_factory=lambda: dict[int, VogelsMotionMountPreset | None]()
+    )
     width: int | None = None
     freeze_preset_index: int | None = None
     automove_type: VogelsMotionMountAutoMoveType | None = None
@@ -179,7 +183,7 @@ class API:
         hass: HomeAssistant,
         mac: str,
         pin: str | None,
-        callback: Callable[[VogelsMotionMountData], None],
+        callback: Callable[[VogelsMotionMountData], None] | None,
     ) -> None:
         """Set up the default data."""
         self._logger = logging.getLogger(f"{__name__}.{mac}")
@@ -774,13 +778,14 @@ class API:
                 address=self._mac,
                 connectable=True,
             )
-            assert self._device is not None
+            if self._device is None:
+                return False
             self._client = BleakClient(
                 address_or_ble_device=self._device,
                 disconnected_callback=self._handle_disconnect,
                 timeout=120,
             )
-        result = self._device is not None and self._client is not None
+        result = self._client is not None
         self._logger.debug("Initialisation was %s", result)
         return result
 
@@ -942,10 +947,10 @@ class API:
             ]
         )
 
-        for auth_type in authentication_types:
-            if await self._authenticate_as(type=auth_type):
+        for test_auth_type in authentication_types:
+            if await self._authenticate_as(type=test_auth_type):
                 if (
-                    auth_type == VogelsMotionMountAuthenticationType.Control
+                    test_auth_type == VogelsMotionMountPinType.Authorized_user
                     and type == VogelsMotionMountActionType.Settings
                 ):
                     # make sure multi pin features are up to date
@@ -965,7 +970,7 @@ class API:
         raise APIAuthenticationError("Invalid pin.", self._authentication_cooldown)
 
     # disconnect from the client
-    def _handle_disconnect(self, _):
+    def _handle_disconnect(self, _: BleakClient):
         self._logger.debug("Device disconnected!")
         if self._client is not None:
             self._update(connected=self._client.is_connected)
@@ -1003,15 +1008,20 @@ class API:
         await self._read_version_mcp()
 
     # Update one or more fields, retaining others from existing data. Then notify the coordinator
-    def _update(self, **kwargs):
+    def _update(self, **kwargs: Any):
         self._data = replace(self._data, **kwargs)
-        self._callback(self._data)
+        if self._callback is not None:
+            self._callback(self._data)
 
-    def _handle_distance_change(self, _, data: bytearray):
+    def _handle_distance_change(
+        self, _: BleakGATTCharacteristic | None, data: bytearray
+    ):
         self._logger.debug("Handle distance change %s", data)
         self._update(distance=int.from_bytes(data, "big"))
 
-    def _handle_rotation_change(self, _, data: bytearray):
+    def _handle_rotation_change(
+        self, _: BleakGATTCharacteristic | None, data: bytearray
+    ):
         self._logger.debug("Handle rotation change %s", data)
         self._update(rotation=int.from_bytes(data, "big"))
 
@@ -1033,7 +1043,7 @@ class API:
         self._logger.debug("Read rotation %s", data)
         self._handle_distance_change(None, data)
 
-    async def _read_preset(self, preset_index):
+    async def _read_preset(self, preset_index: int):
         assert self._client is not None
         data1 = await self._client.read_gatt_char(CHAR_PRESET_UUIDS[preset_index])
         data2 = await self._client.read_gatt_char(CHAR_PRESET_NAMES_UUIDS[preset_index])

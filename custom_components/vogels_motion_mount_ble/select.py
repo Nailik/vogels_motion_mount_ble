@@ -49,7 +49,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def current_option(self):  # type: ignore
         """Return the current active automove option."""
-        if self.coordinator.data is None or self.coordinator.data.automove_type is None:
+        if self.coordinator.data.automove_type is None:
             return None
         return self.coordinator.data.automove_type.value
 
@@ -68,8 +68,6 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def current_option(self):  # type: ignore
         """Return the current selected freeze preset."""
-        if self.coordinator.data is None:
-            return None
         if self.coordinator.data.freeze_preset_index is None:
             return None
         return self.options[self.coordinator.data.freeze_preset_index]
@@ -78,8 +76,6 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     def options(self) -> list[str]:  # type: ignore
         """Return the possible options."""
         # Dynamically generated based on coordinator data
-        if self.coordinator.data is None:
-            return []
         return ["0"] + [
             str(preset.name)
             for _, preset in self.coordinator.data.presets.items()
