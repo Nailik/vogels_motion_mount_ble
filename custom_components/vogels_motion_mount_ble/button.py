@@ -25,9 +25,10 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            RefreshDataButton(coordinator=coordinator),
-            DisconnectButton(coordinator=coordinator),
-            SelectPresetDefaultButton(coordinator=coordinator),
+            StartCalibratonButton(coordinator),
+            RefreshDataButton(coordinator),
+            DisconnectButton(coordinator),
+            SelectPresetDefaultButton(coordinator),
             *[AddPresetButton(coordinator, preset_index) for preset_index in range(7)],
             *[
                 DeletePresetButton(coordinator, preset_index)
@@ -39,6 +40,26 @@ async def async_setup_entry(
             ],
         ]
     )
+
+
+class StartCalibratonButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
+    """Set up the Button that provides an action to start the calibration."""
+
+    _attr_unique_id = "start_calibration"
+    _attr_translation_key = _attr_unique_id
+    _attr_icon = "mdi:rotate-3d"
+
+    @property
+    def available(self) -> bool:  # type: ignore
+        """Set availability if user has permission."""
+        return self.coordinator.api.has_permission(
+            action_type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.start_calibration,
+        )
+
+    async def async_press(self):
+        """Execute start calibration."""
+        await self.coordinator.api.start_calibration()
 
 
 class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):

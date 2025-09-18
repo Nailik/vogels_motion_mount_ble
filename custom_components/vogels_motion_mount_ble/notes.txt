@@ -1,7 +1,8 @@
 # what is permission for start calibration - todo what does start diagnosis do
 # todo change options according to permission
-# todo how to control disable channel
-
+# todo how to control disable channel - awaiting app update
+# todo translate all raise exceptions (mainly in api)
+# instead of crashing at assert self._client is not None raise an unexpected disconnection error?
 # test services:
 authorised user pin change
 supervisior pin change

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 import logging
 import struct
+from anyio import sleep
 from bleak.backends.device import BLEDevice
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak import BleakClient
@@ -19,6 +20,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
+import time
 from typing import Any
 
 from .const import (
@@ -40,6 +42,7 @@ from .const import (
     CHAR_VERSIONS_CEB_UUID,
     CHAR_VERSIONS_MCP_UUID,
     CHAR_WIDTH_UUID,
+    CHAR_CALIBRATE_UUID,
 )
 
 
@@ -163,6 +166,10 @@ class APIAuthenticationError(ConfigEntryAuthFailed):
 
 class APISettingsChangeNotStoredError(HomeAssistantError):
     """Exception class if changed settings are not saved on vogels motion mount."""
+
+
+class APISettingsTimeoutError(HomeAssistantError):
+    """Exception class if an action has a timeout."""
 
 
 # endregion
@@ -361,6 +368,44 @@ class API:
                 return self._data.multi_pin_features.start_calibration
 
         return False
+
+    async def start_calibration(self):
+        """Start the calibration process with 3 minute timeout."""
+        self._logger.debug("Start the calibration process")
+
+        await self._connect(
+            type=VogelsMotionMountActionType.Settings,
+            settings_request_type=SettingsRequestType.start_calibration,
+            char_uuid=CHAR_CALIBRATE_UUID,
+            data=bytes([1]),
+        )
+        start_time = time.time()
+        timeout = 180
+
+        # expected to go from 02, 03, 04, 05, 08, 09, 0c, 00
+        calibration_status: int | None = None
+
+        # wait for calibration to end
+        while calibration_status != 0:
+            # it's expected for the device to disconnect while calibration, therefore i's necessary to reconnect
+            await self._connect(skip_authentication=True)
+            calibration_status = await self._read_calibration_status()
+            self._logger.debug("_read_calibration_status %s", calibration_status)
+            if time.time() - start_time > timeout:
+                raise APISettingsTimeoutError(
+                    "Calibration timed out while waiting for calibration status."
+                )
+            await sleep(1)
+
+        while self._data.distance != 0 and self._data.rotation != 0:
+            # it's expected for the device to disconnect while calibration, therefore i's necessary to reconnect
+            await self._connect(skip_authentication=True)
+            if time.time() - start_time > timeout:
+                raise APISettingsTimeoutError(
+                    "Calibration timed out while waiting for distance and rotation to home."
+                )
+            await sleep(1)
+        await self.disconnect()
 
     async def set_name(self, name: str):
         """Set the bluetooth name for the deice."""
@@ -785,7 +830,7 @@ class API:
                 disconnected_callback=self._handle_disconnect,
                 timeout=120,
             )
-        result = self._client is not None
+        result = self._device is not None and self._client is not None
         self._logger.debug("Initialisation was %s", result)
         return result
 
@@ -797,6 +842,7 @@ class API:
         settings_request_type: SettingsRequestType | None = None,
         char_uuid: str | None = None,
         data: bytes | None = None,
+        skip_authentication: bool = False,
     ):
         if not self._initialize_device():
             raise APIConnectionDeviceNotFoundError("Device not found.")
@@ -820,13 +866,13 @@ class API:
                 disconnected_callback=self._handle_disconnect,
             )
             self._logger.debug("Connected!")
+            self._update(connected=self._client.is_connected)
 
-        self._update(connected=self._client.is_connected)
-
-        await self._authenticate(
-            type=type,
-            settings_request_type=settings_request_type,
-        )
+        if not skip_authentication:
+            await self._authenticate(
+                type=type,
+                settings_request_type=settings_request_type,
+            )
 
         if char_uuid is not None and data is not None:
             self._logger.debug("Write data %s", data)
@@ -1024,6 +1070,12 @@ class API:
     ):
         self._logger.debug("Handle rotation change %s", data)
         self._update(rotation=int.from_bytes(data, "big"))
+
+    async def _read_calibration_status(self) -> int:
+        assert self._client is not None
+        data = await self._client.read_gatt_char(CHAR_CALIBRATE_UUID)
+        self._logger.debug("Read calibration status %s", data)
+        return int(data[0])
 
     async def _read_name(self):
         assert self._client is not None

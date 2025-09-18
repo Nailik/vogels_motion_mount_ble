@@ -66,6 +66,9 @@
       }
     },
     "button": {
+      "start_calibration": {
+        "name": "Start calibration"
+      },
       "refresh_data": {
         "name": "Refresh Data"
       },
@@ -226,6 +229,16 @@
     }
   },
   "services": {
+    "start_calibration": {
+      "name": "Start calibration",
+      "description": "Starts the calibration for the device.",
+      "fields": {
+        "device_id": {
+          "name": "Target Device",
+          "description": "What should this action use as targeted device."
+        }
+      }
+    },
     "refresh_data": {
       "name": "Refresh Data",
       "description": "Refreshes the data from the device.",

@@ -12,6 +12,7 @@ from homeassistant.exceptions import (
 from .const import (
     DOMAIN,
     HA_SERVICE_AUTOMOVE_ID,
+    HA_SERVICE_START_CALIBRATION,
     HA_SERVICE_DELETE_PRESET,
     HA_SERVICE_DISCONNECT,
     HA_SERVICE_DISTANCE_ID,
@@ -46,6 +47,13 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup_services(hass: HomeAssistant):
     """Set up my integration services."""
     _LOGGER.debug("async_setup_services called ")
+
+    hass.services.async_register(
+        DOMAIN,
+        HA_SERVICE_START_CALIBRATION,
+        _start_calibration_service,
+    )
+
     hass.services.async_register(
         DOMAIN,
         HA_SERVICE_REFRESH_DATA,
@@ -157,6 +165,11 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
             },
         )
     return entry.runtime_data
+
+
+async def _start_calibration_service(call: ServiceCall) -> None:
+    _LOGGER.debug("Start calibration service called with data: %s", call.data)
+    await _get_coordinator(call).api.start_calibration()
 
 
 async def _refresh_data_service(call: ServiceCall) -> None:
