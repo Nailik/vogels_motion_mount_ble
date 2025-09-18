@@ -1,17 +1,21 @@
 """Bluetooth api to connect to Vogels MotionMount."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from enum import Enum
 import logging
 import struct
+import time
+from typing import Any
+
 from anyio import sleep
-from bleak.backends.device import BLEDevice
-from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak import BleakClient
+from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak.backends.device import BLEDevice
 from bleak.exc import BleakDeviceNotFoundError
 from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
-from collections.abc import Callable
+
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -20,14 +24,13 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-import time
-from typing import Any
 
 from .const import (
     CHAR_AUTHENTICATE_UUID,
     CHAR_AUTOMOVE_OFF_OPTIONS,
     CHAR_AUTOMOVE_ON_OPTIONS,
     CHAR_AUTOMOVE_UUID,
+    CHAR_CALIBRATE_UUID,
     CHAR_CHANGE_PIN_UUID,
     CHAR_DISTANCE_UUID,
     CHAR_FREEZE_UUID,
@@ -42,7 +45,6 @@ from .const import (
     CHAR_VERSIONS_CEB_UUID,
     CHAR_VERSIONS_MCP_UUID,
     CHAR_WIDTH_UUID,
-    CHAR_CALIBRATE_UUID,
 )
 
 
@@ -131,9 +133,7 @@ class VogelsMotionMountData:
     rotation: int | None = None
     requested_distance: int | None = None
     requested_rotation: int | None = None
-    presets: dict[int, VogelsMotionMountPreset | None] = field(
-        default_factory=lambda: dict[int, VogelsMotionMountPreset | None]()
-    )
+    presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)  # type: ignore[valid-type]
     width: int | None = None
     freeze_preset_index: int | None = None
     automove_type: VogelsMotionMountAutoMoveType | None = None
@@ -340,6 +340,7 @@ class API:
         action_type: VogelsMotionMountActionType,
         settings_request_type: SettingsRequestType | None = None,
     ) -> bool:
+        """Checks if the current user has enough permission to do the specified request."""
         if self._data.auth_type == VogelsMotionMountAuthenticationType.Full:
             return True
         if (
@@ -354,17 +355,15 @@ class API:
                 return False
             if settings_request_type == SettingsRequestType.change_presets:
                 return self._data.multi_pin_features.change_presets
-            elif settings_request_type == SettingsRequestType.change_name:
+            if settings_request_type == SettingsRequestType.change_name:
                 return self._data.multi_pin_features.change_name
-            elif settings_request_type == SettingsRequestType.disable_channel:
+            if settings_request_type == SettingsRequestType.disable_channel:
                 return self._data.multi_pin_features.disable_channel
-            elif (
-                settings_request_type == SettingsRequestType.change_tv_on_off_detection
-            ):
+            if settings_request_type == SettingsRequestType.change_tv_on_off_detection:
                 return self._data.multi_pin_features.change_tv_on_off_detection
-            elif settings_request_type == SettingsRequestType.change_default_position:
+            if settings_request_type == SettingsRequestType.change_default_position:
                 return self._data.multi_pin_features.change_default_position
-            elif settings_request_type == SettingsRequestType.start_calibration:
+            if settings_request_type == SettingsRequestType.start_calibration:
                 return self._data.multi_pin_features.start_calibration
 
         return False
@@ -830,7 +829,7 @@ class API:
                 disconnected_callback=self._handle_disconnect,
                 timeout=120,
             )
-        result = self._device is not None and self._client is not None
+        result = self._client is not None
         self._logger.debug("Initialisation was %s", result)
         return result
 

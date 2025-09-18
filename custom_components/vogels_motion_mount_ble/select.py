@@ -39,7 +39,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_icon = "mdi:autorenew"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -47,7 +47,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         )
 
     @property
-    def current_option(self):  # type: ignore
+    def current_option(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current active automove option."""
         if self.coordinator.data.automove_type is None:
             return None
@@ -66,7 +66,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_icon = "mdi:snowflake"
 
     @property
-    def current_option(self) -> str | None:  # type: ignore
+    def current_option(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current selected freeze preset."""
         index = self.coordinator.data.freeze_preset_index
         if index is None or not (0 <= index < len(self.options)):
@@ -74,7 +74,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         return self.options[index]
 
     @property
-    def options(self) -> list[str]:  # type: ignore
+    def options(self) -> list[str]:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the possible options."""
         # Dynamically generated based on coordinator data
         return ["0"] + [
@@ -84,7 +84,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         ]
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if automove is turned on."""
         if (
             self.coordinator.data

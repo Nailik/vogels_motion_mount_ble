@@ -1,14 +1,14 @@
 """Button entities to define actions for Vogels Motion Mount BLE entities."""
 
-from functools import cached_property
-from homeassistant.components.button import ButtonEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from custom_components.vogels_motion_mount_ble.api import (
     SettingsRequestType,
     VogelsMotionMountActionType,
 )
+from propcache.api import cached_property
+
+from homeassistant.components.button import ButtonEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
@@ -50,7 +50,7 @@ class StartCalibratonButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     _attr_icon = "mdi:rotate-3d"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if user has permission."""
         return self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -70,7 +70,7 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     _attr_icon = "mdi:refresh"
 
     @cached_property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
         """Per default always available."""
         return True
 
@@ -87,7 +87,7 @@ class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     _attr_icon = "mdi:power-plug-off"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability only if device is connected currently."""
         if self.coordinator.data and self.coordinator.data.connected:
             return True
@@ -106,7 +106,7 @@ class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     _attr_icon = "mdi:wall"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if user has permission."""
         return self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Control,
@@ -136,7 +136,7 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         self._attr_unique_id = f"select_preset_id_{preset_index}"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -164,7 +164,7 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         self._attr_unique_id = f"delete_preset_{self._prop_preset_index}"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -201,7 +201,7 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         )
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability of this index of Preset entity based on the lengths of presets in the data."""
         if (
             self.coordinator.data

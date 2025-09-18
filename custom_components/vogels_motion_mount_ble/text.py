@@ -1,13 +1,13 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-from homeassistant.components.text import TextEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from custom_components.vogels_motion_mount_ble.api import (
     SettingsRequestType,
     VogelsMotionMountActionType,
 )
+
+from homeassistant.components.text import TextEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
@@ -40,12 +40,12 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     _attr_icon = "mdi:rename-box-outline"
 
     @property
-    def native_value(self):  # type: ignore
+    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state of the entity."""
         return self.coordinator.data.name
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if user has permission."""
         return self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -73,7 +73,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -81,7 +81,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         )
 
     @property
-    def native_value(self):  # type: ignore
+    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value."""
         if self._preset:
             return self._preset.name

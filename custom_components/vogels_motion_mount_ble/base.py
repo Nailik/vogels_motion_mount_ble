@@ -1,6 +1,7 @@
 """Base entity to define common properties and methods for Vogels Motion Mount BLE entities."""
 
-from functools import cached_property
+from propcache.api import cached_property
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

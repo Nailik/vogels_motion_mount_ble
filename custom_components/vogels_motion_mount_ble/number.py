@@ -1,13 +1,13 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from custom_components.vogels_motion_mount_ble.api import (
     SettingsRequestType,
     VogelsMotionMountActionType,
 )
+
+from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
@@ -54,7 +54,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_icon = "mdi:ruler"
 
     @property
-    def native_value(self):  # type: ignore
+    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
@@ -63,7 +63,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         return self.coordinator.data.distance
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Control,
@@ -86,7 +86,7 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_icon = "mdi:angle-obtuse"
 
     @property
-    def native_value(self):  # type: ignore
+    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
@@ -95,7 +95,7 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
         return self.coordinator.data.rotation
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Control,
@@ -118,14 +118,14 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_icon = "mdi:television-box"
 
     @property
-    def native_value(self):  # type: ignore
+    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.width
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -154,7 +154,7 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         self._attr_translation_key = "preset_distance_custom"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -162,7 +162,7 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         )
 
     @property
-    def native_value(self):  # type: ignore
+    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value."""
         if self._preset:
             return self._preset.distance
@@ -193,7 +193,7 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         self._attr_translation_key = "preset_rotation_custom"
 
     @property
-    def available(self) -> bool:  # type: ignore
+    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -201,7 +201,7 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         )
 
     @property
-    def native_value(self):  # type: ignore
+    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """Return the current value."""
         if self._preset:
             return self._preset.rotation

@@ -1,19 +1,19 @@
+"""Home Assistant services provided by the Vogels Motion Mount integration."""
+
 import logging
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from .const import HA_SERVICE_DEVICE_ID
-from .coordinator import VogelsMotionMountBleCoordinator
 from homeassistant.exceptions import (
-    NoEntitySpecifiedError,
     InvalidEntityFormatError,
     InvalidStateError,
+    NoEntitySpecifiedError,
 )
 
 from .const import (
     DOMAIN,
     HA_SERVICE_AUTOMOVE_ID,
-    HA_SERVICE_START_CALIBRATION,
     HA_SERVICE_DELETE_PRESET,
+    HA_SERVICE_DEVICE_ID,
     HA_SERVICE_DISCONNECT,
     HA_SERVICE_DISTANCE_ID,
     HA_SERVICE_MULTI_PIN_FEATURE_CHANGE_DEFAULT_PRESET_ID,
@@ -38,8 +38,10 @@ from .const import (
     HA_SERVICE_SET_ROTATION,
     HA_SERVICE_SET_SUPERVISIOR_PIN,
     HA_SERVICE_SET_TV_WIDTH,
+    HA_SERVICE_START_CALIBRATION,
     HA_SERVICE_TV_WIDTH_ID,
 )
+from .coordinator import VogelsMotionMountBleCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
