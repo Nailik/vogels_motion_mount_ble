@@ -1,5 +1,6 @@
 """Coordinator for Vogels Motion Mount BLE integration in order to hold api."""
 
+from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +45,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             _LOGGER,
             name=config_entry.title,
             config_entry=config_entry,
+            update_interval=timedelta(minutes=5),
         )
 
         # Initialise your api here

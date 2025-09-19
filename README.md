@@ -63,6 +63,12 @@ During setup, the integration asks for:
 
 > **Note**: Ensure your Bluetooth adapter is working and within range of the mount.
 
+## Data updates
+
+The Vogels Motion Mount integration fetches data from the device every 5 minutes by default.
+This is used to keep up to date if automove or other sources like infrared remote control is used.
+You can disable it in the system options of your added device.
+
 ## Entities
 
 #### Binary Sensors
