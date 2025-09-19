@@ -29,7 +29,7 @@ Use cases:
 
 ## Supported device(s)
 - [Vogel’s MotionMount TVM 7675](https://www.vogels.com/de-de/c/tvm-7675-elektrische-tv-wandhalterung-schwarz)
-> PRO Version possibily works as well but was not tested
+> PRO Version possibly works as well but was not tested
 
 ---
 
