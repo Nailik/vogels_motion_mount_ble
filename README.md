@@ -9,9 +9,8 @@
 
 Home Assistant integration allows to control the Vogel's MotionMount (TVM 7675) over Bluetooth Low Energy (BLE).
 
----
-
 ## High-level description & use cases
+
 This integration exposes the MotionMount as local devices and entities in Home Assistant so you can:
 - Move the mount forward/backward and rotate left/right (percentage-based control).
 - Call named presets and add/delete presets.
@@ -25,21 +24,16 @@ Use cases:
 - Automatically rotate or adjust distance based on other sensors or automations.
 - Expose device status and firmware versions for inventory/monitoring.
 
----
-
 ## Supported device(s)
+
 - [Vogel’s MotionMount TVM 7675](https://www.vogels.com/de-de/c/tvm-7675-elektrische-tv-wandhalterung-schwarz)
 > PRO Version possibly works as well but was not tested
-
----
 
 ## Requirements & prerequisites
 
 - Home Assistant **2025.6.0 or newer**  
 - Bluetooth support on the host (integration depends on HA’s `bluetooth` integration)  
 - Python package: **`bleak>=0.21.1`**
-
----
 
 ## Installation
 
@@ -55,8 +49,6 @@ Use cases:
 2. Restart Home Assistant.  
 3. Configure via **Settings → Devices & Services → Add integration → Vogels MotionMount (BLE)**.
 
----
-
 ## Setup
 
 During setup, the integration asks for:
@@ -71,8 +63,7 @@ During setup, the integration asks for:
 
 > **Note**: Ensure your Bluetooth adapter is working and within range of the mount.
 
----
-### Entities
+## Entities
 
 #### Binary Sensors
 
@@ -169,11 +160,8 @@ During setup, the integration asks for:
 - **Preset Name**  
   - **Description**: Names for each preset (max 32 characters)
 
----
 
 ## Actions
-
----
 
 ### Action: Set authorised user PIN
 
@@ -186,9 +174,6 @@ Authorised users are allowed to control and change the settings (if there is a s
     - **Constraints**: Must be exactly 4 digits, 0000 removes the pin (removing only available if no supervisior is set up)
   - **Example**: `{"device_id": "12345", "pin": "1234"}`
 
-
----
-
 ### Action: Set supervisor PIN
 
 The `vogels_motion_mount_ble.set_supervisor_pin` service sets the supervisor PIN.
@@ -199,8 +184,6 @@ If set downgrades authorised user to control only, a subset of features can be a
   - `pin` — string, Required
     - **Constraints**: Must be exactly 4 digits, 0000 removes the pin (setting pin only available if an authorised user is set up)
   - **Example**: `{"device_id": "12345", "pin": "5678"}`
-  
----
 
 ## Example
 
@@ -220,16 +203,14 @@ action:
       device_id: YOUR_DEVICE_ID_HERE
       preset: "1"   # Preset 1 corresponds to "Dining Room"
 mode: single
-
----
+```
 
 ## Known limitations
+
 The Vogles Motion Mount BLE integration currently has the following limitations:
 
 The Mount will disconnect BLE automatically, therefore no permanent connection is possible.
 Checking for updates is currently not supported.
-
----
 
 ## Troubleshooting
 
@@ -238,8 +219,6 @@ If you're experiencing issues with your Vogles Motion Mount BLE integration, try
 Make sure your Vogels Motion Mount is in range, is powered on and properly also the Bluetooth connection is turned on. Validate if your Bluetooth devices can find the Motion Mount via it's exposed discoveries.
 
 It's possible to reset the Motion Mount by removing the cover and pressing on the reset it will blink fast. For any LED error codes check the manual.
-
----
 
 ## Removing the integration
 
