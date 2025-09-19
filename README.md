@@ -1,116 +1,225 @@
-# Vogels MotionMount (TVM 7675) for Home Assistant
+# Vogels MotionMount Bluetooth Home Assistant Integratioon
 
-Allows you to control the Vogel's MotionMount TVM 7675 non PRO device.
+[![Open Vogels Motion Mount BLE in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Nailik&repository=vogels_motion_mount_ble&category=integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
+[![Version](https://img.shields.io/github/v/release/Nailik/vogels_motion_mount_ble)](https://github.com/Nailik/vogels_motion_mount_ble/releases/latest)
+![Downloads latest](https://img.shields.io/github/downloads/nailik/vogels_motion_mount_ble/latest/total.svg)
+![Downloads](https://img.shields.io/github/downloads/nailik/vogels_motion_mount_ble/total)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-Project is still in heavy development, some features are missing and there are no unit tests yet.
+Home Assistant integration allows to control the Vogel's MotionMount (TVM 7675) over Bluetooth Low Energy (BLE).
+
+## High-level description & use cases
+
+This integration exposes the MotionMount as local devices and entities in Home Assistant so you can:
+- Move the mount forward/backward and rotate left/right (percentage-based control).
+- Call named presets and add/delete presets.
+- Set a freeze preset used when the TV is turned off and how the TV status is detected.
+- Change PIN for authorised user and supervisior including specific permissions.
+- Start the calibration process.
+- Read firmware/hardware version information.
+
+Use cases:
+- Move to a named preset when the TV turns on/off or based on another trigger.
+- Automatically rotate or adjust distance based on other sensors or automations.
+- Expose device status and firmware versions for inventory/monitoring.
+
+## Supported device(s)
+
+- [Vogel’s MotionMount TVM 7675](https://www.vogels.com/de-de/c/tvm-7675-elektrische-tv-wandhalterung-schwarz)
+> PRO Version possibly works as well but was not tested
+
+## Requirements & prerequisites
+
+- Home Assistant **2025.6.0 or newer**  
+- Bluetooth support on the host (integration depends on HA’s `bluetooth` integration)  
+- Python package: **`bleak>=0.21.1`**
+
+## Installation
+
+### Recommended: HACS
+
+1. Add this repository to HACS (Integrations → Custom repositories) or click the “Open in HACS” badge above.  
+2. Install the integration from HACS → Integrations.  
+3. Restart Home Assistant.
+
+### Manual installation
+
+1. Copy the `custom_components/vogels_motion_mount_ble` folder into `<config>/custom_components/`.  
+2. Restart Home Assistant.  
+3. Configure via **Settings → Devices & Services → Add integration → Vogels MotionMount (BLE)**.
 
 ## Setup
 
-This integration requires HomeAssistant 2025.6.0 or newer.
+During setup, the integration asks for:
 
-Use HACS to add this repository or copy the contents in the custom_integrations folder.
+- **MAC** — the BLE MAC address of the device.  
+- **Device name** — a friendly name for the device (optional).  
+- **PIN** — PIN to be used, can be changed later
+  - *Authorised user PIN*: can control the device or change settings.  
+  - *Supervisor PIN*: allows additional control and restrictions.
 
-During Setup the following options appear:
-- MAC: The mac address of the device, required to connect to a BLE device
-- Device name: Local device name, only used within Home Assistant, not necessary to match the BLE Device name.
-- PIN: Within the Vogel's MotionMount you can setup 2 different pins
-  - Authorized user pin: this pin can be used to control the device or change settings
-  - Supervisior pin: when this secondary pin is setup, the authorized user will loose the possibility to change the settings, which settings an authorized user has access to can be changed
+- The integration can **automatically detect the Mount via Bluetooth**.
 
-When the integration is set up the integration tries to connect to the Vogel's MotionMount on each restart, it tries in 1 minute intervals until successful connection.
+> **Note**: Ensure your Bluetooth adapter is working and within range of the mount.
 
-## Status
+## Entities
 
-| Property | Description | Service | Entity | 
-|----------|-------------|---------|------------|
-| Name | Device Name | set_name | ✅ | 
-| Distance | Distance from Wall in Percentage | set_distance | ✅ | 
-| Rotation | Rotation left/right (get, set) | set_rotation | ✅ | 
-| Presets | Name | set_preset | ✅ | 
-| Presets | Distance | set_preset | ✅ | 
-| Presets | Rotation | set_preset | ✅ | 
-| Presets | Delete | delete_preset | ✅ | 
-| Presets | Add | add_preset | ✅ | 
-| Select Preset | move to a preset | select_preset | ✅ | 
-| Auto Move | Auto Move to Freeze Position, On/Off and 5 different HDMI detection Modes | set_automove | ✅ | 
-| Freeze preset | Preset to be used when TV is turned of | set_freeze_preset | ✅ | 
-| TV width | Set the width of the TV in cm, in order for the Mount to know the max rotation | set_tv_width | ✅ | 
-| Authorized user Pin | Pin to controls or change the settings | set_authorised_user_pin | ❌ | 
-| Supervisor Pin | Pin to limit settings control for authorizes user | set_supervisior_pin | ❌ | 
-| Authorizes user features | Which settings an authorized user can change | set_multi_pin_features | ✅ | 
-| CEB BL, FW Version | Version of CEB |  | ✅ | 
-| MCP BL, FW Version | Version of MCP |  | ✅ | 
-| Refresh Data | read data from device | refresh_data | ✅ | 
-| Disconnect | disconnect device | disconnect | ✅ | 
-| Calibrate | Start Calibration | start_calibration | ✅ | 
+#### Binary Sensors
 
-# Bluetooth GATT Services and Characteristics
+- **Connected**  
+  - **Description**: Indicates whether the MotionMount device is currently connected via Bluetooth.
 
----
+#### Buttons
 
-Encoding is usually Big Endian, noted when otherwise.
+- **Start Calibration**  
+  - **Description**: Starts the calibration process for the mount.
 
-## Service 1: `3e6fe65d-ed78-11e4-895e-00026fd5c52c`
+- **Refresh Data**  
+  - **Description**: Read current data from the mount.
 
-| UUID | Read | Write | Notify | Data |
-|------|------|-------|--------|-------------|
-| `c005fa00-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Movement (forward/backward), range: `0` - `100` |
-| `c005fa01-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Rotation (left/right), range `-100` - `100` |
-| `c005fa02-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Auto Move HDMI:<br>• 1: off `1` / on `00`<br>• 2: off `5` / on `4`<br>• 3: off `9` / on `8`<br>• 4: off `13` / on `12`<br>• 5: off `17` / on `16` |
-| `c005fa03-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Calibration `1` to start calibration, returns increasing numbers until it ends with `0`, notify doesn't sent data |
-| `c005fa07-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa08-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | CEB BL Version |
-| `c005fa09-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa0a-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 0 Format:<br>• Byte 0: exists/deleted `1`/`0`<br>• Bytes 1–2: Distance<br>• Bytes 3–4: Rotation<br>• Bytes 5–20: Name (UTF-8 string) |
-| `c005fa0b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 1 Format:<br>• Byte 0: exists/deleted `1`/`0`<br>• Bytes 1–2: Distance<br>• Bytes 3–4: Rotation<br>• Bytes 5–20: Name (UTF-8 string) |
-| `c005fa0c-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 2 Format:<br>• Byte 0: exists/deleted `1`/`0`<br>• Bytes 1–2: Distance<br>• Bytes 3–4: Rotation<br>• Bytes 5–20: Name (UTF-8 string) |
-| `c005fa0d-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 3 Format:<br>• Byte 0: exists/deleted `1`/`0`<br>• Bytes 1–2: Distance<br>• Bytes 3–4: Rotation<br>• Bytes 5–20: Name (UTF-8 string) |
-| `c005fa0e-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 4 Format:<br>• Byte 0: exists/deleted `1`/`0`<br>• Bytes 1–2: Distance<br>• Bytes 3–4: Rotation<br>• Bytes 5–20: Name (UTF-8 string) |
-| `c005fa0f-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 5 Format:<br>• Byte 0: exists/deleted `1`/`0`<br>• Bytes 1–2: Distance<br>• Bytes 3–4: Rotation<br>• Bytes 5–20: Name (UTF-8 string) |
-| `c005fa10-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Preset 6 Format:<br>• Byte 0: exists/deleted `1`/`0`<br>• Bytes 1–2: Distance<br>• Bytes 3–4: Rotation<br>• Bytes 5–20: Name (UTF-8 string) |
-| `c005fa14-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Freeze position, single byte that defines which preset index is used |
-| `c005fa15-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa16-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa17-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 0 (17 Bytes) |
-| `c005fa18-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 1 (17 Bytes) |
-| `c005fa19-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 2 (17 Bytes) |
-| `c005fa1a-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 3 (17 Bytes) |
-| `c005fa1b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 4 (17 Bytes) |
-| `c005fa1c-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 5 (17 Bytes) |
-| `c005fa1d-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Additional Name (UTF-8 string) for Preset 6 (17 Bytes) |
-| `c005fa21-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Unknown |
-| `c005fa22-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa23-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
-| `c005fa24-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Unknown |
+- **Disconnect**  
+  - **Description**: Disconnects the mount from Home Assistant.
 
----
+- **Select default preset**  
+  - **Description**: Homes the mount into the default position.
 
-## Service 2: `030013ac-4202-2d8e-ea11-3959c46ca10e`
+- **Add Preset**  
+  - **Description**: Adds preset at the specific index.
 
-| UUID | Read | Write | Notify | Data |
-|------|------|-------|--------|-------------|
-| `c005fa05-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Unknown |
-| `c005fa06-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa25-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
-| `c005fa26-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa28-0651-4800-b000-000000000000` | ✅ | ❌ | ✅ | Unknown |
-| `c005fa29-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa2a-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Call Preset with id 0x00 - 0x06 |
-| `c005fa2b-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | TV width in cm |
-| `c005fa2d-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Authenticate for session, Little Endian format, authorised user pin is sent as is, for supervisior pin the high byte is offset by 64 |
-| `c005fa2e-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Check permission:<br>• Settings and Control (supervisior): `128,128`<br>• Control only: `128,0` |
-| `c005fa2f-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | change PIN, Little Endian  |
-| `c005fa30-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa31-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Multi Pin features encoded as bitwise or. <br>0: change preset<br>1: change name<br>2: disable channel<br>3: change tv on off detection<br>4: change default position<br>5: start calibration  |
-| `c005fa32-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Unknown |
-| `c005fa33-0651-4800-b000-000000000000` | ❌ | ✅ | ❌ | Unknown |
-| `c005fa34-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | MCP HW Version (Bytes 0-3), MCP BL Version (Bytes 3-5),  CEB FW Version (Bytes 5-7) |
-| `c005fa35-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
-| `c005fa36-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
-| `c005fa37-0651-4800-b000-000000000000` | ✅ | ✅ | ❌ | Name, exactly 20 bytes |
-| `c005fa38-0651-4800-b000-000000000000` | ✅ | ❌ | ❌ | Unknown |
-| `c005fa39-0651-4800-b000-000000000000` | ✅ | ❌ | ✅ | Pin Information<br>• No Pin: `12`<br>• Only Authorised user Pin: `13`• Different Pin for Authorised user and supervisior: `15` |
-| `c005fa3a-0651-4800-b000-000000000000` | ✅ | ✅ | ✅ | Unknown |
+- **Delete Preset**  
+  - **Description**: Deletes a stored preset from the mount.
 
----
+- **Select Preset**  
+  - **Description**: Moves the mount to a stored preset.
 
+#### Numbers
+
+- **Distance**  
+  - **Description**: Distance of the mount from the wall.  
+  - **Range**: 0 to 100  
+  - **Step**: 1
+
+- **Rotation**  
+  - **Description**: Rotation angle of the mount.  
+  - **Range**: -100 to 100  
+  - **Step**: 1
+
+- **TV Width**  
+  - **Description**: Width of the TV in centimeters.  
+  - **Maximum**: 243  
+  - **Step**: 1
+
+- **Preset Distance**  
+  - **Description**: Distance for each preset.  
+  - **Range**: 0 to 100  
+  - **Step**: 1
+
+- **Preset Rotation**  
+  - **Description**: Rotation angle for each preset.  
+  - **Range**: -100 to 100  
+  - **Step**: 1
+
+#### Selects
+
+- **Automove**  
+  - **Description**: Configures automove based on HDMI input.  
+  - **Options**: `"off"`, `"hdmi_1"`, `"hdmi_2"`, `"hdmi_3"`, `"hdmi_4"`, `"hdmi_5"`
+
+- **Freeze**  
+  - **Description**: Sets the preset to move to when automove is triggered.
+  - **Options**: `"0"` (default wall), `"1"`–`"7"` (custom presets)
+
+#### Sensors
+
+- **Distance**  
+  - **Description**: Current distance of the mount from the wall.  
+  - **Range**: 0 to 100  
+
+- **Rotation**  
+  - **Description**: Current rotation of the mount.  
+  - **Range**: -100 to 100  
+
+- **Firmware Version**  
+  - **Description**: Current firmware version
+
+- **Hardware Version**  
+  - **Description**: Hardware version
+
+#### Switches
+
+- **Multi-PIN Features**  
+  - **Description**: Enables or disables multi-PIN feature access.  
+  - **Note**: Only works if both authorised user and supervisor PINs are set up.
+
+#### Texts
+
+- **Name**  
+  - **Description**: Mount name (max 32 characters)
+
+- **Preset Name**  
+  - **Description**: Names for each preset (max 32 characters)
+
+
+## Actions
+
+### Action: Set authorised user PIN
+
+The `vogels_motion_mount_ble.set_authorised_user_pin` service sets the authorised user PIN.
+Authorised users are allowed to control and change the settings (if there is a supervisior a subset of allowed settings can be configured).
+
+- **Data attributes**:
+  - `device_id` — Required
+  - `pin` — string, Required
+    - **Constraints**: Must be exactly 4 digits, 0000 removes the pin (removing only available if no supervisior is set up)
+  - **Example**: `{"device_id": "12345", "pin": "1234"}`
+
+### Action: Set supervisor PIN
+
+The `vogels_motion_mount_ble.set_supervisor_pin` service sets the supervisor PIN.
+If set downgrades authorised user to control only, a subset of features can be allowed to be changed by an authorised user.
+
+- **Data attributes**:
+  - `device_id` — Required
+  - `pin` — string, Required
+    - **Constraints**: Must be exactly 4 digits, 0000 removes the pin (setting pin only available if an authorised user is set up)
+  - **Example**: `{"device_id": "12345", "pin": "5678"}`
+
+## Example
+
+This example shows how to automatically move the Motion Mount to a preset when the user wants to eat.
+
+```yaml
+alias: Move Motion Mount to Dining Room for Meals
+description: "Automatically move the Motion Mount to the Dining Room preset when the user wants to eat."
+trigger:
+  - platform: state
+    entity_id: input_boolean.user_wants_to_eat
+    to: 'on'
+condition: []
+action:
+  - service: vogels_motion_mount_ble.select_preset
+    data:
+      device_id: YOUR_DEVICE_ID_HERE
+      preset: "1"   # Preset 1 corresponds to "Dining Room"
+mode: single
+```
+
+## Known limitations
+
+The Vogles Motion Mount BLE integration currently has the following limitations:
+
+The Mount will disconnect BLE automatically, therefore no permanent connection is possible.
+Checking for updates is currently not supported.
+
+## Troubleshooting
+
+If you're experiencing issues with your Vogles Motion Mount BLE integration, try these general troubleshooting steps:
+
+Make sure your Vogels Motion Mount is in range, is powered on and properly also the Bluetooth connection is turned on. Validate if your Bluetooth devices can find the Motion Mount via it's exposed discoveries.
+
+It's possible to reset the Motion Mount by removing the cover and pressing on the reset it will blink fast. For any LED error codes check the manual.
+
+## Removing the integration
+
+This integration follows standard integration removal, no extra steps are required.

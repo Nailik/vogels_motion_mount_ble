@@ -876,7 +876,7 @@ class API:
                 },
             )
 
-        if preset_index == 0 or self._data.presets[preset_index - 1] is None:
+        if preset_index != 0 and self._data.presets[preset_index - 1] is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_preset_index_not_exists",
@@ -922,6 +922,12 @@ class API:
             change_default_position,
             start_calibration,
         )
+
+        if self._data.pin_setting != VogelsMotionMountPinSettings.Multi:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_multi_pin_settings_not_active",
+            )
 
         multi_pin_features = self._data.multi_pin_features or MultiPinFeatures(
             change_presets=False,

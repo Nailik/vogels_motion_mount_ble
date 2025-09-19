@@ -21,6 +21,9 @@
     "invalid_preset_index": {
       "message": "Invalid preset index {actual}, must be in {expected}."
     },
+    "invalid_multi_pin_settings_not_active": {
+      "message": "To change multi pin features, both authorised user and supervisior pin must be set."
+    },
     "invalid_preset_index_not_exists": {
       "message": "Invalid preset index, preset at {preset_index} does not exist."
     },
@@ -304,157 +307,31 @@
     }
   },
   "services": {
-    "start_calibration": {
-      "name": "Start calibration",
-      "description": "Starts the calibration for the device.",
+    "set_authorised_user_pin": {
+      "name": "Set authorised user pin",
+      "description": "Set a pin for authorised users that are allowed to control and eventually change settings of the mount.",
       "fields": {
         "device_id": {
           "name": "Target Device",
           "description": "What should this action use as targeted device."
+        },
+        "pin": {
+          "name": "Pin",
+          "description": "4 digit numeric pin. 0000 removes the pin but can only used if no Supervisior pin is set."
         }
       }
     },
-    "refresh_data": {
-      "name": "Refresh Data",
-      "description": "Refreshes the data from the device.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        }
-      }
-    },
-    "disconnect": {
-      "name": "Disconnect",
-      "description": "Disconnects from the device.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        }
-      }
-    },
-    "select_preset": {
-      "name": "Select preset",
-      "description": "Selects a preset position on the device.",
+    "set_supervisior_pin": {
+      "name": "Set superivsior pin",
+      "description": "Sets a pin for a supervisior. Downgrades authorised users to control only. Only available if authorised user pin is already set.",
       "fields": {
         "device_id": {
           "name": "Target Device",
           "description": "What should this action use as targeted device."
         },
-        "preset": {
-          "name": "Preset",
-          "description": "Target Prest to select."
-        }
-      }
-    },
-    "delete_preset": {
-      "name": "Delete preset",
-      "description": "Delete a preset from the device.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "preset": {
-          "name": "Preset",
-          "description": "Target Prest to remove."
-        }
-      }
-    },
-    "set_preset": {
-      "name": "Set preset",
-      "description": "Update or add preset data.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "preset": {
-          "name": "Preset",
-          "description": "Preset to update or add."
-        },
-        "name": {
-          "name": "Name",
-          "description": "Name of the preset."
-        },
-        "distance": {
-          "name": "Distance",
-          "description": "Distance value of the preset."
-        },
-        "rotation": {
-          "name": "Rotation",
-          "description": "Rotation percentage of the preset."
-        }
-      }
-    },
-    "set_distance": {
-      "name": "Set distance",
-      "description": "Sets the distance from the wall.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "distance": {
-          "name": "Distance",
-          "description": "Distance value to set."
-        }
-      }
-    },
-    "set_rotation": {
-      "name": "Set rotation",
-      "description": "Sets the rotation percentage.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "rotation": {
-          "name": "Rotation",
-          "description": "Rotation percentage to set."
-        }
-      }
-    },
-    "set_tv_width": {
-      "name": "Set TV width",
-      "description": "Sets the width of the TV.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "tv_width": {
-          "name": "TV width",
-          "description": "Width of the TV in cm."
-        }
-      }
-    },
-    "set_automove": {
-      "name": "Set automove",
-      "description": "Sets the automove setting.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "automove": {
-          "name": "Automove",
-          "description": "Automove setting to set."
-        }
-      }
-    },
-    "set_freeze_preset": {
-      "name": "Set freeze preset",
-      "description": "Sets the freeze preset.",
-      "fields": {
-        "device_id": {
-          "name": "Target Device",
-          "description": "What should this action use as targeted device."
-        },
-        "freeze_preset": {
-          "name": "Freeze Preset",
-          "description": "Preset to set as freeze position, 0 is default preset custom presets are offset by 1."
+        "pin": {
+          "name": "Pin",
+          "description": "4 digit numeric pin. 0000 removes the pin."
         }
       }
     }

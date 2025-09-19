@@ -1,29 +1,7 @@
 # todo how to control disable channel - awaiting app update
-# todo translate all raise exceptions (mainly in api)
 # test services:
 authorised user pin change
 supervisior pin change
-authorised user permissions
-
-
-preset
-    name
-    distance
-    rotation
-    selection
-    add
-    delete
-
-select default preset
-freeze position
-hdmi detection mode
-tv on off detectio
-name
-disconnect
-refresh data
-current distance/rotation
-tv width
-
 
 # test entities
 authorised user permissions
