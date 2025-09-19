@@ -23,3 +23,58 @@ disconnect
 refresh data
 current distance/rotation
 tv width
+
+
+
+api:
+
+exposed data:
+connected
+check if user has permission to do a specific settings change - or as data for current user?
+requested distance
+requested rotation
+current distance
+current rotation
+tv width
+presets (name, distance, rotation)
+automove option (id?)
+freeze preset index
+freeze preset available
+Versions
+pin settings
+current user authentication level
+multi pin features
+name
+
+actions:
+start calibration
+refresh data
+disconnect
+select default preset
+select preset (0-7)
+
+# test connection outside the normal
+
+changes:
+delete preset
+set preset data
+set distance
+set rotation
+set tv width
+set automove
+set freeze preset
+set multi pin features xyz
+set name
+
+# internally: authentication
+# check if data was correctly set
+
+# test connection completely separate? then on initialization all the data can be read for the coordinator
+# coordinator as interface, do not access api externally
+# coordinator can validate input - (only from services, entities already do it by themself)
+
+
+Minimal api that only has
+test connection and internal handles connection and authentication then this could be used for startup check
+
+would only need to have: connect and throw errors and handle all the authentication 
