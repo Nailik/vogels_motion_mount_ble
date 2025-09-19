@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from pytest_homeassistant_custom_component.common import MockConfigEntry # pyright: ignore[reportMissingTypeStubs]
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+)  # pyright: ignore[reportMissingTypeStubs]
 from homeassistant.data_entry_flow import FlowResultType
 from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -9,7 +11,10 @@ from custom_components.vogels_motion_mount_ble.api import API
 
 from homeassistant.core import HomeAssistant
 
-from homeassistant.helpers import selector
+from homeassistant.helpers.selector import (
+    NumberSelector,  # pyright: ignore[reportUnknownVariableType]
+    TextSelector,  # pyright: ignore[reportUnknownVariableType]
+)
 from homeassistant.config_entries import (
     SOURCE_USER,
     SOURCE_BLUETOOTH,
@@ -67,7 +72,7 @@ def mock_discovery():
 
 
 @patch("custom_components.vogels_motion_mount_ble.config_flow.API")
-async def test_user_flow_success( mock_api: AsyncMock, hass: HomeAssistant):
+async def test_user_flow_success(mock_api: AsyncMock, hass: HomeAssistant):
     """Test entity is created with input data if test_connection is successful."""
     m_api: API = AsyncMock()
     m_api.test_connection = AsyncMock(return_value=True)
@@ -80,230 +85,238 @@ async def test_user_flow_success( mock_api: AsyncMock, hass: HomeAssistant):
     assert "type" in flow_result and flow_result["type"] is FlowResultType.FORM
 
     # with valid user data the entry is created
-    configure_result = await hass.config_entries.flow.async_configure( # pyright: ignore[reportUnknownMemberType]
+    configure_result = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )
-    
+
     # Ensure API.test_connection was called
     m_api.test_connection.assert_called()
 
     # validate input data correctly used
-    assert "type" in configure_result and configure_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        "type" in configure_result
+        and configure_result["type"] is FlowResultType.CREATE_ENTRY
+    )
     assert "title" in configure_result and configure_result["title"] == MOCKED_CONF_NAME
-    assert "data" in configure_result and configure_result["data"][CONF_MAC] == MOCKED_CONF_MAC
-
-
-async def test_user_flow_invalid_mac(hass, mock_api):
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    assert (
+        "data" in configure_result
+        and configure_result["data"][CONF_MAC] == MOCKED_CONF_MAC
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_user_flow_invalid_mac(mock_api: AsyncMock, hass: HomeAssistant) -> None:
+    """Test flow rejects invalid MAC address."""
+    m_api: API = AsyncMock()
+    mock_api.return_value = m_api
+
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )  # pyright: ignore[reportAssignmentType]
+
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+        flow_result["flow_id"],
         {**MOCKED_CONFIG, CONF_MAC: "INVALID-MAC"},
-    )
+    )  # type: ignore
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"][CONF_ERROR] == "invalid_mac_code"
+    assert configure_result["type"] is FlowResultType.FORM
+    assert configure_result["errors"][CONF_ERROR] == "invalid_mac_code"
+    m_api.test_connection.assert_not_called()
 
 
-async def test_user_flow_authentication_error(hass, mock_api):
-    mock_api.return_value.test_connection = AsyncMock(
-        side_effect=APIAuthenticationError(cooldown=0)
-    )
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_user_flow_authentication_error(
+    mock_api: AsyncMock, hass: HomeAssistant
+) -> None:
+    """Test flow with authentication error and no resulting cooldown."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(side_effect=APIAuthenticationError(cooldown=0))
+    mock_api.return_value = m_api
 
-    result = await hass.config_entries.flow.async_init(
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
-    )
+    )  # type: ignore
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+        flow_result["flow_id"],
         MOCKED_CONFIG,
+    )  # type: ignore
+
+    assert configure_result["errors"][CONF_ERROR] == "error_invalid_authentication"
+
+
+@pytest.mark.parametrize(
+    "cooldown,expected_error",
+    [
+        (30, "error_auth_cooldown"),
+        (0, "error_invalid_authentication"),
+        (-5, "error_invalid_authentication"),
+    ],
+)
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_user_flow_authentication_cooldown(
+    mock_api: AsyncMock, hass: HomeAssistant, cooldown: int, expected_error: str
+) -> None:
+    """Test full config flow with authentication cooldown variations."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(
+        side_effect=APIAuthenticationError(cooldown=cooldown)
     )
+    mock_api.return_value = m_api
 
-    assert result2["errors"][CONF_ERROR] == "error_invalid_authentication"
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )  # pyright: ignore[reportAssignmentType]
 
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+        flow_result["flow_id"],
+        MOCKED_CONFIG,
+    )  # type: ignore
 
-async def test_user_flow_authentication_cooldown_positive(hass):
-    """Test full config flow with cooldown > 0."""
-    with patch(
-        "custom_components.vogels_motion_mount_ble.config_flow.API",
-        autospec=True,
-    ) as mock_api:
-        mock_api.return_value.test_connection = AsyncMock(
-            side_effect=lambda: Exception("mock")  # placeholder
-        )
-        # Use side effect to simulate APIAuthenticationError with cooldown
-        from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
-
-        mock_api.return_value.test_connection.side_effect = APIAuthenticationError(
-            cooldown=30
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            MOCKED_CONFIG,
-        )
-
-        assert result2["errors"][CONF_ERROR] == "error_auth_cooldown"
-        # In your code, the placeholder key is "retry_at"
-        assert "retry_at" in result2["description_placeholders"]
+    assert configure_result["errors"][CONF_ERROR] == expected_error
+    if cooldown > 0:
+        assert "retry_at" in configure_result["description_placeholders"]
+    else:
+        assert configure_result.get("description_placeholders") is None
 
 
-async def test_user_flow_authentication_cooldown_zero(hass):
-    """Test full config flow with cooldown == 0."""
-    with patch(
-        "custom_components.vogels_motion_mount_ble.config_flow.API",
-        autospec=True,
-    ) as mock_api:
-        from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
-
-        mock_api.test_connection = AsyncMock(
-            side_effect=APIAuthenticationError(cooldown=0)
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            MOCKED_CONFIG,
-        )
-
-        assert result2["errors"][CONF_ERROR] == "error_invalid_authentication"
-        assert result2.get("description_placeholders") is None
-
-
-async def test_user_flow_authentication_cooldown_negative(hass):
-    """Test full config flow with cooldown < 0."""
-    with patch(
-        "custom_components.vogels_motion_mount_ble.config_flow.API",
-        autospec=True,
-    ) as mock_api:
-        from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
-
-        mock_api.test_connection = AsyncMock(
-            side_effect=APIAuthenticationError(cooldown=-5)
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            MOCKED_CONFIG,
-        )
-
-        assert result2["errors"][CONF_ERROR] == "error_invalid_authentication"
-        assert result2.get("description_placeholders") is None
-
-
-async def test_user_flow_device_not_found(hass, mock_api):
-    mock_api.test_connection = AsyncMock(
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_user_flow_device_not_found(
+    mock_api: AsyncMock, hass: HomeAssistant
+) -> None:
+    """Test flow when device is not found."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(
         side_effect=APIConnectionDeviceNotFoundError("not found")
     )
+    mock_api.return_value = m_api
 
-    result = await hass.config_entries.flow.async_init(
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    )  # pyright: ignore[reportAssignmentType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+        flow_result["flow_id"],
         MOCKED_CONFIG,
-    )
-    assert result2["errors"][CONF_ERROR] == "error_device_not_found"
+    )  # type: ignore
+
+    assert configure_result["errors"][CONF_ERROR] == "error_device_not_found"
 
 
-async def test_user_flow_connection_error(hass, mock_api):
-    mock_api.test_connection = AsyncMock(
-        side_effect=APIConnectionError("cannot connect")
-    )
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_user_flow_connection_error(
+    mock_api: AsyncMock, hass: HomeAssistant
+) -> None:
+    """Test flow when connection cannot be made."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(side_effect=APIConnectionError("cannot connect"))
+    mock_api.return_value = m_api
 
-    result = await hass.config_entries.flow.async_init(
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    )  # pyright: ignore[reportAssignmentType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+        flow_result["flow_id"],
         MOCKED_CONFIG,
-    )
-    assert result2["errors"][CONF_ERROR] == "error_cannot_connect"
+    )  # type: ignore
+
+    assert configure_result["errors"][CONF_ERROR] == "error_cannot_connect"
 
 
-async def test_user_flow_unknown_error(hass, mock_api):
-    mock_api.test_connection = AsyncMock(side_effect=Exception("boom"))
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_user_flow_unknown_error(
+    mock_api: AsyncMock, hass: HomeAssistant
+) -> None:
+    """Test flow when unknown error occurs."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(side_effect=Exception("boom"))
+    mock_api.return_value = m_api
 
-    result = await hass.config_entries.flow.async_init(
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    )  # pyright: ignore[reportAssignmentType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+        flow_result["flow_id"],
         MOCKED_CONFIG,
-    )
-    assert result2["errors"][CONF_ERROR] == "error_unknown"
+    )  # type: ignore
+
+    assert configure_result["errors"][CONF_ERROR] == "error_unknown"
 
 
-async def test_bluetooth_flow_creates_entry(hass, mock_api, mock_discovery):
-    mock_api.test_connection = AsyncMock(return_value=True)
-    result = await hass.config_entries.flow.async_init(
+# -------------------------------
+# BLUETOOTH FLOW TESTS
+# -------------------------------
+
+
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_bluetooth_flow_creates_entry(
+    mock_api: AsyncMock, hass: HomeAssistant, mock_discovery: Dict[str, Any]
+) -> None:
+    """Test Bluetooth discovery creates a form."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(return_value=True)
+    mock_api.return_value = m_api
+
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=mock_discovery
-    )
+    )  # pyright: ignore[reportAssignmentType]
+    assert flow_result["type"] is FlowResultType.FORM
 
-    assert result["type"] is FlowResultType.FORM
 
-
-async def test_bluetooth_id_already_exists(hass, mock_api, mock_discovery):
-    # Create a mock entry with the same MAC
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_bluetooth_id_already_exists(
+    mock_api: AsyncMock, hass: HomeAssistant, mock_discovery: Dict[str, Any]
+) -> None:
+    """Test Bluetooth discovery aborts if entry already exists."""
+    m_api: API = AsyncMock()
+    mock_api.return_value = m_api
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="AA:BB:CC:DD:EE:FF",
-        data=MOCKED_CONFIG,
+        domain=DOMAIN, unique_id=MOCKED_CONF_MAC, data=MOCKED_CONFIG
     )
     entry.add_to_hass(hass)
 
-    flow = hass.config_entries.flow
-    result = await flow.async_init(
-        DOMAIN, context={"source": "bluetooth"}, data=mock_discovery
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    # Ensure API.test_connection was never called
-    mock_api.return_value.test_connection.assert_not_called()
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=mock_discovery
+    )  # pyright: ignore[reportAssignmentType]
+
+    assert flow_result["type"] is FlowResultType.ABORT
+    assert flow_result["reason"] == "already_configured"
+    m_api.test_connection.assert_not_called()
 
 
-async def test_reauth_flow(hass, mock_api):
-    mock_api.test_connection = AsyncMock(return_value=True)
+# -------------------------------
+# REAUTH FLOW
+# -------------------------------
+
+
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_reauth_flow(mock_api: AsyncMock, hass: HomeAssistant) -> None:
+    """Test reauth flow aborts correctly."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(return_value=True)
+    mock_api.return_value = m_api
+
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="AA:BB:CC:DD:EE:FF",
-        data=MOCKED_CONFIG,
+        domain=DOMAIN, unique_id=MOCKED_CONF_MAC, data=MOCKED_CONFIG
     )
     entry.add_to_hass(hass)
 
-    assert hass.config_entries.async_entries(DOMAIN)[0] == entry
-
-    result = await hass.config_entries.flow.async_init(
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data={CONF_MAC: "AA:BB:CC:DD:EE:FF"},
-    )
-    assert result["type"] is FlowResultType.ABORT
+        data={CONF_MAC: MOCKED_CONF_MAC},
+    )  # pyright: ignore[reportAssignmentType]
+
+    assert flow_result["type"] is FlowResultType.ABORT
 
 
-async def test_reauth_entry_does_not_exist(hass):
+@pytest.mark.asyncio
+async def test_reauth_entry_does_not_exist(hass: HomeAssistant) -> None:
+    """Test reauth fails for non-existing entry."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCKED_CONF_MAC,
-        data=MOCKED_CONFIG,
+        domain=DOMAIN, unique_id=MOCKED_CONF_MAC, data=MOCKED_CONFIG
     )
     entry.add_to_hass(hass)
-
-    assert hass.config_entries.async_entries(DOMAIN)[0] == entry
 
     with pytest.raises(UnknownEntry):
         await hass.config_entries.flow.async_init(
@@ -313,34 +326,39 @@ async def test_reauth_entry_does_not_exist(hass):
         )
 
 
-async def test_reconfigure_flow(hass, mock_api):
-    mock_api.test_connection = AsyncMock(return_value=True)
+# -------------------------------
+# RECONFIGURE FLOW
+# -------------------------------
+
+
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_reconfigure_flow(mock_api: AsyncMock, hass: HomeAssistant) -> None:
+    """Test reconfigure flow aborts correctly."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(return_value=True)
+    mock_api.return_value = m_api
+
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCKED_CONF_MAC,
-        data=MOCKED_CONFIG,
+        domain=DOMAIN, unique_id=MOCKED_CONF_MAC, data=MOCKED_CONFIG
     )
     entry.add_to_hass(hass)
 
-    assert hass.config_entries.async_entries(DOMAIN)[0] == entry
-
-    result = await hass.config_entries.flow.async_init(
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
-        data={CONF_MAC: "AA:BB:CC:DD:EE:FF"},
-    )
-    assert result["type"] is FlowResultType.ABORT
-
-
-async def test_reconfigure_entry_does_not_exist(hass):
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCKED_CONF_MAC,
         data=MOCKED_CONFIG,
+    )  # pyright: ignore[reportAssignmentType]
+
+    assert flow_result["type"] is FlowResultType.ABORT
+
+
+@pytest.mark.asyncio
+async def test_reconfigure_entry_does_not_exist(hass: HomeAssistant) -> None:
+    """Test reconfigure fails for non-existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCKED_CONF_MAC, data=MOCKED_CONFIG
     )
     entry.add_to_hass(hass)
-
-    assert hass.config_entries.async_entries(DOMAIN)[0] == entry
 
     with pytest.raises(UnknownEntry):
         await hass.config_entries.flow.async_init(
@@ -350,103 +368,89 @@ async def test_reconfigure_entry_does_not_exist(hass):
         )
 
 
-async def test_prefilled_discovery_form(hass, mock_discovery):
+# -------------------------------
+# PREFILLED FORM TESTS
+# -------------------------------
+
+
+async def test_prefilled_discovery_form(
+    hass: HomeAssistant, mock_discovery: Dict[str, Any]
+) -> None:
     """Test prefilled form when discovery info is present."""
-    flow_result = await hass.config_entries.flow.async_init(
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=mock_discovery
-    )
+    )  # pyright: ignore[reportAssignmentType]
 
     schema: vol.Schema = flow_result["data_schema"]
     mac_field = schema.schema[CONF_MAC]
     name_field = schema.schema[CONF_NAME]
     pin_field = schema.schema[CONF_PIN]
 
-    assert isinstance(mac_field, selector.TextSelector)
-    assert isinstance(name_field, selector.TextSelector)
-    assert hasattr(pin_field, "validators") or isinstance(
-        pin_field, selector.NumberSelector
-    )
+    assert isinstance(mac_field, TextSelector)
+    assert isinstance(name_field, TextSelector)
+    assert hasattr(pin_field, "validators") or isinstance(pin_field, NumberSelector)
 
-    # Check read_only flags
-    assert mac_field.config["read_only"] is True
-    assert name_field.config["read_only"] is False
-    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
+    assert mac_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
+    assert name_field.config["read_only"] is False  # pyright: ignore[reportUnknownMemberType]
+    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
 
-    # Check defaults
-    validated = schema({})
+    validated: Dict[str, Any] = schema({})  # pyright: ignore[reportUnknownVariableType]
     assert validated[CONF_MAC] == MOCKED_CONF_MAC
     assert validated[CONF_NAME] == MOCKED_CONF_NAME
 
 
 @pytest.mark.asyncio
-async def test_prefilled_reauth_flow_form(hass, mock_api):
-    """Test prefilled form when doing a reauth flow (only PIN editable)."""
+async def test_prefilled_reauth_flow_form(hass: HomeAssistant) -> None:
+    """Test prefilled reauth flow form (only PIN editable)."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCKED_CONF_MAC,
-        data=MOCKED_CONFIG,
+        domain=DOMAIN, unique_id=MOCKED_CONF_MAC, data=MOCKED_CONFIG
     )
     entry.add_to_hass(hass)
 
-    flow_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-    )
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id}
+    )  # pyright: ignore[reportAssignmentType]
 
     schema: vol.Schema = flow_result["data_schema"]
     mac_field = schema.schema[CONF_MAC]
     name_field = schema.schema[CONF_NAME]
     pin_field = schema.schema[CONF_PIN]
 
-    # Types
-    assert isinstance(mac_field, selector.TextSelector)
-    assert isinstance(name_field, selector.TextSelector)
-    assert hasattr(pin_field, "validators") or isinstance(
-        pin_field, selector.NumberSelector
-    )
+    assert isinstance(mac_field, TextSelector)
+    assert isinstance(name_field, TextSelector)
+    assert hasattr(pin_field, "validators") or isinstance(pin_field, NumberSelector)
 
-    # Read-only flags
-    assert mac_field.config["read_only"] is True  # MAC not editable
-    assert name_field.config["read_only"] is True  # Name not editable
-    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
+    assert mac_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
+    assert name_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
+    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
 
 
 @pytest.mark.asyncio
-async def test_prefilled_reconfigure_flow_form(hass, mock_api):
-    """Test prefilled form when doing a reconfigure flow (both MAC and Name editable)."""
+async def test_prefilled_reconfigure_flow_form(hass: HomeAssistant) -> None:
+    """Test prefilled reconfigure flow form (MAC read-only, Name editable)."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCKED_CONF_MAC,
-        data=MOCKED_CONFIG,
+        domain=DOMAIN, unique_id=MOCKED_CONF_MAC, data=MOCKED_CONFIG
     )
     entry.add_to_hass(hass)
 
-    flow_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
-    )
+    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id}
+    )  # pyright: ignore[reportAssignmentType]
 
-    print("DEBUG: ", flow_result)
     schema: vol.Schema = flow_result["data_schema"]
     mac_field = schema.schema[CONF_MAC]
     name_field = schema.schema[CONF_NAME]
     pin_field = schema.schema[CONF_PIN]
 
-    # Types
-    assert isinstance(mac_field, selector.TextSelector)
-    assert isinstance(name_field, selector.TextSelector)
-    assert hasattr(pin_field, "validators") or isinstance(
-        pin_field, selector.NumberSelector
-    )
+    assert isinstance(mac_field, TextSelector)
+    assert isinstance(name_field, TextSelector)
+    assert hasattr(pin_field, "validators") or isinstance(pin_field, NumberSelector)
 
-    # Read-only flags
-    assert mac_field.config["read_only"] is True  # MAC editable
-    assert name_field.config["read_only"] is False  # Name editable
-    assert pin_field.validators[0].config["read_only"] is False  # PIN editable
+    assert mac_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
+    assert name_field.config["read_only"] is False  # pyright: ignore[reportUnknownMemberType]
+    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
 
-    # Defaults
-    validated = schema({})
+    validated: Dict[str, Any] = schema({})  # pyright: ignore[reportUnknownVariableType]
     assert validated[CONF_MAC] == MOCKED_CONF_MAC
     assert validated[CONF_NAME] == MOCKED_CONF_NAME
     assert validated[CONF_PIN] == MOCKED_CONF_PIN
-all te
