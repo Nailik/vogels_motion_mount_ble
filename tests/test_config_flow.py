@@ -1,13 +1,11 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-)  # pyright: ignore[reportMissingTypeStubs]
 from homeassistant.data_entry_flow import FlowResultType
 from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from typing import Any, Dict
 from custom_components.vogels_motion_mount_ble.api import API
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
@@ -85,7 +83,7 @@ async def test_user_flow_success(mock_api: AsyncMock, hass: HomeAssistant):
     assert "type" in flow_result and flow_result["type"] is FlowResultType.FORM
 
     # with valid user data the entry is created
-    configure_result = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+    configure_result = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )
@@ -115,7 +113,7 @@ async def test_user_flow_invalid_mac(mock_api: AsyncMock, hass: HomeAssistant) -
         DOMAIN, context={"source": SOURCE_USER}
     )  # pyright: ignore[reportAssignmentType]
 
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         {**MOCKED_CONFIG, CONF_MAC: "INVALID-MAC"},
     )  # type: ignore
@@ -138,7 +136,7 @@ async def test_user_flow_authentication_error(
         DOMAIN, context={"source": SOURCE_USER}
     )  # type: ignore
 
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )  # type: ignore
@@ -169,7 +167,7 @@ async def test_user_flow_authentication_cooldown(
         DOMAIN, context={"source": SOURCE_USER}
     )  # pyright: ignore[reportAssignmentType]
 
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )  # type: ignore
@@ -195,7 +193,7 @@ async def test_user_flow_device_not_found(
     flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )  # pyright: ignore[reportAssignmentType]
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )  # type: ignore
@@ -215,7 +213,7 @@ async def test_user_flow_connection_error(
     flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )  # pyright: ignore[reportAssignmentType]
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )  # type: ignore
@@ -235,7 +233,7 @@ async def test_user_flow_unknown_error(
     flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )  # pyright: ignore[reportAssignmentType]
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(  # pyright: ignore[reportUnknownMemberType]
+    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )  # type: ignore
@@ -390,11 +388,13 @@ async def test_prefilled_discovery_form(
     assert isinstance(name_field, TextSelector)
     assert hasattr(pin_field, "validators") or isinstance(pin_field, NumberSelector)
 
-    assert mac_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
-    assert name_field.config["read_only"] is False  # pyright: ignore[reportUnknownMemberType]
-    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+    assert mac_field.config["read_only"] is True
+    assert name_field.config["read_only"] is False
+    # fmt: off
+    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue]
+    # fmt: on
 
-    validated: Dict[str, Any] = schema({})  # pyright: ignore[reportUnknownVariableType]
+    validated: Dict[str, Any] = schema({})
     assert validated[CONF_MAC] == MOCKED_CONF_MAC
     assert validated[CONF_NAME] == MOCKED_CONF_NAME
 
@@ -420,9 +420,11 @@ async def test_prefilled_reauth_flow_form(hass: HomeAssistant) -> None:
     assert isinstance(name_field, TextSelector)
     assert hasattr(pin_field, "validators") or isinstance(pin_field, NumberSelector)
 
-    assert mac_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
-    assert name_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
-    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+    assert mac_field.config["read_only"] is True
+    assert name_field.config["read_only"] is True
+    # fmt: off
+    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue]
+    # fmt: on
 
 
 @pytest.mark.asyncio
@@ -446,9 +448,11 @@ async def test_prefilled_reconfigure_flow_form(hass: HomeAssistant) -> None:
     assert isinstance(name_field, TextSelector)
     assert hasattr(pin_field, "validators") or isinstance(pin_field, NumberSelector)
 
-    assert mac_field.config["read_only"] is True  # pyright: ignore[reportUnknownMemberType]
-    assert name_field.config["read_only"] is False  # pyright: ignore[reportUnknownMemberType]
-    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+    assert mac_field.config["read_only"] is True
+    assert name_field.config["read_only"] is False
+    # fmt: off
+    assert pin_field.validators[0].config["read_only"] is False  # pyright: ignore[reportAttributeAccessIssue]
+    # fmt: on
 
     validated: Dict[str, Any] = schema({})  # pyright: ignore[reportUnknownVariableType]
     assert validated[CONF_MAC] == MOCKED_CONF_MAC

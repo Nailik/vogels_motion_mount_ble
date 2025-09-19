@@ -34,8 +34,8 @@ def pytest_configure():
         class InotifyNotAvailableError(Exception):
             pass
 
-        fake.AIOUSBWatcher = AIOUSBWatcher
-        fake.InotifyNotAvailableError = InotifyNotAvailableError
+        fake.AIOUSBWatcher = AIOUSBWatcher # pyright: ignore[reportAttributeAccessIssue]
+        fake.InotifyNotAvailableError = InotifyNotAvailableError # pyright: ignore[reportAttributeAccessIssue]
         sys.modules["aiousbwatcher"] = fake
 
 
