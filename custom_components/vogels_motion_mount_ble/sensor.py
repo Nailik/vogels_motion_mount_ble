@@ -40,6 +40,7 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "current_distance"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:ruler"
+    _attr_entity_registry_enabled_default = False
 
     @cached_property
     def available(self) -> bool:
@@ -60,6 +61,7 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "current_rotation"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:angle-obtuse"
+    _attr_entity_registry_enabled_default = False
 
     @property
     def native_value(self):
