@@ -1,5 +1,5 @@
+# todo what happens if i delete the freeze preset or select a preset that doesn't exist
 # todo how to control disable channel - awaiting app update
-# todo translate all raise exceptions (mainly in api)
 # test services:
 authorised user pin change
 supervisior pin change
