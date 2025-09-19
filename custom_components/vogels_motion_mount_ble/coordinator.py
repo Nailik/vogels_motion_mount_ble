@@ -12,6 +12,8 @@ from .const import CONF_MAC, CONF_NAME, CONF_PIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountData]):
     """Vogels Motion Mount BLE coordinator."""
