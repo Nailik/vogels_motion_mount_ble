@@ -18,10 +18,10 @@ def pytest_configure():
             def __init__(self, *args, **kwargs):
                 self._callbacks = []
 
-            async def async_start(self):
+            def async_start(self):
                 return
 
-            async def async_stop(self):
+            def async_stop(self):
                 return
 
             def async_register_callback(self, callback):

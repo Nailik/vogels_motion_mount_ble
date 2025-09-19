@@ -1,9 +1,13 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry # pyright: ignore[reportMissingTypeStubs]
 from homeassistant.data_entry_flow import FlowResultType
 from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from typing import Any, Dict
+from custom_components.vogels_motion_mount_ble.api import API
+
+from homeassistant.core import HomeAssistant
 
 from homeassistant.helpers import selector
 from homeassistant.config_entries import (
@@ -31,7 +35,8 @@ from unittest.mock import create_autospec
 MOCKED_CONF_MAC = "AA:BB:CC:DD:EE:FF"
 MOCKED_CONF_NAME = "Mount"
 MOCKED_CONF_PIN = 1234
-MOCKED_CONFIG = {
+
+MOCKED_CONFIG: Dict[str, Any] = {
     CONF_MAC: MOCKED_CONF_MAC,
     CONF_NAME: MOCKED_CONF_NAME,
     CONF_PIN: MOCKED_CONF_PIN,
@@ -61,29 +66,32 @@ def mock_discovery():
         yield mock_instance
 
 
-@pytest.fixture
-def mock_api():
-    with patch(
-        "custom_components.vogels_motion_mount_ble.config_flow.API", autospec=True
-    ) as mock_api:
-        yield mock_api
+@patch("custom_components.vogels_motion_mount_ble.config_flow.API")
+async def test_user_flow_success( mock_api: AsyncMock, hass: HomeAssistant):
+    """Test entity is created with input data if test_connection is successful."""
+    m_api: API = AsyncMock()
+    m_api.test_connection = AsyncMock(return_value=True)
+    mock_api.return_value = m_api
 
-
-async def test_user_flow_success(hass, mock_api):
-    mock_api.return_value.test_connection = AsyncMock(return_value=True)
-
-    result = await hass.config_entries.flow.async_init(
+    # with empty user data a form is shown
+    flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert "type" in flow_result and flow_result["type"] is FlowResultType.FORM
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    # with valid user data the entry is created
+    configure_result = await hass.config_entries.flow.async_configure( # pyright: ignore[reportUnknownMemberType]
+        flow_result["flow_id"],
         MOCKED_CONFIG,
     )
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == MOCKED_CONF_NAME
-    assert result2["data"][CONF_MAC] == MOCKED_CONF_MAC
+    
+    # Ensure API.test_connection was called
+    m_api.test_connection.assert_called()
+
+    # validate input data correctly used
+    assert "type" in configure_result and configure_result["type"] is FlowResultType.CREATE_ENTRY
+    assert "title" in configure_result and configure_result["title"] == MOCKED_CONF_NAME
+    assert "data" in configure_result and configure_result["data"][CONF_MAC] == MOCKED_CONF_MAC
 
 
 async def test_user_flow_invalid_mac(hass, mock_api):
@@ -155,7 +163,7 @@ async def test_user_flow_authentication_cooldown_zero(hass):
     ) as mock_api:
         from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 
-        mock_api.return_value.test_connection = AsyncMock(
+        mock_api.test_connection = AsyncMock(
             side_effect=APIAuthenticationError(cooldown=0)
         )
 
@@ -180,7 +188,7 @@ async def test_user_flow_authentication_cooldown_negative(hass):
     ) as mock_api:
         from custom_components.vogels_motion_mount_ble.api import APIAuthenticationError
 
-        mock_api.return_value.test_connection = AsyncMock(
+        mock_api.test_connection = AsyncMock(
             side_effect=APIAuthenticationError(cooldown=-5)
         )
 
@@ -198,7 +206,7 @@ async def test_user_flow_authentication_cooldown_negative(hass):
 
 
 async def test_user_flow_device_not_found(hass, mock_api):
-    mock_api.return_value.test_connection = AsyncMock(
+    mock_api.test_connection = AsyncMock(
         side_effect=APIConnectionDeviceNotFoundError("not found")
     )
 
@@ -213,7 +221,7 @@ async def test_user_flow_device_not_found(hass, mock_api):
 
 
 async def test_user_flow_connection_error(hass, mock_api):
-    mock_api.return_value.test_connection = AsyncMock(
+    mock_api.test_connection = AsyncMock(
         side_effect=APIConnectionError("cannot connect")
     )
 
@@ -228,7 +236,7 @@ async def test_user_flow_connection_error(hass, mock_api):
 
 
 async def test_user_flow_unknown_error(hass, mock_api):
-    mock_api.return_value.test_connection = AsyncMock(side_effect=Exception("boom"))
+    mock_api.test_connection = AsyncMock(side_effect=Exception("boom"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -241,7 +249,7 @@ async def test_user_flow_unknown_error(hass, mock_api):
 
 
 async def test_bluetooth_flow_creates_entry(hass, mock_api, mock_discovery):
-    mock_api.return_value.test_connection = AsyncMock(return_value=True)
+    mock_api.test_connection = AsyncMock(return_value=True)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=mock_discovery
     )
@@ -269,7 +277,7 @@ async def test_bluetooth_id_already_exists(hass, mock_api, mock_discovery):
 
 
 async def test_reauth_flow(hass, mock_api):
-    mock_api.return_value.test_connection = AsyncMock(return_value=True)
+    mock_api.test_connection = AsyncMock(return_value=True)
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AA:BB:CC:DD:EE:FF",
@@ -306,7 +314,7 @@ async def test_reauth_entry_does_not_exist(hass):
 
 
 async def test_reconfigure_flow(hass, mock_api):
-    mock_api.return_value.test_connection = AsyncMock(return_value=True)
+    mock_api.test_connection = AsyncMock(return_value=True)
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCKED_CONF_MAC,
@@ -441,3 +449,4 @@ async def test_prefilled_reconfigure_flow_form(hass, mock_api):
     assert validated[CONF_MAC] == MOCKED_CONF_MAC
     assert validated[CONF_NAME] == MOCKED_CONF_NAME
     assert validated[CONF_PIN] == MOCKED_CONF_PIN
+all te
