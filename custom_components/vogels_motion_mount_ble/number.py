@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
+from homeassistant.const import EntityCategory
 
 
 async def async_setup_entry(
@@ -116,16 +117,17 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_native_step = 1
     _attr_native_max_value = 1000
     _attr_icon = "mdi:television-box"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.width
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -144,6 +146,7 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     _attr_native_max_value = 100
     _attr_native_step = 1
     _attr_icon = "mdi:ruler"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
@@ -154,7 +157,7 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         self._attr_translation_key = "preset_distance_custom"
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -162,7 +165,7 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         )
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if self._preset:
             return self._preset.distance
@@ -183,6 +186,7 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     _attr_native_max_value = 100
     _attr_native_step = 1
     _attr_icon = "mdi:angle-obtuse"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
@@ -193,7 +197,7 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         self._attr_translation_key = "preset_rotation_custom"
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -201,7 +205,7 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
         )
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if self._preset:
             return self._preset.rotation

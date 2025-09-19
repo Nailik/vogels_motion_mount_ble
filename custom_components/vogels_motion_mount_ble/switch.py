@@ -10,6 +10,7 @@ from . import VogelsMotionMountBleConfigEntry
 from .api import VogelsMotionMountActionType, VogelsMotionMountPinSettings
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
+from homeassistant.const import EntityCategory
 
 
 async def async_setup_entry(
@@ -38,9 +39,10 @@ class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchE
     _attr_unique_id = "change_presets"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:security"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
             self.coordinator.data.pin_setting is not None
@@ -51,7 +53,7 @@ class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchE
         )
 
     @property
-    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def is_on(self) -> bool:
         """Returns on if change_presets is enabled."""
         if self.coordinator.data.multi_pin_features is not None:
             return self.coordinator.data.multi_pin_features.change_presets
@@ -76,9 +78,10 @@ class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEnti
     _attr_unique_id = "change_name"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:security"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
             self.coordinator.data.pin_setting is not None
@@ -89,7 +92,7 @@ class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEnti
         )
 
     @property
-    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def is_on(self) -> bool:
         """Returns on if change presets is enabled."""
         if self.coordinator.data.multi_pin_features is not None:
             return self.coordinator.data.multi_pin_features.change_name
@@ -114,9 +117,10 @@ class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, Switch
     _attr_unique_id = "disable_channel"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:security"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
             self.coordinator.data.pin_setting is not None
@@ -127,7 +131,7 @@ class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, Switch
         )
 
     @property
-    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def is_on(self) -> bool:
         """Returns on if disable channel is enabled."""
         if self.coordinator.data.multi_pin_features is not None:
             return self.coordinator.data.multi_pin_features.disable_channel
@@ -156,9 +160,10 @@ class MultiPinFeatureChangeTvOnOffDetectionSwitch(
     _attr_unique_id = "change_tv_on_off_detection"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:security"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
             self.coordinator.data.pin_setting is not None
@@ -169,7 +174,7 @@ class MultiPinFeatureChangeTvOnOffDetectionSwitch(
         )
 
     @property
-    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def is_on(self) -> bool:
         """Returns on if change tv on off detection is enabled."""
         if self.coordinator.data.multi_pin_features is not None:
             return self.coordinator.data.multi_pin_features.change_tv_on_off_detection
@@ -198,9 +203,10 @@ class MultiPinFeatureChangeDefaultPositionSwitch(
     _attr_unique_id = "change_default_position"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:security"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
             self.coordinator.data.pin_setting is not None
@@ -211,7 +217,7 @@ class MultiPinFeatureChangeDefaultPositionSwitch(
         )
 
     @property
-    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def is_on(self) -> bool:
         """Returns on if change default position is enabled."""
         if self.coordinator.data.multi_pin_features is not None:
             return self.coordinator.data.multi_pin_features.change_default_position
@@ -240,9 +246,10 @@ class MultiPinFeatureStartCalibrationSwitch(
     _attr_unique_id = "start_calibration"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:security"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability of multi pin features."""
         return (
             self.coordinator.data.pin_setting is not None
@@ -253,7 +260,7 @@ class MultiPinFeatureStartCalibrationSwitch(
         )
 
     @property
-    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def is_on(self) -> bool:
         """Returns on if change start calibration is enabled."""
         if self.coordinator.data.multi_pin_features is not None:
             return self.coordinator.data.multi_pin_features.start_calibration

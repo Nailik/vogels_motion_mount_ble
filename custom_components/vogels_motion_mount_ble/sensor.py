@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
+from homeassistant.const import EntityCategory
 
 
 async def async_setup_entry(
@@ -41,12 +42,12 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_icon = "mdi:ruler"
 
     @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def available(self) -> bool:
         """Per default always true."""
         return True
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -60,13 +61,8 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:angle-obtuse"
 
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Per default always true."""
-        return True
-
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the state of the rotation or None."""
         if not self.coordinator.data:
             return None
@@ -79,14 +75,10 @@ class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "ceb_bl_version"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
-
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Per default always true."""
-        return True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -99,14 +91,10 @@ class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "mcp_hw_version"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
-
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Per default always true."""
-        return True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -119,14 +107,10 @@ class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "mcp_bl_version"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
-
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Per default always true."""
-        return True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -139,14 +123,10 @@ class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "mcp_fw_version"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:alpha-v"
-
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Per default always true."""
-        return True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data:
             return None
@@ -159,14 +139,10 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "pin_settings"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:cloud-key"
-
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Per default always true."""
-        return True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data or not self.coordinator.data.pin_setting:
             return None
@@ -179,14 +155,10 @@ class AuthenticationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_unique_id = "authentication"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:server-security"
-
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Per default always true."""
-        return True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if not self.coordinator.data or not self.coordinator.data.auth_type:
             return None

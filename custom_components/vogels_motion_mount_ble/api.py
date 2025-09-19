@@ -134,7 +134,7 @@ class VogelsMotionMountData:
     rotation: int | None = None
     requested_distance: int | None = None
     requested_rotation: int | None = None
-    presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)  # type: ignore[valid-type]
+    presets: dict[int, VogelsMotionMountPreset | None] = field(default_factory=dict)
     width: int | None = None
     freeze_preset_index: int | None = None
     automove_type: VogelsMotionMountAutoMoveType | None = None

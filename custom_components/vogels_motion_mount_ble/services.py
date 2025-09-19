@@ -16,6 +16,8 @@ HA_SERVICE_SET_AUTHORISED_USER_PIN = "set_authorised_user_pin"
 HA_SERVICE_SET_SUPERVISIOR_PIN = "set_supervisior_pin"
 HA_SERVICE_PIN_ID = "pin"
 
+PARALLEL_UPDATES = 1
+
 
 def async_setup_services(hass: HomeAssistant):
     """Set up my integration services."""

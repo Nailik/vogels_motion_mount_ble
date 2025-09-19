@@ -22,6 +22,3 @@ set_authorised_user_pin:
       selector:
         text:
           multiline: false
-
-
-

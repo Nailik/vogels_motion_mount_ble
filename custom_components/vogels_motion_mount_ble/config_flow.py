@@ -14,10 +14,10 @@ from voluptuous.schema_builder import UNDEFINED
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import (
-    NumberSelector,  # pyright: ignore[reportUnknownVariableType]
+    NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    TextSelector,  # pyright: ignore[reportUnknownVariableType]
+    TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )

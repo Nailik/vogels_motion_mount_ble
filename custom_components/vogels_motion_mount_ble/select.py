@@ -12,6 +12,7 @@ from .api import (
 )
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
+from homeassistant.const import EntityCategory
 
 
 async def async_setup_entry(
@@ -37,9 +38,10 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_translation_key = _attr_unique_id
     _attr_options = ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
     _attr_icon = "mdi:autorenew"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
         return self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -47,7 +49,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         )
 
     @property
-    def current_option(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def current_option(self):
         """Return the current active automove option."""
         if self.coordinator.data.automove_type is None:
             return None
@@ -64,9 +66,10 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     _attr_unique_id = "freeze_preset"
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:snowflake"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def current_option(self) -> str | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def current_option(self) -> str | None:
         """Return the current selected freeze preset."""
         index = self.coordinator.data.freeze_preset_index
         if index is None or not (0 <= index < len(self.options)):
@@ -74,7 +77,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         return self.options[index]
 
     @property
-    def options(self) -> list[str]:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def options(self) -> list[str]:
         """Return the possible options."""
         # Dynamically generated based on coordinator data
         return ["0"] + [
@@ -84,7 +87,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         ]
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if automove is turned on."""
         if (
             self.coordinator.data

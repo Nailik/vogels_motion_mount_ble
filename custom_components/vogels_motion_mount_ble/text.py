@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
+from homeassistant.const import EntityCategory
 
 
 async def async_setup_entry(
@@ -38,14 +39,15 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     _attr_native_min = 1
     _attr_native_max = 20
     _attr_icon = "mdi:rename-box-outline"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the state of the entity."""
         return self.coordinator.data.name
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if user has permission."""
         return self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -64,6 +66,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     _attr_native_min = 1
     _attr_native_max = 32
     _attr_icon = "mdi:form-textbox"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
@@ -73,7 +76,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
         return super().available and self.coordinator.api.has_permission(
             action_type=VogelsMotionMountActionType.Settings,
@@ -81,7 +84,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
         )
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
         if self._preset:
             return self._preset.name
