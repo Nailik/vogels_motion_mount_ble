@@ -50,7 +50,7 @@ class StartCalibrationButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Set availability if user has permission."""
-        return self.coordinator.data.permission.start_calibration
+        return self.coordinator.data.permissions.start_calibration
 
     async def async_press(self):
         """Execute start calibration."""
@@ -142,7 +142,7 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.data.permission.change_presets
+        return super().available and self.coordinator.data.permissions.change_presets
 
     async def async_press(self):
         """Delete a custom preset by it's index."""
@@ -183,5 +183,5 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         """Set availability of this index of Preset entity based on the lengths of presets in the data."""
         return (
             self.coordinator.data.presets[self._preset_index] is None
-            and self.coordinator.data.permission.change_presets
+            and self.coordinator.data.permissions.change_presets
         )

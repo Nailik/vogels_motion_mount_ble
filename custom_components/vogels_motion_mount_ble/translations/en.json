@@ -87,11 +87,12 @@
   },
   "config": {
     "error": {
-      "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
-      "error_auth_failed": "Authentication failed, missing or invalid pin.",
-      "error_auth_failed_cooldown": "Authentication failed, too many attempts. You can try again at {retry_at}.",
       "invalid_mac_code": "The inserted MAC address is not valid.",
-      "error_missing_permission": "User has no permission for requested action."
+      "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
+      "error_invalid_authentication": "Authentication failed, missing or invalid pin.",
+      "error_invalid_authentication_cooldown": "Authentication failed, too many attempts. You can try again at {retry_at}.",
+      "error_missing_permission": "User has no permission for requested action.",
+      "error_unknown": "An unknown error occurred while trying to connect to the device. {error}"
     },
     "abort": {
       "already_configured": "The device is already configured.",

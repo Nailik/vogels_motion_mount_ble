@@ -13,6 +13,8 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.util import dt as dt_util
+from datetime import timedelta
 from homeassistant.components import bluetooth
 
 from .data import VogelsMotionMountAuthenticationType
@@ -77,22 +79,30 @@ async def async_setup_entry(
         device=device,
         unsub_options_update_listener=unsub_update_listener,
     )
+    config_entry.runtime_data = coordinator
 
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception as err:
         raise ConfigEntryError(
-            translation_key=f"Something went wrong {err}",
+            translation_key="error_unknown",
             translation_placeholders={"error": str(err)},
         ) from err
 
-    if (
-        coordinator.data.permissions.auth_type
-        == VogelsMotionMountAuthenticationType.Wrong
-    ):
+    permissions = coordinator.data.permissions
+    if permissions.auth_status.type == VogelsMotionMountAuthenticationType.Wrong:
+        if permissions.auth_status.cooldown > 0:
+            retry_time = dt_util.now() + timedelta(
+                seconds=permissions.auth_status.cooldown
+            )
+            return ConfigEntryAuthFailed(
+                translation_key="error_invalid_authentication_cooldown",
+                translation_placeholders={
+                    "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
+                },
+            )
         raise ConfigEntryAuthFailed("error_invalid_authentication")
 
-    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
@@ -119,6 +129,6 @@ async def async_unload_entry(
         _LOGGER.debug("async_unload_entry pop")
         coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
         await coordinator.unload()
-        bluetooth.async_rediscover_address(hass, config_entry.data[CONF_MAC])
+        # bluetooth.async_rediscover_address(hass, config_entry.data[CONF_MAC])
 
     return unload_ok

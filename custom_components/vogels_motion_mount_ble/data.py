@@ -38,6 +38,14 @@ class VogelsMotionMountAutoMoveType(Enum):
 
 
 @dataclass
+class VogelsMotionMountAuthenticationStatus:
+    """Current authentication status."""
+
+    type: VogelsMotionMountAuthenticationType
+    cooldown: int | None = None
+
+
+@dataclass
 class VogelsMotionMountPreset:
     """Preset data."""
 
@@ -100,7 +108,7 @@ class VogelsMotionMountData:
 class VogelsMotionMountPermissions:
     """Permissions for currently used pin."""
 
-    auth_type: VogelsMotionMountAuthenticationType
+    auth_status: VogelsMotionMountAuthenticationStatus
     change_settings: bool
     change_default_position: bool
     change_name: bool

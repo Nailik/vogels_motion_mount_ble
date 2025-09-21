@@ -47,7 +47,7 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     @property
     def available(self) -> bool:
         """Set availability if user has permission."""
-        return self.coordinator.data.permission.change_name
+        return self.coordinator.data.permissions.change_name
 
     async def async_set_value(self, value: str) -> None:
         """Set the name value from the UI."""
@@ -73,7 +73,7 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.data.permission.change_presets
+        return super().available and self.coordinator.data.permissions.change_presets
 
     @property
     def native_value(self):

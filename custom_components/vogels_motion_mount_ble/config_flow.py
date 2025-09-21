@@ -7,6 +7,9 @@ from datetime import timedelta
 import logging
 import re
 from typing import Any
+from .data import (
+    VogelsMotionMountAuthenticationType,
+)
 from homeassistant.components import bluetooth
 
 import voluptuous as vol
@@ -14,6 +17,7 @@ from voluptuous.schema_builder import UNDEFINED
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -25,8 +29,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.util import dt as dt_util
 
 from .client import (
-    VogelsMotionMountBluetoothClient,
-    APIAuthenticationError,
+    get_permissions,
 )
 from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 
@@ -128,27 +131,34 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             if device is None:
                 return ValidationResult({CONF_ERROR: "error_device_not_found"})
 
-            client = VogelsMotionMountBluetoothClient(
-                pin=user_input.get(CONF_PIN),
+            client = await establish_connection(
+                client_class=BleakClientWithServiceCache,
                 device=device,
-                authentication_callback=lambda _: None,
-                connection_callback=lambda _: None,
-                distance_callback=lambda _: None,
-                rotation_callback=lambda _: None,
+                name=device.name or "Unknown Device",
             )
-            await client.read_auth_type()
-            _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
-        except APIAuthenticationError as err:
-            _LOGGER.error("Setting APIAuthenticationError: %s", err)
-            if err.cooldown > 0:
-                retry_time = dt_util.now() + timedelta(seconds=err.cooldown)
-                return ValidationResult(
-                    errors={CONF_ERROR: "error_auth_cooldown"},
-                    description_placeholders={
-                        "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
-                    },
-                )
-            return ValidationResult({CONF_ERROR: "error_invalid_authentication"})
+
+            permissions = await get_permissions(client, user_input.get(CONF_PIN))
+            if (
+                permissions.auth_status.type
+                == VogelsMotionMountAuthenticationType.Wrong
+            ):
+                if permissions.auth_status.cooldown > 0:
+                    retry_time = dt_util.now() + timedelta(
+                        seconds=permissions.auth_status.cooldown
+                    )
+                    return ValidationResult(
+                        errors={CONF_ERROR: "error_invalid_authentication_cooldown"},
+                        description_placeholders={
+                            "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
+                        },
+                    )
+                return ValidationResult({CONF_ERROR: "error_invalid_authentication"})
+
+            _LOGGER.debug(
+                "Successfully tested connection to %s pers %s",
+                user_input[CONF_MAC],
+                permissions,
+            )
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Setting Exception: %s", err)
             return ValidationResult(

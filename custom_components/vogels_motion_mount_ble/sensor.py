@@ -141,4 +141,4 @@ class AuthenticationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        return self.coordinator.data.auth_type.value
+        return self.coordinator.data.permissions.auth_status.type.value

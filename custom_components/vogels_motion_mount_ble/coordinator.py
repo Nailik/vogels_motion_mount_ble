@@ -54,10 +54,10 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         self._client = VogelsMotionMountBluetoothClient(
             pin=config_entry.data.get(CONF_PIN),
             device=device,
-            permission_callback=self._permissions_changed,
-            connection_callback=self._connection_changed,
-            distance_callback=self._distance_changed,
-            rotation_callback=self._rotation_changed,
+            permission_callback=lambda _: None,
+            connection_callback=lambda _: None,
+            distance_callback=lambda _: None,
+            rotation_callback=lambda _: None,
         )
 
         # Initialise DataUpdateCoordinator
@@ -66,6 +66,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             _LOGGER,
             name=config_entry.title,
             config_entry=config_entry,
+            update_method=self._read_data,
             update_interval=timedelta(minutes=5),
         )
         _LOGGER.debug("Coordinator startup finished")
@@ -268,7 +269,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
     # region internal
     # -------------------------------
 
-    async def _async_update_data(self) -> VogelsMotionMountData:
+    async def _read_data(self) -> VogelsMotionMountData:
         """Fetch data from device."""
         return VogelsMotionMountData(
             automove=await self._client.read_automove(),
