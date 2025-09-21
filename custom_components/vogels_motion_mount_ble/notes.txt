@@ -34,6 +34,3 @@ refresh data
 current distance/rotation
 tv width
 
-
-
-
