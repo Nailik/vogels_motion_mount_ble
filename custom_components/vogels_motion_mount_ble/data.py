@@ -41,7 +41,7 @@ class VogelsMotionMountAutoMoveType(Enum):
 class VogelsMotionMountAuthenticationStatus:
     """Current authentication status."""
 
-    type: VogelsMotionMountAuthenticationType
+    auth_type: VogelsMotionMountAuthenticationType
     cooldown: int | None = None
 
 

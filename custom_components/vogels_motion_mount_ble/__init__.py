@@ -90,7 +90,7 @@ async def async_setup_entry(
         ) from err
 
     permissions = coordinator.data.permissions
-    if permissions.auth_status.type == VogelsMotionMountAuthenticationType.Wrong:
+    if permissions.auth_status.auth_type == VogelsMotionMountAuthenticationType.Wrong:
         if permissions.auth_status.cooldown > 0:
             retry_time = dt_util.now() + timedelta(
                 seconds=permissions.auth_status.cooldown

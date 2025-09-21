@@ -36,19 +36,4 @@ tv width
 
 
 
-@dataclass
-class VogelsMotionMountAuthStatus:
-    type: VogelsMotionMountAuthenticationType
-    multi_pin_features: VogelsMotionMountMultiPinFeatures
-    cooldown: int
 
-    async def _has_write_permission(self, char_uuid: str) -> bool:
-        return (
-            (char_uuid == CHAR_PRESET_UUIDS and self.multi_pin_features.change_presets)
-            or (char_uuid == CHAR_PRESET_NAMES_UUIDS and self.multi_pin_features.change_presets)
-            or (char_uuid == CHAR_NAME_UUID and self.multi_pin_features.change_name)
-            or (char_uuid == ChAR_DISABLE_CHANNEL and self.multi_pin_features.disable_channel)
-            or (char_uuid == CHAR_FREEZE_UUID and self.multi_pin_features.change_tv_on_off_detection)
-            or (char_uuid == CHAR_CALIBRATE_UUID and self.multi_pin_features.start_calibration)
-            or self.type != VogelsMotionMountAuthenticationType.Wrong
-        )
