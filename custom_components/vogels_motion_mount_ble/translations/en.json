@@ -87,15 +87,11 @@
   },
   "config": {
     "error": {
-      "error_cannot_connect": "Found device but unable to connect to the device.",
       "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
-      "error_invalid_authentication": "Invalid Authentication, check or disable PIN.",
-      "error_auth_cooldown": "Authentication failed, too many attempts. You can try again at {retry_at}.",
-      "error_unknown": "An unknown error occurred while trying to connect to the device. {error}",
+      "error_auth_failed": "Authentication failed, missing or invalid pin.",
+      "error_auth_failed_cooldown": "Authentication failed, too many attempts. You can try again at {retry_at}.",
       "invalid_mac_code": "The inserted MAC address is not valid.",
-      "invalid_authentication_for_action": "Invalid authentication for action {type} with settings type {settings_request_type}, cooldown of {cooldown} seconds.",
-      "invalid_authentication_missing_for_action": "Invalid authentication missing for action {type} with settings type {settings_request_type}.",
-      "error_missing_permission": "User has no permission for action {type} with settings type {settings_request_type}."
+      "error_missing_permission": "User has no permission for requested action."
     },
     "abort": {
       "already_configured": "The device is already configured.",
@@ -187,12 +183,12 @@
       "auto_move": {
         "name": "Automove setting",
         "state": {
-          "off": "Off",
-          "hdmi_1": "HDMI 1",
-          "hdmi_2": "HDMI 2",
-          "hdmi_3": "HDMI 3",
-          "hdmi_4": "HDMI 4",
-          "hdmi_5": "HDMI 5"
+          "0": "Off",
+          "1": "HDMI 1",
+          "2": "HDMI 2",
+          "3": "HDMI 3",
+          "4": "HDMI 4",
+          "5": "HDMI 5"
         }
       },
       "freeze_preset": {

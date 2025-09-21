@@ -7,6 +7,7 @@ from datetime import timedelta
 import logging
 import re
 from typing import Any
+from homeassistant.components import bluetooth
 
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
@@ -23,11 +24,9 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import dt as dt_util
 
-from .api import (
-    API,
+from .client import (
+    VogelsMotionMountBluetoothClient,
     APIAuthenticationError,
-    APIConnectionDeviceNotFoundError,
-    APIConnectionError,
 )
 from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
 
@@ -120,16 +119,25 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             return ValidationResult({CONF_ERROR: "invalid_mac_code"})
 
         try:
-            await API(
+            device = bluetooth.async_ble_device_from_address(
                 hass=self.hass,
-                mac=user_input[CONF_MAC],
+                address=user_input[CONF_MAC],
+                connectable=True,
+            )
+
+            if device is None:
+                return ValidationResult({CONF_ERROR: "error_device_not_found"})
+
+            client = VogelsMotionMountBluetoothClient(
                 pin=user_input.get(CONF_PIN),
-                callback=None,
-            ).test_connection()
+                device=device,
+                authentication_callback=lambda _: None,
+                connection_callback=lambda _: None,
+                distance_callback=lambda _: None,
+                rotation_callback=lambda _: None,
+            )
+            await client.read_auth_type()
             _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
-        except APIConnectionDeviceNotFoundError as err:
-            _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
-            return ValidationResult({CONF_ERROR: "error_device_not_found"})
         except APIAuthenticationError as err:
             _LOGGER.error("Setting APIAuthenticationError: %s", err)
             if err.cooldown > 0:
@@ -141,9 +149,6 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
             return ValidationResult({CONF_ERROR: "error_invalid_authentication"})
-        except APIConnectionError as err:
-            _LOGGER.error("Setting APIConnectionError: %s", err)
-            return ValidationResult({CONF_ERROR: "error_cannot_connect"})
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Setting Exception: %s", err)
             return ValidationResult(

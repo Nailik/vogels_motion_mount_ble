@@ -5,9 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
-from .api import (
-    SettingsRequestType,
-    VogelsMotionMountActionType,
+from .data import (
     VogelsMotionMountAutoMoveType,
 )
 from .base import VogelsMotionMountBleBaseEntity
@@ -36,28 +34,40 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
 
     _attr_unique_id = "auto_move"
     _attr_translation_key = _attr_unique_id
-    _attr_options = ["off", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4", "hdmi_5"]
+    _attr_options = ["0", "1", "2", "3", "4", "5"]
     _attr_icon = "mdi:autorenew"
     _attr_entity_category = EntityCategory.CONFIG
 
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.change_tv_on_off_detection,
-        )
+        return self.coordinator.data.permission.change_tv_on_off_detection
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:
         """Return the current active automove option."""
-        if self.coordinator.data.automove_type is None:
-            return None
-        return self.coordinator.data.automove_type.value
+        automove = self.coordinator.data.automove.value
+        # Off → always "0"
+        if automove % 2:
+            return "0"
+        # On → HDMI index = (value // 4) + 1
+        return str((automove // 4) + 1)
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        await self.coordinator.api.set_automove(option)
+        current_value = self.coordinator.data.automove.value
+
+        if option == "0":
+            # Disabled → pick matching Off for current HDMI
+            hdmi_index = (current_value // 4) + 1
+            enum_value = (hdmi_index - 1) * 4 + 1
+        else:
+            # Enabled → On for selected HDMI
+            hdmi_index = int(option)
+            enum_value = (hdmi_index - 1) * 4
+
+        target = VogelsMotionMountAutoMoveType(enum_value)
+        await self.coordinator.set_automove(target)
 
 
 class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
@@ -81,27 +91,17 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
         """Return the possible options."""
         # Dynamically generated based on coordinator data
         return ["0"] + [
-            str(preset.name)
-            for _, preset in self.coordinator.data.presets.items()
-            if preset is not None
+            str(preset.data.name)
+            for preset in self.coordinator.data.presets
+            if preset.data is not None
         ]
 
     @property
     def available(self) -> bool:
         """Set availability if automove is turned on."""
-        if (
-            self.coordinator.data
-            and self.coordinator.data.automove_type
-            is not VogelsMotionMountAutoMoveType.Off
-            and self.coordinator.api.has_permission(
-                action_type=VogelsMotionMountActionType.Settings,
-                settings_request_type=SettingsRequestType.change_default_position,
-            )
-        ):
-            return True
-        return False
+        return self.coordinator.data.permission.change_default_position
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         index = self.options.index(option)
-        await self.coordinator.api.set_freeze_preset(index)
+        await self.coordinator.set_freeze_preset(index)

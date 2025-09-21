@@ -1,9 +1,7 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-from custom_components.vogels_motion_mount_ble.api import (
-    SettingsRequestType,
-    VogelsMotionMountActionType,
-)
+from .data import VogelsMotionMountPresetData
+from dataclasses import replace
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant
@@ -63,16 +61,9 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
             return self.coordinator.data.requested_distance
         return self.coordinator.data.distance
 
-    @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Control,
-        )
-
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_distance(int(value))
+        await self.coordinator.set_distance(int(value))
 
 
 class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
@@ -95,16 +86,9 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
             return self.coordinator.data.requested_rotation
         return self.coordinator.data.rotation
 
-    @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
-        """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Control,
-        )
-
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_rotation(int(value))
+        await self.coordinator.set_rotation(int(value))
 
 
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
@@ -122,20 +106,16 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.width
+        return self.coordinator.data.tv_width
 
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-        )
+        return self.coordinator.data.permission.change_settings
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_tv_width(int(value))
+        await self.coordinator.set_tv_width(int(value))
 
 
 class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
@@ -159,22 +139,26 @@ class PresetDistanceNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.change_presets,
-        )
+        return super().available and self.coordinator.data.permission.change_presets
 
     @property
     def native_value(self):
         """Return the current value."""
-        if self._preset:
-            return self._preset.distance
+        if self._preset.data:
+            return self._preset.data.distance
         return None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_preset(
-            preset_index=self._preset_index, distance=(int(value))
+        preset_data = self._preset.data
+        if preset_data is None:
+            preset_data = VogelsMotionMountPresetData(
+                name=str(self._preset_index),
+                distance=0,
+                rotation=0,
+            )
+        await self.coordinator.set_preset(
+            replace(self._preset, data=replace(preset_data, distance=(int(value))))
         )
 
 
@@ -199,21 +183,24 @@ class PresetRotationNumber(VogelsMotionMountBlePresetBaseEntity, NumberEntity):
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.change_presets,
-        )
+        return super().available and self.coordinator.data.permission.change_presets
 
     @property
     def native_value(self):
         """Return the current value."""
-        if self._preset:
-            return self._preset.rotation
+        if self._preset.data:
+            return self._preset.data.rotation
         return None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
-        await self.coordinator.api.set_preset(
-            preset_index=self._preset_index,
-            rotation=(int(value)),
+        preset_data = self._preset.data
+        if preset_data is None:
+            preset_data = VogelsMotionMountPresetData(
+                name=str(self._preset_index),
+                distance=0,
+                rotation=0,
+            )
+        await self.coordinator.set_preset(
+            replace(self._preset, data=replace(preset_data, rotation=(int(value))))
         )

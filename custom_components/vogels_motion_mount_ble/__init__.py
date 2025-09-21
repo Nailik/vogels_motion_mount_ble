@@ -13,10 +13,12 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.components import bluetooth
 
-from .api import APIAuthenticationError, APIConnectionDeviceNotFoundError
+from .data import VogelsMotionMountAuthenticationType
 from .coordinator import VogelsMotionMountBleCoordinator
 from .services import async_setup_services
+from .const import CONF_MAC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,26 +62,39 @@ async def async_setup_entry(
     unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
 
     # Initialise the coordinator that manages data updates from your api.
+    device = bluetooth.async_ble_device_from_address(
+        hass=hass,
+        address=config_entry.data[CONF_MAC],
+        connectable=True,
+    )
+
+    if device is None:
+        raise ConfigEntryNotReady("error_device_not_found")
+
     coordinator = VogelsMotionMountBleCoordinator(
         hass=hass,
         config_entry=config_entry,
+        device=device,
         unsub_options_update_listener=unsub_update_listener,
     )
-    config_entry.runtime_data = coordinator
 
     try:
-        await coordinator.api.refresh_data()
-    except APIConnectionDeviceNotFoundError as err:
-        raise ConfigEntryNotReady("error_device_not_found") from err
-    except APIAuthenticationError as err:
-        raise ConfigEntryAuthFailed("error_invalid_athentication") from err
+        await coordinator.async_config_entry_first_refresh()
     except Exception as err:
         raise ConfigEntryError(
             translation_key=f"Something went wrong {err}",
             translation_placeholders={"error": str(err)},
         ) from err
 
+    if (
+        coordinator.data.permissions.auth_type
+        == VogelsMotionMountAuthenticationType.Wrong
+    ):
+        raise ConfigEntryAuthFailed("error_invalid_authentication")
+
+    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 
@@ -104,5 +119,6 @@ async def async_unload_entry(
         _LOGGER.debug("async_unload_entry pop")
         coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
         await coordinator.unload()
+        bluetooth.async_rediscover_address(hass, config_entry.data[CONF_MAC])
 
     return unload_ok

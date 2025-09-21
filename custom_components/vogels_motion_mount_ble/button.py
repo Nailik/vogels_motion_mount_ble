@@ -1,18 +1,15 @@
 """Button entities to define actions for Vogels Motion Mount BLE entities."""
 
-from custom_components.vogels_motion_mount_ble.api import (
-    SettingsRequestType,
-    VogelsMotionMountActionType,
-)
-
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from dataclasses import replace
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
 from homeassistant.const import EntityCategory
+from .data import VogelsMotionMountPresetData
 
 
 async def async_setup_entry(
@@ -53,14 +50,11 @@ class StartCalibrationButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Set availability if user has permission."""
-        return self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.start_calibration,
-        )
+        return self.coordinator.data.permission.start_calibration
 
     async def async_press(self):
         """Execute start calibration."""
-        await self.coordinator.api.start_calibration()
+        await self.coordinator.start_calibration()
 
 
 class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
@@ -73,7 +67,7 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
 
     async def async_press(self):
         """Execute data refresh."""
-        await self.coordinator.api.refresh_data()
+        await self.coordinator.refresh_data()
 
 
 class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
@@ -87,13 +81,11 @@ class DisconnectButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Set availability only if device is connected currently."""
-        if self.coordinator.data and self.coordinator.data.connected:
-            return True
-        return False
+        return self.coordinator.data.connected
 
     async def async_press(self):
         """Execute disconnect."""
-        await self.coordinator.api.disconnect()
+        await self.coordinator.disconnect()
 
 
 class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
@@ -103,16 +95,9 @@ class SelectPresetDefaultButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     _attr_translation_key = _attr_unique_id
     _attr_icon = "mdi:wall"
 
-    @property
-    def available(self) -> bool:
-        """Set availability if user has permission."""
-        return self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Control,
-        )
-
     async def async_press(self):
         """Select the default preset with id 0."""
-        await self.coordinator.api.select_default_preset()
+        await self.coordinator.select_preset(0)
 
 
 class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -133,17 +118,9 @@ class SelectPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
         )
         self._attr_unique_id = f"select_preset_id_{preset_index}"
 
-    @property
-    def available(self) -> bool:
-        """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.change_presets,
-        )
-
     async def async_press(self):
-        """Select a custom preset by it's index."""
-        await self.coordinator.api.select_preset(self._preset_index)
+        """Select a custom preset by it's index, they are offset by 1 due to default preset."""
+        await self.coordinator.select_preset(self._preset_index + 1)
 
 
 class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -160,19 +137,16 @@ class DeletePresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"delete_preset_{self._prop_preset_index}"
+        self._attr_unique_id = f"delete_preset_{preset_index}"
 
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.change_presets,
-        )
+        return super().available and self.coordinator.data.permission.change_presets
 
     async def async_press(self):
         """Delete a custom preset by it's index."""
-        await self.coordinator.api.delete_preset(self._preset_index)
+        await self.coordinator.set_preset(replace(self._preset, data=None))
 
 
 class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
@@ -189,28 +163,25 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"add_preset_{self._prop_preset_index}"
+        self._attr_unique_id = f"add_preset_{preset_index}"
 
     async def async_press(self):
         """Add a custom preset by it's index with empty data."""
-        await self.coordinator.api.set_preset(
-            preset_index=self._preset_index,
-            name=f"{self._preset_index}",
-            distance=0,
-            rotation=0,
+        await self.coordinator.set_preset(
+            replace(
+                self._preset,
+                data=VogelsMotionMountPresetData(
+                    name=str(self._preset_index),
+                    distance=0,
+                    rotation=0,
+                ),
+            )
         )
 
     @property
     def available(self) -> bool:
         """Set availability of this index of Preset entity based on the lengths of presets in the data."""
-        if (
-            self.coordinator.data
-            and self.coordinator.data.presets
-            and not self._preset
-            and self.coordinator.api.has_permission(
-                action_type=VogelsMotionMountActionType.Settings,
-                settings_request_type=SettingsRequestType.change_presets,
-            )
-        ):
-            return True
-        return False
+        return (
+            self.coordinator.data.presets[self._preset_index] is None
+            and self.coordinator.data.permission.change_presets
+        )

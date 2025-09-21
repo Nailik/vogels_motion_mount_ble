@@ -1,7 +1,5 @@
 """Sensor entities to define properties for Vogels Motion Mount BLE entities."""
 
-from propcache.api import cached_property
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,16 +40,9 @@ class DistanceSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     _attr_icon = "mdi:ruler"
     _attr_entity_registry_enabled_default = False
 
-    @cached_property
-    def available(self) -> bool:
-        """Per default always true."""
-        return True
-
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
-            return None
         return self.coordinator.data.distance
 
 
@@ -66,8 +57,6 @@ class RotationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the rotation or None."""
-        if not self.coordinator.data:
-            return None
         return self.coordinator.data.rotation
 
 
@@ -82,9 +71,7 @@ class CEBBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.ceb_bl_version
+        return self.coordinator.data.versions.ceb_bl_version
 
 
 class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -98,9 +85,7 @@ class MCPHWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.mcp_hw_version
+        return self.coordinator.data.versions.mcp_hw_version
 
 
 class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -114,9 +99,7 @@ class MCPBLSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.mcp_bl_version
+        return self.coordinator.data.versions.mcp_bl_version
 
 
 class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -130,9 +113,7 @@ class MCPFWSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.mcp_fw_version
+        return self.coordinator.data.versions.mcp_fw_version
 
 
 class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
@@ -146,8 +127,6 @@ class PinSettingsSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data or not self.coordinator.data.pin_setting:
-            return None
         return self.coordinator.data.pin_setting.value
 
 
@@ -162,6 +141,4 @@ class AuthenticationSensor(VogelsMotionMountBleBaseEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the current value."""
-        if not self.coordinator.data or not self.coordinator.data.auth_type:
-            return None
         return self.coordinator.data.auth_type.value

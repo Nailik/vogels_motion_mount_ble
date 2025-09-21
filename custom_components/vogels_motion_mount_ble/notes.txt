@@ -1,4 +1,14 @@
 # todo how to control disable channel - awaiting app update
+# todo check if tv width change is also possible with control permission
+# todo check if default preset index change does work when tv on off detection is off
+# todo check if it works setting authorised user permission if there is no multi pin and pin gets set later (both authorised user and supervisior)
+ #TODO test exception text on initialisation (wrong pin, device not found, other err)
+
+
+# TODO auth cooldown missing
+
+
+
 # test services:
 authorised user pin change
 supervisior pin change
@@ -26,55 +36,19 @@ tv width
 
 
 
-api:
+@dataclass
+class VogelsMotionMountAuthStatus:
+    type: VogelsMotionMountAuthenticationType
+    multi_pin_features: VogelsMotionMountMultiPinFeatures
+    cooldown: int
 
-exposed data:
-connected
-check if user has permission to do a specific settings change - or as data for current user?
-requested distance
-requested rotation
-current distance
-current rotation
-tv width
-presets (name, distance, rotation)
-automove option (id?)
-freeze preset index
-freeze preset available
-Versions
-pin settings
-current user authentication level
-multi pin features
-name
-
-actions:
-start calibration
-refresh data
-disconnect
-select default preset
-select preset (0-7)
-
-# test connection outside the normal
-
-changes:
-delete preset
-set preset data
-set distance
-set rotation
-set tv width
-set automove
-set freeze preset
-set multi pin features xyz
-set name
-
-# internally: authentication
-# check if data was correctly set
-
-# test connection completely separate? then on initialization all the data can be read for the coordinator
-# coordinator as interface, do not access api externally
-# coordinator can validate input - (only from services, entities already do it by themself)
-
-
-Minimal api that only has
-test connection and internal handles connection and authentication then this could be used for startup check
-
-would only need to have: connect and throw errors and handle all the authentication 
+    async def _has_write_permission(self, char_uuid: str) -> bool:
+        return (
+            (char_uuid == CHAR_PRESET_UUIDS and self.multi_pin_features.change_presets)
+            or (char_uuid == CHAR_PRESET_NAMES_UUIDS and self.multi_pin_features.change_presets)
+            or (char_uuid == CHAR_NAME_UUID and self.multi_pin_features.change_name)
+            or (char_uuid == ChAR_DISABLE_CHANNEL and self.multi_pin_features.disable_channel)
+            or (char_uuid == CHAR_FREEZE_UUID and self.multi_pin_features.change_tv_on_off_detection)
+            or (char_uuid == CHAR_CALIBRATE_UUID and self.multi_pin_features.start_calibration)
+            or self.type != VogelsMotionMountAuthenticationType.Wrong
+        )

@@ -32,8 +32,6 @@ class ConnectionBinarySensor(VogelsMotionMountBleBaseEntity, BinarySensorEntity)
     @property
     def is_on(self):
         """Return if the MotionMount is currently connected."""
-        if not self.coordinator.data:
-            return None
         return self.coordinator.data.connected
 
     @property
