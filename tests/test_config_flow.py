@@ -49,29 +49,36 @@ MOCKED_CONFIG: Dict[str, Any] = {
 
 @pytest.fixture(autouse=True)
 def mock_integration():
-    with patch(
-        "bleak_retry_connector.establish_connection", new_callable=AsyncMock
-    ) as mock_conn, patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=BLEDevice(
-            address=MOCKED_CONF_MAC, name=MOCKED_CONF_NAME, details={}
-        ),
-    ) as mock_dev, patch(
-        "custom_components.vogels_motion_mount_ble.__init__.VogelsMotionMountBleCoordinator",
-        return_value=MagicMock(),
-    ) as mock_coord:
+    with (
+        patch(
+            "bleak_retry_connector.establish_connection", new_callable=AsyncMock
+        ) as mock_conn,
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=BLEDevice(
+                address=MOCKED_CONF_MAC, name=MOCKED_CONF_NAME, details={}
+            ),
+        ) as mock_dev,
+        patch(
+            "custom_components.vogels_motion_mount_ble.__init__.VogelsMotionMountBleCoordinator",
+            return_value=MagicMock(),
+        ) as mock_coord,
+    ):
         mock_conn.return_value = AsyncMock()
         yield mock_coord, mock_conn, mock_dev
 
 
 @pytest.fixture(autouse=True)
 def patch_api():
-    with patch(
-        "homeassistant.components.bluetooth.async_setup", return_value=True
-    ), patch(
-        "custom_components.vogels_motion_mount_ble.async_setup", return_value=True
-    ), patch(
-        "custom_components.vogels_motion_mount_ble.async_setup_entry", return_value=True
+    with (
+        patch("homeassistant.components.bluetooth.async_setup", return_value=True),
+        patch(
+            "custom_components.vogels_motion_mount_ble.async_setup", return_value=True
+        ),
+        patch(
+            "custom_components.vogels_motion_mount_ble.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -281,9 +288,7 @@ async def test_user_flow_unknown_error(
         flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-        configure_result: Dict[
-            str, Any
-        ] = await hass.config_entries.flow.async_configure(
+        configure_result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"],
             MOCKED_CONFIG,
         )
