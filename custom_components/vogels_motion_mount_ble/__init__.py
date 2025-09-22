@@ -129,6 +129,6 @@ async def async_unload_entry(
         _LOGGER.debug("async_unload_entry pop")
         coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
         await coordinator.unload()
-        # bluetooth.async_rediscover_address(hass, config_entry.data[CONF_MAC])
+        bluetooth.async_rediscover_address(hass, config_entry.data[CONF_MAC])
 
     return unload_ok
