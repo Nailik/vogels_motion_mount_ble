@@ -91,11 +91,11 @@ async def async_setup_entry(
 
     permissions = coordinator.data.permissions
     if permissions.auth_status.auth_type == VogelsMotionMountAuthenticationType.Wrong:
-        if permissions.auth_status.cooldown > 0:
+        if permissions.auth_status.cooldown and permissions.auth_status.cooldown > 0:
             retry_time = dt_util.now() + timedelta(
                 seconds=permissions.auth_status.cooldown
             )
-            return ConfigEntryAuthFailed(
+            raise ConfigEntryAuthFailed(
                 translation_key="error_invalid_authentication_cooldown",
                 translation_placeholders={
                     "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
