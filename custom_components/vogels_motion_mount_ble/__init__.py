@@ -12,6 +12,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    IntegrationError,
 )
 from homeassistant.util import dt as dt_util
 from datetime import timedelta
@@ -20,7 +21,7 @@ from homeassistant.components import bluetooth
 from .data import VogelsMotionMountAuthenticationType
 from .coordinator import VogelsMotionMountBleCoordinator
 from .services import async_setup_services
-from .const import CONF_MAC
+from .const import CONF_MAC, MIN_HA_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,19 +37,16 @@ PLATFORMS: list[Platform] = [
 
 type VogelsMotionMountBleConfigEntry = ConfigEntry[VogelsMotionMountBleCoordinator]
 
-# for this version read_only was added to config selectors
-MIN_HA_VERSION = "2025.6.0"
-
-if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
-    raise RuntimeError(
-        f"Vogels Motion Mount BLE requires Home Assistant {MIN_HA_VERSION}+"
-    )
-
 
 async def async_setup(
     hass: HomeAssistant, entry: VogelsMotionMountBleConfigEntry
 ) -> bool:
     """Set up Vogels Motion Mount integration services."""
+    if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
+        raise IntegrationError(
+            translation_key="invalid_ha_version",
+            translation_placeholders={"version": MIN_HA_VERSION},
+        )
     _LOGGER.debug("async_setup called with config_entry: %s", entry)
     async_setup_services(hass)
     return True

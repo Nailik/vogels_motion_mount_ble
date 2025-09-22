@@ -1,6 +1,8 @@
 """Constants for the Vogels Motion Mount BLE integration."""
 
 DOMAIN = "vogels_motion_mount_ble"
+# for this version read_only was added to config selectors
+MIN_HA_VERSION = "2025.6.0"
 
 CONF_MAC = "conf_mac"
 CONF_NAME = "conf_name"

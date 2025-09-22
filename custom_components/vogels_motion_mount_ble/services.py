@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 1
 
 def async_setup_services(hass: HomeAssistant):
     """Set up my integration services."""
-    _LOGGER.debug("async_setup_services called ")
+    _LOGGER.debug("async_setup_services calledx ")
 
     hass.services.async_register(
         DOMAIN,

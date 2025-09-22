@@ -87,6 +87,7 @@
   },
   "config": {
     "error": {
+      "invalid_ha_version": "Vogels Motion Mount BLE requires Home Assistant Version {version}.",
       "invalid_mac_code": "The inserted MAC address is not valid.",
       "error_device_not_found": "Device not found. Please check the MAC address and ensure the device is powered on.",
       "error_invalid_authentication": "Authentication failed, missing or invalid pin.",

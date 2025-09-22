@@ -27,7 +27,7 @@ from custom_components.vogels_motion_mount_ble.const import (
     CONF_PIN,
     CONF_ERROR,
 )
-from bleak import BLEDevice
+from bleak.backends.device import BLEDevice
 from unittest.mock import create_autospec
 
 from custom_components.vogels_motion_mount_ble.data import (
@@ -190,6 +190,11 @@ def mock_discovery():
         yield mock_instance
 
 
+# -------------------------------
+# region Userflow
+# -------------------------------
+
+
 @pytest.mark.parametrize(
     "cooldown,expected_error",
     [
@@ -297,7 +302,8 @@ async def test_user_flow_unknown_error(
 
 
 # -------------------------------
-# BLUETOOTH FLOW TESTS
+# endregion
+# region Bluetooth Flow
 # -------------------------------
 
 
@@ -338,7 +344,8 @@ async def test_bluetooth_id_already_exists(
 
 
 # -------------------------------
-# REAUTH FLOW
+# endregion
+# region Reauthentication flow
 # -------------------------------
 
 
@@ -387,7 +394,8 @@ async def test_reauth_entry_does_not_exist(
 
 
 # -------------------------------
-# RECONFIGURE FLOW
+# endregion
+# region Reconfiguration Flow
 # -------------------------------
 
 
@@ -436,7 +444,8 @@ async def test_reconfigure_entry_does_not_exist(
 
 
 # -------------------------------
-# PREFILLED FORM TESTS
+# endregion
+# region Prefilled Form
 # -------------------------------
 
 
