@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 # -------------------------------
 
 
-class APIAuthenticationError(Exception):
+class VogelsMotionMountClientAuthenticationError(Exception):
     """Exception class if user is not authorized to do this action."""
 
     def __init__(self, cooldown: int, message: str = "Unauthorized") -> None:
@@ -96,7 +96,6 @@ class VogelsMotionMountBluetoothClient:
         self._permission_callback = permission_callback
         self._distance_callback = distance_callback
         self._rotation_callback = rotation_callback
-        self._client: BleakClient | None = None
         self._session_data: _VogelsMotionMountSessionData | None = None
 
     # -------------------------------
@@ -198,8 +197,8 @@ class VogelsMotionMountBluetoothClient:
 
     async def disconnect(self):
         """Disconnect from the Vogels Motion Mount BLE device if connected."""
-        if self._client:
-            await self._client.disconnect()
+        if self._session_data:
+            await self._session_data.client.disconnect()
 
     async def select_preset(self, preset_index: int):
         """Select the preset at the given index on the Vogels Motion Mount."""
@@ -357,7 +356,7 @@ class VogelsMotionMountBluetoothClient:
         """Writes data by first connecting, checking permission status and then writing data. Also reads updated data that is then returned to be verified."""
         session_data = await self._connect()
         if not self._has_write_permission(char_uuid, session_data.permissions):
-            raise APIAuthenticationError(cooldown=0)
+            raise VogelsMotionMountClientAuthenticationError(cooldown=0)
         await session_data.client.write_gatt_char(char_uuid, data)
 
     def _has_write_permission(
