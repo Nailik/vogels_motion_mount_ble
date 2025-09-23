@@ -1,9 +1,19 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from typing import Any, Dict
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from . import (
+    MOCKED_CONF_MAC,
+    MOCKED_CONF_NAME,
+    MOCKED_CONF_PIN,
+    MOCKED_CONFIG,
+    CONF_MAC,
+    DOMAIN,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_ERROR,
+)
 
 from homeassistant.core import HomeAssistant
 
@@ -20,14 +30,6 @@ from homeassistant.config_entries import (
 import voluptuous as vol
 
 from homeassistant.config_entries import UnknownEntry
-from custom_components.vogels_motion_mount_ble.const import (
-    DOMAIN,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_ERROR,
-)
-from bleak.backends.device import BLEDevice
 from unittest.mock import create_autospec
 
 from custom_components.vogels_motion_mount_ble.data import (
@@ -35,52 +37,6 @@ from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountPermissions,
     VogelsMotionMountAuthenticationStatus,
 )
-
-MOCKED_CONF_MAC = "AA:BB:CC:DD:EE:FF"
-MOCKED_CONF_NAME = "Mount"
-MOCKED_CONF_PIN = 1234
-
-MOCKED_CONFIG: Dict[str, Any] = {
-    CONF_MAC: MOCKED_CONF_MAC,
-    CONF_NAME: MOCKED_CONF_NAME,
-    CONF_PIN: MOCKED_CONF_PIN,
-}
-
-
-@pytest.fixture(autouse=True)
-def mock_integration():
-    with (
-        patch(
-            "bleak_retry_connector.establish_connection", new_callable=AsyncMock
-        ) as mock_conn,
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=BLEDevice(
-                address=MOCKED_CONF_MAC, name=MOCKED_CONF_NAME, details={}
-            ),
-        ) as mock_dev,
-        patch(
-            "custom_components.vogels_motion_mount_ble.__init__.VogelsMotionMountBleCoordinator",
-            return_value=MagicMock(),
-        ) as mock_coord,
-    ):
-        mock_conn.return_value = AsyncMock()
-        yield mock_coord, mock_conn, mock_dev
-
-
-@pytest.fixture(autouse=True)
-def patch_api():
-    with (
-        patch("homeassistant.components.bluetooth.async_setup", return_value=True),
-        patch(
-            "custom_components.vogels_motion_mount_ble.async_setup", return_value=True
-        ),
-        patch(
-            "custom_components.vogels_motion_mount_ble.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        yield
 
 
 def make_permissions(
@@ -178,9 +134,7 @@ async def test_user_flow_authentication_error(
 
 @pytest.fixture
 def mock_discovery():
-    mock_instance: BluetoothServiceInfoBleak = create_autospec(
-        BluetoothServiceInfoBleak, instance=True
-    )
+    mock_instance: Any = create_autospec(Any, instance=True)
     mock_instance.address = MOCKED_CONF_MAC
     mock_instance.name = MOCKED_CONF_NAME
     with patch(
@@ -235,15 +189,11 @@ async def test_user_flow_authentication_cooldown(
 
 
 @pytest.mark.asyncio
-@patch(
-    "homeassistant.components.bluetooth.async_ble_device_from_address",
-    return_value=None,
-)
 async def test_user_flow_device_not_found(
-    mock_device: AsyncMock, hass: HomeAssistant
+    mock_dev: AsyncMock, hass: HomeAssistant
 ) -> None:
-    mock_device = AsyncMock()
-    mock_device.return_value = None
+    mock_dev = AsyncMock()
+    mock_dev.return_value = None
 
     """Test flow when device is not found."""
     flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -258,16 +208,12 @@ async def test_user_flow_device_not_found(
 
 
 @pytest.mark.asyncio
-@patch(
-    "homeassistant.components.bluetooth.async_ble_device_from_address",
-    return_value=AsyncMock,
-)
 async def test_user_flow_connection_error(
-    mock_device: AsyncMock, hass: HomeAssistant
+    mock_dev: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test flow when connection cannot be made."""
-    mock_device = AsyncMock()
-    mock_device.side_effect = Exception("Device error")
+    mock_dev = AsyncMock()
+    mock_dev.side_effect = Exception("Device error")
 
     flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -282,10 +228,9 @@ async def test_user_flow_connection_error(
 
 @pytest.mark.asyncio
 async def test_user_flow_unknown_error(
-    mock_integration: AsyncMock, hass: HomeAssistant
+    mock_conn: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test flow when unknown error occurs."""
-    _, mock_conn, _ = mock_integration
     mock_conn.side_effect = Exception("Connection failed")
     with pytest.raises(Exception):
         await mock_conn()
@@ -351,6 +296,7 @@ async def test_bluetooth_id_already_exists(
 
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
+@pytest.mark.usefixtures("patch_default_bleak_client")
 async def test_reauth_flow(
     mock_get_permissions: AsyncMock, hass: HomeAssistant
 ) -> None:
@@ -375,6 +321,7 @@ async def test_reauth_flow(
 
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
+@pytest.mark.usefixtures("patch_default_bleak_client")
 async def test_reauth_entry_does_not_exist(
     mock_get_permissions: AsyncMock, hass: HomeAssistant
 ) -> None:
@@ -401,6 +348,7 @@ async def test_reauth_entry_does_not_exist(
 
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
+@pytest.mark.usefixtures("patch_default_bleak_client")
 async def test_reconfigure_flow(
     mock_get_permissions: AsyncMock, hass: HomeAssistant
 ) -> None:

@@ -1,12 +1,5 @@
 import pytest
-from custom_components.vogels_motion_mount_ble.const import (
-    DOMAIN,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PIN,
-    MIN_HA_VERSION,
-)
-from bleak.backends.device import BLEDevice
+
 from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountAuthenticationType,
 )
@@ -26,52 +19,16 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     IntegrationError,
 )
-from typing import Any, Dict
 
 from unittest.mock import AsyncMock, patch, MagicMock, Mock
 
-
-MOCKED_CONF_ENTRY_ID = "some-entry-id"
-MOCKED_CONF_MAC = "AA:BB:CC:DD:EE:FF"
-MOCKED_CONF_NAME = "Mount"
-MOCKED_CONF_PIN = 1234
-
-MOCKED_CONFIG: Dict[str, Any] = {
-    CONF_MAC: MOCKED_CONF_MAC,
-    CONF_NAME: MOCKED_CONF_NAME,
-    CONF_PIN: MOCKED_CONF_PIN,
-}
-
-
-@pytest.fixture(autouse=True)
-def mock_conn():
-    with patch(
-        "bleak_retry_connector.establish_connection", new_callable=AsyncMock
-    ) as mock_conn:
-        mock_conn.return_value = AsyncMock()
-        yield mock_conn
-
-
-@pytest.fixture(autouse=True)
-def mock_dev():
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address"
-    ) as mock_dev:
-        mock_dev.return_value = BLEDevice(
-            address=MOCKED_CONF_MAC, name=MOCKED_CONF_NAME, details={}
-        )
-        yield mock_dev
-
-
-@pytest.fixture(autouse=True)
-def mock_coord():
-    with patch(
-        "custom_components.vogels_motion_mount_ble.VogelsMotionMountBleCoordinator"
-    ) as mock_coord:
-        instance = MagicMock()
-        instance.async_config_entry_first_refresh = AsyncMock()
-        mock_coord.return_value = instance
-        yield instance
+from . import (
+    MOCKED_CONF_ENTRY_ID,
+    MOCKED_CONFIG,
+    DOMAIN,
+    MIN_HA_VERSION,
+    MOCKED_CONF_MAC,
+)
 
 
 def make_config_entry(mock_coord: MagicMock) -> MagicMock:
@@ -98,6 +55,7 @@ async def test_async_setup_version_too_old(mock_coord: MagicMock, hass: HomeAssi
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
 async def test_async_setup_version_ok(mock_coord: MagicMock, hass: HomeAssistant):
     """Test that async_setup succeeds if HA version is sufficient."""
     with patch(
@@ -245,9 +203,7 @@ async def test_async_reload_entry(mock_coord: MagicMock):
 
 
 @pytest.mark.asyncio
-@patch(
-    "custom_components.vogels_motion_mount_ble.__init__.bluetooth.async_rediscover_address"
-)
+@pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
 async def test_async_unload_entry_success(mock_rediscover: AsyncMock):
     """async_unload_platforms returns true: platforms unloaded, coordinator unload + rediscover called."""
 

@@ -5,6 +5,7 @@
 # todo in the docs write with which version it was tested
 # todo create integration test that calls all services and checks if it works (with wrong, control, full permission and multi pin permissions)
  #TODO test exception text on initialisation (wrong pin, device not found, other err)
+ # add docs known limitation (readonly not supported always pin check because it's assumed that users would always want to control it)
 
 
 # TODO auth cooldown missing
