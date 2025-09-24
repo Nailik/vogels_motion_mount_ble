@@ -62,7 +62,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
 # name: test_all_entities[select.mount_freeze_preset-entry]
@@ -73,6 +73,13 @@
     'capabilities': dict({
       'options': list([
         '0',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Gaming Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -102,5 +109,29 @@
     'translation_key': 'freeze_preset',
     'unique_id': 'freeze_preset',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.mount_freeze_preset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Freeze preset',
+      'icon': 'mdi:snowflake',
+      'options': list([
+        '0',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Gaming Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mount_freeze_preset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---

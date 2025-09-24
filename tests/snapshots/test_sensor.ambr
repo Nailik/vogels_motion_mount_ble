@@ -1,4 +1,102 @@
 # serializer version: 1
+# name: test_all_entities[sensor.mount_authentication-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mount_authentication',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:server-security',
+    'original_name': 'Authentication',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'authentication',
+    'unique_id': 'authentication',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_authentication-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Authentication',
+      'icon': 'mdi:server-security',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_authentication',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.mount_ceb_bl_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mount_ceb_bl_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alpha-v',
+    'original_name': 'CEB BL Version',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ceb_bl_version',
+    'unique_id': 'ceb_bl_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_ceb_bl_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount CEB BL Version',
+      'icon': 'mdi:alpha-v',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_ceb_bl_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0.0',
+  })
+# ---
 # name: test_all_entities[sensor.mount_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -9,7 +107,7 @@
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
     'entity_id': 'sensor.mount_distance',
@@ -32,5 +130,264 @@
     'translation_key': 'current_distance',
     'unique_id': 'current_distance',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Distance',
+      'icon': 'mdi:ruler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_all_entities[sensor.mount_mcp_bl_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mount_mcp_bl_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alpha-v',
+    'original_name': 'MCP BL Version',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mcp_hw_version',
+    'unique_id': 'mcp_hw_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_mcp_bl_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount MCP BL Version',
+      'icon': 'mdi:alpha-v',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_mcp_bl_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'revA',
+  })
+# ---
+# name: test_all_entities[sensor.mount_mcp_bl_version_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mount_mcp_bl_version_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alpha-v',
+    'original_name': 'MCP BL Version',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mcp_bl_version',
+    'unique_id': 'mcp_bl_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_mcp_bl_version_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount MCP BL Version',
+      'icon': 'mdi:alpha-v',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_mcp_bl_version_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0.1',
+  })
+# ---
+# name: test_all_entities[sensor.mount_mcp_bl_version_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mount_mcp_bl_version_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alpha-v',
+    'original_name': 'MCP BL Version',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mcp_fw_version',
+    'unique_id': 'mcp_fw_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_mcp_bl_version_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount MCP BL Version',
+      'icon': 'mdi:alpha-v',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_mcp_bl_version_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0.0',
+  })
+# ---
+# name: test_all_entities[sensor.mount_pin_settings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mount_pin_settings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cloud-key',
+    'original_name': 'Pin Settings',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pin_settings',
+    'unique_id': 'pin_settings',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_pin_settings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Pin Settings',
+      'icon': 'mdi:cloud-key',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_pin_settings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13',
+  })
+# ---
+# name: test_all_entities[sensor.mount_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mount_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_rotation',
+    'unique_id': 'current_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mount_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Rotation',
+      'icon': 'mdi:angle-obtuse',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mount_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
   })
 # ---

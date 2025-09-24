@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Mount',
+    'state': 'Living Room Mount',
   })
 # ---
 # name: test_all_entities[text.mount_preset_0_name-entry]
@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'Movie Mode',
   })
 # ---
 # name: test_all_entities[text.mount_preset_1_name-entry]
@@ -170,7 +170,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'Movie Mode',
   })
 # ---
 # name: test_all_entities[text.mount_preset_2_name-entry]
@@ -228,7 +228,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'Movie Mode',
   })
 # ---
 # name: test_all_entities[text.mount_preset_3_name-entry]
@@ -286,7 +286,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'Gaming Mode',
   })
 # ---
 # name: test_all_entities[text.mount_preset_4_name-entry]
@@ -344,7 +344,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'Movie Mode',
   })
 # ---
 # name: test_all_entities[text.mount_preset_5_name-entry]
@@ -402,7 +402,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'Movie Mode',
   })
 # ---
 # name: test_all_entities[text.mount_preset_6_name-entry]
@@ -460,6 +460,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'Movie Mode',
   })
 # ---

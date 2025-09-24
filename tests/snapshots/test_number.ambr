@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='VogelsMotionMountBleCoordinator().data.requested_distance' id='139179454031456'>",
+    'state': '100',
   })
 # ---
 # name: test_all_entities[number.mount_preset_0_distance-entry]
@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '80',
   })
 # ---
 # name: test_all_entities[number.mount_preset_0_rotation-entry]
@@ -170,7 +170,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '15',
   })
 # ---
 # name: test_all_entities[number.mount_preset_1_distance-entry]
@@ -228,7 +228,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '80',
   })
 # ---
 # name: test_all_entities[number.mount_preset_1_rotation-entry]
@@ -286,7 +286,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '15',
   })
 # ---
 # name: test_all_entities[number.mount_preset_2_distance-entry]
@@ -344,7 +344,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '80',
   })
 # ---
 # name: test_all_entities[number.mount_preset_2_rotation-entry]
@@ -402,7 +402,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '15',
   })
 # ---
 # name: test_all_entities[number.mount_preset_3_distance-entry]
@@ -460,7 +460,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '100',
   })
 # ---
 # name: test_all_entities[number.mount_preset_3_rotation-entry]
@@ -518,7 +518,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '-10',
   })
 # ---
 # name: test_all_entities[number.mount_preset_4_distance-entry]
@@ -576,7 +576,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '80',
   })
 # ---
 # name: test_all_entities[number.mount_preset_4_rotation-entry]
@@ -634,7 +634,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '15',
   })
 # ---
 # name: test_all_entities[number.mount_preset_5_distance-entry]
@@ -692,7 +692,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '80',
   })
 # ---
 # name: test_all_entities[number.mount_preset_5_rotation-entry]
@@ -750,7 +750,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '15',
   })
 # ---
 # name: test_all_entities[number.mount_preset_6_distance-entry]
@@ -808,7 +808,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '80',
   })
 # ---
 # name: test_all_entities[number.mount_preset_6_rotation-entry]
@@ -866,7 +866,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '15',
   })
 # ---
 # name: test_all_entities[number.mount_rotation-entry]
@@ -924,7 +924,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='VogelsMotionMountBleCoordinator().data.requested_rotation' id='139179454025408'>",
+    'state': '5',
   })
 # ---
 # name: test_all_entities[number.mount_tv_width-entry]
@@ -983,6 +983,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='VogelsMotionMountBleCoordinator().data.tv_width' id='139179454028096'>",
+    'state': '140',
   })
 # ---

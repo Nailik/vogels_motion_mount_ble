@@ -16,6 +16,12 @@ from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountPermissions,
     VogelsMotionMountAuthenticationStatus,
     VogelsMotionMountPreset,
+    VogelsMotionMountData,
+    VogelsMotionMountAutoMoveType,
+    VogelsMotionMountMultiPinFeatures,
+    VogelsMotionMountPinSettings,
+    VogelsMotionMountPresetData,
+    VogelsMotionMountVersions,
 )
 
 
@@ -68,27 +74,102 @@ def mock_data():
         instance.async_config_entry_first_refresh = AsyncMock()
         instance.address = MOCKED_CONF_MAC
         instance.name = MOCKED_CONF_NAME
-        instance.data.name = MOCKED_CONF_NAME
-        instance.data.presets = [
-            VogelsMotionMountPreset(0, None),
-            VogelsMotionMountPreset(1, None),
-            VogelsMotionMountPreset(2, None),
-            VogelsMotionMountPreset(3, None),
-            VogelsMotionMountPreset(4, None),
-            VogelsMotionMountPreset(5, None),
-            VogelsMotionMountPreset(6, None),
-        ]
-        instance.data.permissions = VogelsMotionMountPermissions(
-            auth_status=VogelsMotionMountAuthenticationStatus(
-                auth_type=VogelsMotionMountAuthenticationType.Full,
+        instance.data = VogelsMotionMountData(
+            automove=VogelsMotionMountAutoMoveType.Hdmi_1_On,
+            connected=True,
+            distance=100,
+            freeze_preset_index=0,
+            multi_pin_features=VogelsMotionMountMultiPinFeatures(
+                change_default_position=True,
+                change_name=True,
+                change_presets=True,
+                change_tv_on_off_detection=False,
+                disable_channel=False,
+                start_calibration=True,
             ),
-            change_settings=True,
-            change_default_position=True,
-            change_name=True,
-            change_presets=True,
-            change_tv_on_off_detection=True,
-            disable_channel=True,
-            start_calibration=True,
+            name="Living Room Mount",
+            pin_setting=VogelsMotionMountPinSettings.Single,
+            presets=[
+                VogelsMotionMountPreset(
+                    index=0,
+                    data=VogelsMotionMountPresetData(
+                        distance=80,
+                        name="Movie Mode",
+                        rotation=15,
+                    ),
+                ),
+                VogelsMotionMountPreset(
+                    index=1,
+                    data=VogelsMotionMountPresetData(
+                        distance=80,
+                        name="Movie Mode",
+                        rotation=15,
+                    ),
+                ),
+                VogelsMotionMountPreset(
+                    index=2,
+                    data=VogelsMotionMountPresetData(
+                        distance=80,
+                        name="Movie Mode",
+                        rotation=15,
+                    ),
+                ),
+                VogelsMotionMountPreset(
+                    index=3,
+                    data=VogelsMotionMountPresetData(
+                        distance=100,
+                        name="Gaming Mode",
+                        rotation=-10,
+                    ),
+                ),
+                VogelsMotionMountPreset(
+                    index=4,
+                    data=VogelsMotionMountPresetData(
+                        distance=80,
+                        name="Movie Mode",
+                        rotation=15,
+                    ),
+                ),
+                VogelsMotionMountPreset(
+                    index=5,
+                    data=VogelsMotionMountPresetData(
+                        distance=80,
+                        name="Movie Mode",
+                        rotation=15,
+                    ),
+                ),
+                VogelsMotionMountPreset(
+                    index=6,
+                    data=VogelsMotionMountPresetData(
+                        distance=80,
+                        name="Movie Mode",
+                        rotation=15,
+                    ),
+                ),
+            ],
+            rotation=5,
+            tv_width=140,
+            versions=VogelsMotionMountVersions(
+                ceb_bl_version="1.0.0",
+                mcp_bl_version="1.0.1",
+                mcp_fw_version="2.0.0",
+                mcp_hw_version="revA",
+            ),
+            permissions=VogelsMotionMountPermissions(
+                auth_status=VogelsMotionMountAuthenticationStatus(
+                    auth_type=VogelsMotionMountAuthenticationType.Full,
+                    cooldown=None,
+                ),
+                change_settings=True,
+                change_default_position=True,
+                change_name=True,
+                change_presets=True,
+                change_tv_on_off_detection=True,
+                disable_channel=False,
+                start_calibration=True,
+            ),
+            requested_distance=None,
+            requested_rotation=None,
         )
         mock_data.return_value = instance
         yield instance

@@ -10,6 +10,10 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     snapshot_platform,
 )
+from custom_components.vogels_motion_mount_ble.sensor import (
+    DistanceSensor,
+    RotationSensor,
+)
 
 
 async def test_all_entities(
@@ -22,6 +26,12 @@ async def test_all_entities(
     with patch(
         "custom_components.vogels_motion_mount_ble.PLATFORMS", [Platform.SENSOR]
     ):
-        await setup_integration(hass, mock_config_entry)
+        with patch.object(
+            DistanceSensor, "_attr_entity_registry_enabled_default", True
+        ):
+            with patch.object(
+                RotationSensor, "_attr_entity_registry_enabled_default", True
+            ):
+                await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
