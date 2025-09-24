@@ -1,4 +1,3 @@
-import pytest
 from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -13,7 +12,6 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 
-@pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -22,7 +20,7 @@ async def test_all_entities(
 ) -> None:
     """Test all entities."""
     with patch(
-        "custom_components.vogels_motion_mount_ble.PLATFORMS", [Platform.NUMBER]
+        "custom_components.vogels_motion_mount_ble.PLATFORMS", [Platform.BINARY_SENSOR]
     ):
         await setup_integration(hass, mock_config_entry)
 

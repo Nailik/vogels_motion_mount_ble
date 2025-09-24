@@ -20,6 +20,12 @@ from homeassistant.exceptions import (
     IntegrationError,
 )
 
+from custom_components.vogels_motion_mount_ble.data import (
+    VogelsMotionMountPermissions,
+    VogelsMotionMountAuthenticationStatus,
+    VogelsMotionMountPreset,
+)
+
 from unittest.mock import AsyncMock, patch, MagicMock, Mock
 
 from . import (
@@ -28,6 +34,7 @@ from . import (
     DOMAIN,
     MIN_HA_VERSION,
     MOCKED_CONF_MAC,
+    MOCKED_CONF_NAME,
 )
 
 
@@ -38,6 +45,44 @@ def make_config_entry(mock_coord: MagicMock) -> MagicMock:
     config_entry.domain = DOMAIN
     config_entry.runtime_data = mock_coord
     return config_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_coord():
+    with patch(
+        "custom_components.vogels_motion_mount_ble.VogelsMotionMountBleCoordinator"
+    ) as mock_coord:
+        instance = MagicMock()
+        instance.address = MOCKED_CONF_MAC
+        instance.name = MOCKED_CONF_NAME
+        instance.data.name = MOCKED_CONF_NAME
+        instance.data.connected = False
+        instance._read_data = AsyncMock()
+        instance.async_config_entry_first_refresh = AsyncMock()
+        instance.data.presets = [
+            VogelsMotionMountPreset(0, None),
+            VogelsMotionMountPreset(1, None),
+            VogelsMotionMountPreset(2, None),
+            VogelsMotionMountPreset(3, None),
+            VogelsMotionMountPreset(4, None),
+            VogelsMotionMountPreset(5, None),
+            VogelsMotionMountPreset(6, None),
+        ]
+        instance.data.permissions = VogelsMotionMountPermissions(
+            auth_status=VogelsMotionMountAuthenticationStatus(
+                auth_type=VogelsMotionMountAuthenticationType.Full,
+            ),
+            change_settings=True,
+            change_default_position=True,
+            change_name=True,
+            change_presets=True,
+            change_tv_on_off_detection=True,
+            disable_channel=True,
+            start_calibration=True,
+        )
+        instance.unload = AsyncMock()
+        mock_coord.return_value = instance
+        yield instance
 
 
 # -------------------------------
@@ -55,7 +100,7 @@ async def test_async_setup_version_too_old(mock_coord: MagicMock, hass: HomeAssi
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_async_setup_version_ok(mock_coord: MagicMock, hass: HomeAssistant):
     """Test that async_setup succeeds if HA version is sufficient."""
     with patch(
@@ -203,16 +248,18 @@ async def test_async_reload_entry(mock_coord: MagicMock):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
-async def test_async_unload_entry_success(mock_rediscover: AsyncMock):
+@patch(
+    "custom_components.vogels_motion_mount_ble.__init__.bluetooth.async_rediscover_address"
+)
+async def test_async_unload_entry_success(
+    mock_rediscover: AsyncMock, mock_coord: MagicMock
+):
     """async_unload_platforms returns true: platforms unloaded, coordinator unload + rediscover called."""
 
     hass = MagicMock()
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
 
-    coordinator = MagicMock()
-    coordinator.unload = AsyncMock()
-    config_entry = make_config_entry(coordinator)
+    config_entry = make_config_entry(mock_coord)
 
     result = await async_unload_entry(hass, config_entry)
 
@@ -220,7 +267,7 @@ async def test_async_unload_entry_success(mock_rediscover: AsyncMock):
     hass.config_entries.async_unload_platforms.assert_awaited_once_with(
         config_entry, PLATFORMS
     )
-    coordinator.unload.assert_awaited_once()
+    mock_coord.unload.assert_awaited_once()
     mock_rediscover.assert_called_once_with(hass, MOCKED_CONF_MAC)
 
 

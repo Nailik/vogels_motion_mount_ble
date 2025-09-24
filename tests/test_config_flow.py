@@ -192,7 +192,6 @@ async def test_user_flow_authentication_cooldown(
 async def test_user_flow_device_not_found(
     mock_dev: AsyncMock, hass: HomeAssistant
 ) -> None:
-    mock_dev = AsyncMock()
     mock_dev.return_value = None
 
     """Test flow when device is not found."""
@@ -212,7 +211,6 @@ async def test_user_flow_connection_error(
     mock_dev: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test flow when connection cannot be made."""
-    mock_dev = AsyncMock()
     mock_dev.side_effect = Exception("Device error")
 
     flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -296,7 +294,6 @@ async def test_bluetooth_id_already_exists(
 
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
-@pytest.mark.usefixtures("patch_default_bleak_client")
 async def test_reauth_flow(
     mock_get_permissions: AsyncMock, hass: HomeAssistant
 ) -> None:
@@ -321,7 +318,6 @@ async def test_reauth_flow(
 
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
-@pytest.mark.usefixtures("patch_default_bleak_client")
 async def test_reauth_entry_does_not_exist(
     mock_get_permissions: AsyncMock, hass: HomeAssistant
 ) -> None:
@@ -348,7 +344,6 @@ async def test_reauth_entry_does_not_exist(
 
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
-@pytest.mark.usefixtures("patch_default_bleak_client")
 async def test_reconfigure_flow(
     mock_get_permissions: AsyncMock, hass: HomeAssistant
 ) -> None:

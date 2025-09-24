@@ -1,0 +1,988 @@
+# serializer version: 1
+# name: test_all_entities[number.mount_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mount_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance',
+    'unique_id': 'distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "<MagicMock name='VogelsMotionMountBleCoordinator().data.requested_distance' id='139179454031456'>",
+  })
+# ---
+# name: test_all_entities[number.mount_preset_0_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_0_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Preset 0 distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_distance_custom',
+    'unique_id': 'preset_0_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_0_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 0 distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_0_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_0_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_0_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Preset 0 rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_rotation_custom',
+    'unique_id': 'preset_0_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_0_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 0 rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_0_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_1_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_1_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Preset 1 distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_distance_custom',
+    'unique_id': 'preset_1_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_1_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 1 distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_1_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_1_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_1_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Preset 1 rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_rotation_custom',
+    'unique_id': 'preset_1_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_1_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 1 rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_1_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_2_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_2_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Preset 2 distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_distance_custom',
+    'unique_id': 'preset_2_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_2_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 2 distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_2_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_2_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_2_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Preset 2 rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_rotation_custom',
+    'unique_id': 'preset_2_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_2_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 2 rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_2_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_3_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_3_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Preset 3 distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_distance_custom',
+    'unique_id': 'preset_3_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_3_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 3 distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_3_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_3_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_3_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Preset 3 rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_rotation_custom',
+    'unique_id': 'preset_3_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_3_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 3 rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_3_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_4_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_4_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Preset 4 distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_distance_custom',
+    'unique_id': 'preset_4_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_4_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 4 distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_4_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_4_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_4_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Preset 4 rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_rotation_custom',
+    'unique_id': 'preset_4_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_4_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 4 rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_4_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_5_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_5_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Preset 5 distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_distance_custom',
+    'unique_id': 'preset_5_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_5_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 5 distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_5_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_5_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_5_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Preset 5 rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_rotation_custom',
+    'unique_id': 'preset_5_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_5_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 5 rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_5_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_6_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_6_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ruler',
+    'original_name': 'Preset 6 distance',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_distance_custom',
+    'unique_id': 'preset_6_distance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_6_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 6 distance',
+      'icon': 'mdi:ruler',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_6_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_preset_6_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_preset_6_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Preset 6 rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'preset_rotation_custom',
+    'unique_id': 'preset_6_rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_preset_6_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Preset 6 rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_preset_6_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[number.mount_rotation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mount_rotation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-obtuse',
+    'original_name': 'Rotation',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rotation',
+    'unique_id': 'rotation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.mount_rotation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Rotation',
+      'icon': 'mdi:angle-obtuse',
+      'max': 100,
+      'min': -100,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "<MagicMock name='VogelsMotionMountBleCoordinator().data.requested_rotation' id='139179454025408'>",
+  })
+# ---
+# name: test_all_entities[number.mount_tv_width-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000,
+      'min': 0.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mount_tv_width',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:television-box',
+    'original_name': 'TV width',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tv_width',
+    'unique_id': 'tv_width',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_all_entities[number.mount_tv_width-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount TV width',
+      'icon': 'mdi:television-box',
+      'max': 1000,
+      'min': 0.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mount_tv_width',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "<MagicMock name='VogelsMotionMountBleCoordinator().data.tv_width' id='139179454028096'>",
+  })
+# ---
