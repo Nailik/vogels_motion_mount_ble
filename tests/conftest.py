@@ -5,6 +5,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from unittest.mock import AsyncMock, patch, MagicMock
 from . import (
     MOCKED_CONF_ENTRY_ID,
+    MOCKED_CONF_ENTRY_UNIQUE_ID,
     MOCKED_CONFIG,
     DOMAIN,
     MOCKED_CONF_MAC,
@@ -26,19 +27,38 @@ from custom_components.vogels_motion_mount_ble.data import (
 
 
 @pytest.fixture(autouse=True)
+def mock_coord(mock_data: MagicMock):
+    with patch(
+        "custom_components.vogels_motion_mount_ble.VogelsMotionMountBleCoordinator"
+    ) as mock_coord:
+        instance = MagicMock()
+        instance.address = MOCKED_CONF_MAC
+        instance.name = MOCKED_CONF_NAME
+        instance._read_data = AsyncMock()
+        instance.async_config_entry_first_refresh = AsyncMock()
+        instance.unload = AsyncMock()
+        instance.data = mock_data
+        mock_coord.return_value = instance
+        yield instance
+
+
+@pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth):
     yield
 
 
 @pytest.fixture(autouse=True)
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(mock_coord: MagicMock) -> MockConfigEntry:
     """Mock a config entry."""
-    return MockConfigEntry(
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="VogelsMotionMount",
         data=MOCKED_CONFIG,
-        unique_id=MOCKED_CONF_ENTRY_ID,
+        unique_id=MOCKED_CONF_ENTRY_UNIQUE_ID,
+        entry_id=MOCKED_CONF_ENTRY_ID,
     )
+    mock_config_entry.runtime_data = mock_coord
+    return mock_config_entry
 
 
 @pytest.fixture(autouse=True)
@@ -68,13 +88,9 @@ def mock_async_update_data():
 @pytest.fixture(autouse=True)
 def mock_data():
     with patch(
-        "custom_components.vogels_motion_mount_ble.VogelsMotionMountBleCoordinator"
+        "custom_components.vogels_motion_mount_ble.data.VogelsMotionMountData"
     ) as mock_data:
-        instance = MagicMock()
-        instance.async_config_entry_first_refresh = AsyncMock()
-        instance.address = MOCKED_CONF_MAC
-        instance.name = MOCKED_CONF_NAME
-        instance.data = VogelsMotionMountData(
+        instance = VogelsMotionMountData(
             automove=VogelsMotionMountAutoMoveType.Hdmi_1_On,
             connected=True,
             distance=100,
