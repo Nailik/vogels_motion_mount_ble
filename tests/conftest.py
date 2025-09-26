@@ -38,6 +38,11 @@ def mock_coord(mock_data: MagicMock):
         instance.async_config_entry_first_refresh = AsyncMock()
         instance.unload = AsyncMock()
         instance.data = mock_data
+        instance.start_calibration = AsyncMock()
+        instance.refresh_data = AsyncMock()
+        instance.disconnect = AsyncMock()
+        instance.select_preset = AsyncMock()
+        instance.set_preset = AsyncMock()
         mock_coord.return_value = instance
         yield instance
 
