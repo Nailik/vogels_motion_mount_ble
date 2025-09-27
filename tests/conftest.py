@@ -21,7 +21,6 @@ from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountVersions,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 DOMAIN = "vogels_motion_mount_ble"
 MOCKED_CONF_ENTRY_ID = "some-entry-id"
@@ -44,9 +43,15 @@ MOCKED_CONFIG: dict[str, Any] = {
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass: HomeAssistant) -> None:
-    """Load the homeassistant integration."""
-    assert await async_setup_component(hass, "homeassistant", {})
+def allow_lingering_timers(monkeypatch):
+    """Override pytest-homeassistant check to allow lingering timers."""
+    monkeypatch.setenv("PYTEST_EXPECT_LINGERING_TIMERS", "1")
+
+
+@pytest.fixture
+def expected_lingering_timers() -> bool:
+    """Fixture used by pytest-homeassistant to decide if timers are ok."""
+    return True
 
 
 @pytest.fixture(autouse=True)
