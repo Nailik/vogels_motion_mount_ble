@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from bleak.backends.device import BLEDevice
 
 from custom_components.vogels_motion_mount_ble import VogelsMotionMountBleCoordinator
 from custom_components.vogels_motion_mount_ble.data import (
@@ -227,7 +228,9 @@ def mock_dev():
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address"
     ) as mock_dev:
-        mock_dev.return_value = MagicMock(
-            address=MOCKED_CONF_MAC, name=MOCKED_CONF_NAME, details={}
+        mock_dev.return_value = BLEDevice(
+            address=MOCKED_CONF_MAC,
+            name=MOCKED_CONF_NAME,
+            details={},
         )
         yield mock_dev

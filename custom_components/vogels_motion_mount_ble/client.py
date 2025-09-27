@@ -8,6 +8,7 @@ import logging
 import struct
 
 from bleak import BleakClient
+from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
 
@@ -29,7 +30,7 @@ from .const import (
     CHAR_VERSIONS_CEB_UUID,
     CHAR_VERSIONS_MCP_UUID,
     CHAR_WIDTH_UUID,
-    ChAR_DISABLE_CHANNEL,
+    CHAR_DISABLE_CHANNEL,
 )
 from .data import (
     VogelsMotionMountAuthenticationStatus,
@@ -103,7 +104,9 @@ class VogelsMotionMountBluetoothClient:
 
     async def read_permissions(self) -> VogelsMotionMountPermissions:
         """Read and return the current permissions for the connected Vogels Motion Mount."""
-        return (await self._connect()).permissions
+        pers = (await self._connect()).permissions
+        _LOGGER.debug("Read permissions %s", pers)
+        return pers
 
     async def read_automove(self) -> VogelsMotionMountAutoMoveType:
         """Read and return the current automove type for the Vogels Motion Mount."""
@@ -223,7 +226,7 @@ class VogelsMotionMountBluetoothClient:
         assert rotation in range(-100, 101)
         await self._write(
             char_uuid=CHAR_ROTATION_UUID,
-            data=int(rotation).to_bytes(2, byteorder="big"),
+            data=int(rotation).to_bytes(2, byteorder="big", signed=True),
         )
 
     async def set_authorised_user_pin(self, pin: str):
@@ -282,11 +285,11 @@ class VogelsMotionMountBluetoothClient:
             data = (
                 bytes(0x01)
                 + int(preset.data.distance).to_bytes(2, byteorder="big")
-                + int(preset.data.rotation).to_bytes(2, byteorder="big")
+                + int(preset.data.rotation).to_bytes(2, byteorder="big", signed=True)
                 + preset.data.name.encode("utf-8")
             )
         else:
-            data = bytes(0x01)
+            data = bytes(0x00)
 
         await self._write(
             char_uuid=CHAR_PRESET_UUIDS[preset.index],
@@ -329,10 +332,13 @@ class VogelsMotionMountBluetoothClient:
             disconnected_callback=self._handle_disconnect,
         )
 
+        pers = await get_permissions(client, self._pin)
+        _LOGGER.debug("Connected with permissions %s", pers)
         self._session_data = _VogelsMotionMountSessionData(
             client=client,
-            permissions=await get_permissions(client, self._pin),
+            permissions=pers,
         )
+        await self._setup_notifications(client)
         self._permission_callback(self._session_data.permissions)
         self._connection_callback(self._session_data.client.is_connected)
         return self._session_data
@@ -361,13 +367,38 @@ class VogelsMotionMountBluetoothClient:
             (char_uuid == CHAR_PRESET_UUIDS and permissions.change_presets)
             or (char_uuid == CHAR_PRESET_NAMES_UUIDS and permissions.change_presets)
             or (char_uuid == CHAR_NAME_UUID and permissions.change_name)
-            or (char_uuid == ChAR_DISABLE_CHANNEL and permissions.disable_channel)
+            or (char_uuid == CHAR_DISABLE_CHANNEL and permissions.disable_channel)
             or (
                 char_uuid == CHAR_FREEZE_UUID and permissions.change_tv_on_off_detection
             )
             or (char_uuid == CHAR_CALIBRATE_UUID and permissions.start_calibration)
             or permissions.change_settings
         )
+
+    # -------------------------------
+    # region Notifications
+    # -------------------------------
+
+    async def _setup_notifications(self, client: BleakClient):
+        """Setup notifications for distance and rotation changes."""
+        await client.start_notify(
+            char_specifier=CHAR_DISTANCE_UUID,
+            callback=self._handle_distance_change,
+        )
+        await client.start_notify(
+            char_specifier=CHAR_ROTATION_UUID,
+            callback=self._handle_rotation_change,
+        )
+
+    def _handle_distance_change(
+        self, _: BleakGATTCharacteristic | None, data: bytearray
+    ):
+        self._distance_callback(int.from_bytes(data, "big"))
+
+    def _handle_rotation_change(
+        self, _: BleakGATTCharacteristic | None, data: bytearray
+    ):
+        self._rotation_callback(int.from_bytes(data, "big"))
 
     # -------------------------------
     # region Permission
@@ -379,11 +410,11 @@ async def get_permissions(
 ) -> VogelsMotionMountPermissions:
     """Check permissions by evaluating auth_type and reading multi pin features only if necessary."""
     max_auth_status = await _get_max_auth_status(client, pin)
-    if max_auth_status == VogelsMotionMountAuthenticationType.Full:
+    if max_auth_status.auth_type == VogelsMotionMountAuthenticationType.Full:
         return VogelsMotionMountPermissions(
             max_auth_status, True, True, True, True, True, True, True
         )
-    if max_auth_status == VogelsMotionMountAuthenticationType.Control:
+    if max_auth_status.auth_type == VogelsMotionMountAuthenticationType.Control:
         multi_pin_features = await _read_multi_pin_features_directly(client)
         return VogelsMotionMountPermissions(
             auth_status=max_auth_status,
@@ -413,7 +444,7 @@ async def _get_max_auth_status(
     await client.write_gatt_char(CHAR_AUTHENTICATE_UUID, supervisior_pin_data)
     current_auth_type = await _get_auth_status(client)
 
-    if current_auth_type is not VogelsMotionMountAuthenticationType.Wrong:
+    if current_auth_type.auth_type != VogelsMotionMountAuthenticationType.Wrong:
         return current_auth_type
 
     authorised_user_pin_data = pin.to_bytes(2, "little")

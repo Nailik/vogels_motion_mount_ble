@@ -100,7 +100,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
     # region Config
     # -------------------------------
 
-
     async def request_distance(self, distance: int):
         """Request a distance to move to."""
         await self._client.request_distance(distance)
@@ -261,6 +260,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     def _permissions_changed(self, permissions: VogelsMotionMountPermissions):
         if self.data is not None:
+            _LOGGER.debug("_permissions_changed %s", permissions)
             self.async_set_updated_data(replace(self.data, permissions=permissions))
 
     def _connection_changed(self, connected: bool):
@@ -268,10 +268,12 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             self.async_set_updated_data(replace(self.data, connected=connected))
 
     def _distance_changed(self, distance: int):
+        _LOGGER.debug("_distance_changed %s", distance)
         if self.data is not None:
             self.async_set_updated_data(replace(self.data, distance=distance))
 
     def _rotation_changed(self, rotation: int):
+        _LOGGER.debug("_rotation_changed %s", rotation)
         if self.data is not None:
             self.async_set_updated_data(replace(self.data, rotation=rotation))
 

@@ -238,9 +238,8 @@
         "name": "Authentication",
         "state": {
           "0": "Wrong",
-          "1": "Missing",
-          "2": "Control",
-          "3": "Full"
+          "1": "Control",
+          "2": "Full"
         }
       }
     },
