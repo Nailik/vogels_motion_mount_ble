@@ -10,7 +10,6 @@ from . import (
     DOMAIN,
     MOCKED_CONF_MAC,
     MOCKED_CONF_NAME,
-    MOCKED_CONF_DEVICE_ID,
 )
 from homeassistant.core import HomeAssistant
 
@@ -51,17 +50,18 @@ def mock_coord(mock_data: MagicMock):
         instance.set_distance = AsyncMock()
         instance.set_authorised_user_pin = AsyncMock()
         instance._async_update_data = AsyncMock()
+        instance.last_update_success = True
         mock_coord.return_value = instance
         yield instance
 
 
 @pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth):
-    yield
+    yield enable_bluetooth
 
 
 @pytest.fixture(autouse=True)
-def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant):
     """Mock a config entry."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -72,7 +72,7 @@ def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant) -> MockConfigE
     )
     mock_config_entry.runtime_data = mock_coord
     mock_config_entry.add_to_hass(hass)
-    return mock_config_entry
+    yield mock_config_entry
 
 
 @pytest.fixture(autouse=True)
@@ -205,20 +205,3 @@ def mock_dev():
             address=MOCKED_CONF_MAC, name=MOCKED_CONF_NAME, details={}
         )
         yield mock_dev
-
-
-@pytest.fixture(autouse=True)
-def mock_device():
-    with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_get"
-    ) as mock_async_get:
-        device = MagicMock()
-        device.config_entries = {MOCKED_CONF_ENTRY_ID}
-
-        def _side_effect(device_id: str):
-            if device_id == MOCKED_CONF_DEVICE_ID:
-                return device
-            return None
-
-        mock_async_get.side_effect = _side_effect
-        yield mock_async_get

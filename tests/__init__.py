@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 DOMAIN = "vogels_motion_mount_ble"
 MOCKED_CONF_ENTRY_ID = "some-entry-id"
-MOCKED_CONF_ENTRY_UNIQUE_ID = "some-unique-id"
+MOCKED_CONF_ENTRY_UNIQUE_ID = "some-entry-unique-id"
 MOCKED_CONF_DEVICE_ID = "some-device-id"
 MOCKED_CONF_MAC = "AA:BB:CC:DD:EE:FF"
 MOCKED_CONF_NAME = "Mount"

@@ -1,9 +1,9 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.core import ServiceCall, HomeAssistant
 from homeassistant.exceptions import NoEntitySpecifiedError
-from . import MOCKED_CONF_DEVICE_ID
+from . import MOCKED_CONF_DEVICE_ID, MOCKED_CONF_ENTRY_ID
 from custom_components.vogels_motion_mount_ble import services
 from custom_components.vogels_motion_mount_ble.services import (
     DOMAIN,
@@ -12,6 +12,24 @@ from custom_components.vogels_motion_mount_ble.services import (
     HA_SERVICE_SET_AUTHORISED_USER_PIN,
     HA_SERVICE_SET_SUPERVISIOR_PIN,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_device():
+    with patch(
+        "homeassistant.helpers.device_registry.DeviceRegistry.async_get"
+    ) as mock_async_get:
+        device = MagicMock()
+        device.config_entries = {MOCKED_CONF_ENTRY_ID}
+
+        def _side_effect(device_id: str):
+            if device_id == MOCKED_CONF_DEVICE_ID:
+                return device
+            return None
+
+        mock_async_get.side_effect = _side_effect
+        yield mock_async_get
+
 
 # -------------------------------
 # region Setup
@@ -42,7 +60,6 @@ def test_services_registered(hass: HomeAssistant):
 async def test_set_authorised_user_pin_success(
     hass: HomeAssistant, mock_config_entry: AsyncMock
 ):
-    # Service call with correct device_id
     call = ServiceCall(
         domain=DOMAIN,
         service=HA_SERVICE_SET_AUTHORISED_USER_PIN,
@@ -60,8 +77,6 @@ async def test_set_authorised_user_pin_success(
 async def test_set_supervisior_pin_success(
     hass: HomeAssistant, mock_config_entry: AsyncMock
 ):
-    hass.config_entries.async_get_entry = MagicMock(return_value=mock_config_entry)
-
     call = ServiceCall(
         domain=DOMAIN,
         service=HA_SERVICE_SET_SUPERVISIOR_PIN,
