@@ -3,9 +3,9 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.backends.device import BLEDevice
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from bleak.backends.device import BLEDevice
 
 from custom_components.vogels_motion_mount_ble import VogelsMotionMountBleCoordinator
 from custom_components.vogels_motion_mount_ble.data import (

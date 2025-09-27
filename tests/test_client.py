@@ -1,30 +1,21 @@
-from bleak import BleakClient
-import pytest
-from unittest.mock import AsyncMock, Mock, MagicMock, patch
-from bleak.backends.device import BLEDevice
+"""Tests for bluetooth client interface."""
 
-from custom_components.vogels_motion_mount_ble.data import (
-    VogelsMotionMountPermissions,
-    VogelsMotionMountMultiPinFeatures,
-    VogelsMotionMountAutoMoveType,
-    VogelsMotionMountVersions,
-    VogelsMotionMountPinSettings,
-    VogelsMotionMountPresetData,
-    VogelsMotionMountPreset,
-    VogelsMotionMountAuthenticationType,
-    VogelsMotionMountAuthenticationStatus,
-)
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+from bleak import BleakClient
+from bleak.backends.device import BLEDevice
+import pytest
+
 from custom_components.vogels_motion_mount_ble.client import (
     VogelsMotionMountBluetoothClient,
-    _VogelsMotionMountSessionData,
     VogelsMotionMountClientAuthenticationError,
-    get_permissions,
-    _get_max_auth_status,
-    _get_auth_status,
-    _read_multi_pin_features_directly,
     _encode_supervisior_pin,
+    _get_auth_status,
+    _get_max_auth_status,
+    _read_multi_pin_features_directly,
+    _VogelsMotionMountSessionData,
+    get_permissions,
 )
-
 from custom_components.vogels_motion_mount_ble.const import (
     CHAR_AUTHENTICATE_UUID,
     CHAR_AUTOMOVE_UUID,
@@ -41,8 +32,19 @@ from custom_components.vogels_motion_mount_ble.const import (
     CHAR_VERSIONS_MCP_UUID,
     CHAR_WIDTH_UUID,
 )
+from custom_components.vogels_motion_mount_ble.data import (
+    VogelsMotionMountAuthenticationStatus,
+    VogelsMotionMountAuthenticationType,
+    VogelsMotionMountAutoMoveType,
+    VogelsMotionMountMultiPinFeatures,
+    VogelsMotionMountPermissions,
+    VogelsMotionMountPinSettings,
+    VogelsMotionMountPreset,
+    VogelsMotionMountPresetData,
+    VogelsMotionMountVersions,
+)
 
-from .conftest import MOCKED_CONF_MAC, MOCKED_CONF_NAME, MOCKED_CONF_PIN
+from .conftest import MOCKED_CONF_MAC, MOCKED_CONF_NAME, MOCKED_CONF_PIN  # noqa: TID251
 
 
 @pytest.fixture
@@ -124,7 +126,7 @@ async def test_read_permissions(
         change_default_position=True,
         start_calibration=True,
     )
-    client._connect = AsyncMock(
+    client._connect = AsyncMock(  # noqa: SLF001
         return_value=_VogelsMotionMountSessionData(
             client=mock_session, permissions=perms
         )
@@ -139,7 +141,7 @@ async def test_read_automove(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """It should decode the automove value into VogelsMotionMountAutoMoveType."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = (1).to_bytes(1, "big")
 
     result = await client.read_automove()
@@ -154,7 +156,7 @@ async def test_read_distance(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Reading distance returns correct integer value."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = (42).to_bytes(2, "big")
     distance = await client.read_distance()
     assert distance == 42
@@ -166,7 +168,7 @@ async def test_read_freeze_preset_index(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """It should return the freeze preset index from the correct characteristic."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = bytes([3])
     result = await client.read_freeze_preset_index()
     assert result == 3
@@ -179,7 +181,7 @@ async def test_read_multi_pin_features(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Read multi-pin features parses bits correctly."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = bytes([0b10011111])
     features = await client.read_multi_pin_features()
     assert features.start_calibration is True
@@ -192,7 +194,7 @@ async def test_read_name(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Reading name returns correct string value."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = b"MyMount\x00"
     name = await client.read_name()
     assert name == "MyMount"
@@ -204,7 +206,7 @@ async def test_read_pin_settings(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """It should decode and return VogelsMotionMountPinSettings."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = bytes([12])
     result = await client.read_pin_settings()
     assert isinstance(result, VogelsMotionMountPinSettings)
@@ -218,7 +220,7 @@ async def test_read_presets(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """It should read all presets and decode them into VogelsMotionMountPreset list."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     preset_data = (
         b"\x01"
         + (50).to_bytes(2, "big")
@@ -245,7 +247,7 @@ async def test_read_presets_with_empty_data(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """It should return preset with data=None when the first byte is 0."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     empty_data = b"\x00" + b"\x00" * 19
     mock_session.client.read_gatt_char.side_effect = [
         empty_data,
@@ -262,7 +264,7 @@ async def test_read_rotation(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Reading rotation returns correct integer value."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = (25).to_bytes(2, "big")
     rotation = await client.read_rotation()
     assert rotation == 25
@@ -274,7 +276,7 @@ async def test_read_tv_width(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """It should return the first byte as TV width."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.return_value = bytes([120])
 
     result = await client.read_tv_width()
@@ -289,7 +291,7 @@ async def test_read_versions(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """It should return VogelsMotionMountVersions decoded from CEB and MCP UUIDs."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.client.read_gatt_char.side_effect = [
         bytes([1, 2, 3]),  # CEB version
         bytes([4, 5, 6, 7, 8, 9, 10]),  # MCP version
@@ -317,7 +319,7 @@ async def test_select_preset_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Selecting a preset writes correct bytes."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.select_preset(3)
     mock_session.client.write_gatt_char.assert_called_once()
 
@@ -328,7 +330,7 @@ async def test_start_calibration_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Starting calibration writes correct byte."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.start_calibration()
     mock_session.client.write_gatt_char.assert_called_once_with(
         CHAR_CALIBRATE_UUID, bytes([1])
@@ -341,7 +343,7 @@ async def test_disconnect(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Disconnect clears session and disconnects client."""
-    client._session_data = mock_session
+    client._session_data = mock_session  # noqa: SLF001
     await client.disconnect()
     mock_session.client.disconnect.assert_awaited_once()
 
@@ -357,7 +359,7 @@ async def test_request_distance_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Requesting distance writes correct bytes."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.request_distance(55)
     mock_session.client.write_gatt_char.assert_called_once_with(
         CHAR_DISTANCE_UUID, (55).to_bytes(2, "big")
@@ -370,7 +372,7 @@ async def test_request_rotation_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Requesting rotation writes correct bytes."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.request_rotation(-25)
     mock_session.client.write_gatt_char.assert_called_once_with(
         CHAR_ROTATION_UUID, (-25).to_bytes(2, "big", signed=True)
@@ -383,7 +385,7 @@ async def test_set_authorised_user_pin_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """set_authorised_user_pin writes the little-endian 2-byte PIN when permissions allow."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.set_authorised_user_pin("1234")
     expected = int("1234").to_bytes(2, byteorder="little")
     mock_session.client.write_gatt_char.assert_awaited_once_with(
@@ -397,7 +399,7 @@ async def test_set_automove_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Set automove writes correct value."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.set_automove(VogelsMotionMountAutoMoveType.Hdmi_1_On)
     mock_session.client.write_gatt_char.assert_called_once_with(
         CHAR_AUTOMOVE_UUID, (0).to_bytes(2, "big")
@@ -410,7 +412,7 @@ async def test_set_freeze_preset_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """set_freeze_preset writes the selected index when TV on/off detection permission is present."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.set_freeze_preset(2)
     mock_session.client.write_gatt_char.assert_awaited_once_with(
         CHAR_FREEZE_UUID, bytes([2])
@@ -423,7 +425,7 @@ async def test_set_multi_pin_features_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Set multi-pin features writes bitfield correctly."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     features = VogelsMotionMountMultiPinFeatures(
         change_presets=True,
         change_name=False,
@@ -442,9 +444,9 @@ async def test_set_name_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Set name writes padded bytearray."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.set_name("MyMount")
-    expected_bytes = bytearray("MyMount".encode("utf-8")).ljust(20, b"\x00")
+    expected_bytes = bytearray(b"MyMount").ljust(20, b"\x00")
     mock_session.client.write_gatt_char.assert_called_once_with(
         CHAR_NAME_UUID, expected_bytes
     )
@@ -456,7 +458,7 @@ async def test_set_preset_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """set_preset writes both preset and preset-name characteristics, padded to expected lengths."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     preset = VogelsMotionMountPreset(
         index=1,
         data=VogelsMotionMountPresetData(name="Room", distance=33, rotation=-12),
@@ -477,7 +479,7 @@ async def test_set_preset_with_none_data_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """set_preset writes correct bytes when preset.data is None."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     preset = VogelsMotionMountPreset(index=0, data=None)
     await client.set_preset(preset)
     expected_data = bytes([0x00]).ljust(20, b"\x00")
@@ -495,7 +497,7 @@ async def test_set_supervisior_pin_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """set_supervisior_pin writes encoded supervisor bytes when permissions allow."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.set_supervisior_pin("4321")
     mock_session.client.write_gatt_char.assert_awaited_once()
     args, _ = mock_session.client.write_gatt_char.call_args_list[0]
@@ -510,7 +512,7 @@ async def test_set_tv_width_writes(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Set TV width writes correct byte."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     await client.set_tv_width(120)
     mock_session.client.write_gatt_char.assert_called_once_with(
         CHAR_WIDTH_UUID, bytes([120])
@@ -535,8 +537,8 @@ async def test_connect_returns_existing_session_data(
         distance_callback=lambda d: None,
         rotation_callback=lambda r: None,
     )
-    client._session_data = mock_session
-    returned_session = await client._connect()
+    client._session_data = mock_session  # noqa: SLF001
+    returned_session = await client._connect()  # noqa: SLF001
     assert returned_session is mock_session
 
 
@@ -576,7 +578,7 @@ async def test_connect_sets_session_and_triggers_callbacks(mock_dev):
             distance_callback=lambda _: None,
             rotation_callback=lambda _: None,
         )
-        session = await client._connect()
+        session = await client._connect()  # noqa: SLF001
         assert isinstance(session, _VogelsMotionMountSessionData)
         permission_cb.assert_called_once_with(mock_perms)
         connection_cb.assert_called_once_with(mock_client.is_connected)
@@ -593,9 +595,9 @@ def test_handle_disconnect_resets_session_and_triggers_callback(mock_dev):
         distance_callback=lambda _: None,
         rotation_callback=lambda _: None,
     )
-    client._session_data = MagicMock()
-    client._handle_disconnect(MagicMock(spec=BleakClient))
-    assert client._session_data is None
+    client._session_data = MagicMock()  # noqa: SLF001
+    client._handle_disconnect(MagicMock(spec=BleakClient))  # noqa: SLF001
+    assert client._session_data is None  # noqa: SLF001
     connection_cb.assert_called_once_with(False)
 
 
@@ -616,7 +618,7 @@ async def test_setup_notifications_registers_distance_and_rotation(mock_dev):
         distance_callback=lambda _: None,
         rotation_callback=lambda _: None,
     )
-    await client._setup_notifications(mock_client)
+    await client._setup_notifications(mock_client)  # noqa: SLF001
     assert mock_client.start_notify.await_count == 2
 
 
@@ -625,7 +627,7 @@ async def test_distance_callback_fires(
     client: VogelsMotionMountBluetoothClient, callbacks
 ):
     """Distance callback is called when notification arrives."""
-    client._handle_distance_change(None, (10).to_bytes(2, "big"))
+    client._handle_distance_change(None, (10).to_bytes(2, "big"))  # noqa: SLF001
     callbacks["distance"].assert_called_once_with(10)
 
 
@@ -634,7 +636,7 @@ async def test_rotation_callback_fires(
     client: VogelsMotionMountBluetoothClient, callbacks
 ):
     """Rotation callback is called when notification arrives."""
-    client._handle_rotation_change(None, (20).to_bytes(2, "big", signed=True))
+    client._handle_rotation_change(None, (20).to_bytes(2, "big", signed=True))  # noqa: SLF001
     callbacks["rotation"].assert_called_once_with(20)
 
 
@@ -649,7 +651,7 @@ async def test_write_without_permission_raises(
     mock_session: _VogelsMotionMountSessionData,
 ):
     """Writing a characteristic without permission raises authentication error."""
-    client._connect = AsyncMock(return_value=mock_session)
+    client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.permissions = VogelsMotionMountPermissions(
         auth_status=None,
         change_name=False,
@@ -660,9 +662,9 @@ async def test_write_without_permission_raises(
         change_default_position=False,
         start_calibration=False,
     )
-    client._session_data = mock_session
+    client._session_data = mock_session  # noqa: SLF001
     with pytest.raises(VogelsMotionMountClientAuthenticationError):
-        await client._write(CHAR_NAME_UUID, b"test")
+        await client._write(CHAR_NAME_UUID, b"test")  # noqa: SLF001
 
 
 @pytest.mark.asyncio
@@ -677,7 +679,7 @@ async def test_get_permissions_full_returns_all_true():
         return_value=status,
     ):
         perms = await get_permissions(mock_client, 1234)
-        assert all([getattr(perms, f) for f in vars(perms) if f != "auth_status"])
+        assert all(getattr(perms, f) for f in vars(perms) if f != "auth_status")
 
 
 @pytest.mark.asyncio
