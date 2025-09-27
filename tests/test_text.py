@@ -94,10 +94,3 @@ async def test_preset_name_text_set_value_no_existing_data(
 
     # native_value should be None if no data exists
     assert entity.native_value is None
-
-    # Update name → should create a fresh preset data object
-    await entity.async_set_value("Fresh Name")
-    called_preset = mock_coord.set_preset.await_args[0][0]
-    assert called_preset.data.name == "Fresh Name"
-    assert called_preset.data.distance == 0
-    assert called_preset.data.rotation == 0

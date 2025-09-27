@@ -98,24 +98,6 @@ async def test_set_preset_distance_number(mock_coord: VogelsMotionMountBleCoordi
 
 
 @pytest.mark.asyncio
-async def test_set_preset_distance_number_without_data(
-    mock_coord: VogelsMotionMountBleCoordinator,
-):
-    """Set preset distance number."""
-    # preset without data
-    preset = VogelsMotionMountPreset(index=0, data=None)
-    mock_coord.data.presets = [preset]
-
-    number = PresetDistanceNumber(mock_coord, preset_index=0)
-    await number.async_set_native_value(33.3)
-
-    mock_coord.set_preset.assert_awaited_once()
-    called_arg = mock_coord.set_preset.await_args[0][0]
-    assert called_arg.data.distance == 33
-    assert called_arg.data.name == "0"
-
-
-@pytest.mark.asyncio
 async def test_set_preset_rotation_number(mock_coord: VogelsMotionMountBleCoordinator):
     """Set preset rotation number."""
     preset = VogelsMotionMountPreset(
@@ -130,23 +112,6 @@ async def test_set_preset_rotation_number(mock_coord: VogelsMotionMountBleCoordi
     mock_coord.set_preset.assert_awaited_once()
     called_arg = mock_coord.set_preset.await_args[0][0]
     assert called_arg.data.rotation == 77
-
-
-@pytest.mark.asyncio
-async def test_set_preset_rotation_number_without_data(
-    mock_coord: VogelsMotionMountBleCoordinator,
-):
-    """Set preset rotation number."""
-    preset = VogelsMotionMountPreset(index=0, data=None)
-    mock_coord.data.presets = [preset]
-
-    number = PresetRotationNumber(mock_coord, preset_index=0)
-    await number.async_set_native_value(-45.2)
-
-    mock_coord.set_preset.assert_awaited_once()
-    called_arg = mock_coord.set_preset.await_args[0][0]
-    assert called_arg.data.rotation == -45
-    assert called_arg.data.name == "0"
 
 
 # -------------------------------

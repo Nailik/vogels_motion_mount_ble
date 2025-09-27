@@ -54,7 +54,7 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
 
 
 class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
-    """Implementation of a sensor."""
+    """Implementation of a the Preset Name text."""
 
     _attr_translation_key = "preset_name_custom"
     _attr_native_min = 1
@@ -83,7 +83,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Set the preset name value from the UI."""
-        preset_data = self._preset.data
         await self.coordinator.set_preset(
-            replace(self._preset, data=replace(preset_data, name=value))
+            replace(self._preset, data=replace( self._preset.data, name=value))
         )
