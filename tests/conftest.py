@@ -21,6 +21,7 @@ from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountVersions,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 DOMAIN = "vogels_motion_mount_ble"
 MOCKED_CONF_ENTRY_ID = "some-entry-id"
@@ -43,22 +44,9 @@ MOCKED_CONFIG: dict[str, Any] = {
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth_scanner():
-    """Mock Bluetooth scanner and timers to prevent actual scanning and timer scheduling."""
-    with patch("homeassistant.components.bluetooth.BaseHaScanner") as MockScanner:
-        mock_instance = MockScanner.return_value
-        mock_instance.async_start = AsyncMock()
-        mock_instance.async_stop = AsyncMock()
-        mock_instance._async_expire_devices_schedule_next = AsyncMock()  # noqa: SLF001
-        yield mock_instance
-
-
-@pytest.fixture(autouse=True)
-def mock_bluetooth_integration():
-    """Mock Bluetooth integration to prevent actual initialization."""
-    with patch("homeassistant.components.bluetooth.async_setup") as mock_setup:
-        mock_setup.return_value = True
-        yield mock_setup
+async def load_homeassistant(hass: HomeAssistant) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture(autouse=True)
