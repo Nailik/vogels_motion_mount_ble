@@ -11,6 +11,11 @@ from pytest_homeassistant_custom_component.common import (
     snapshot_platform,
 )
 
+# -------------------------------
+# endregion
+# region Setup
+# -------------------------------
+
 
 async def test_all_entities(
     hass: HomeAssistant,
@@ -23,3 +28,9 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+# -------------------------------
+# endregion
+# region Actions
+# -------------------------------

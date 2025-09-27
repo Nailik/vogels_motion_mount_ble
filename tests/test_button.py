@@ -25,6 +25,10 @@ from custom_components.vogels_motion_mount_ble.button import (
     AddPresetButton,
 )
 
+# -------------------------------
+# region Setup
+# -------------------------------
+
 
 async def test_all_entities(
     hass: HomeAssistant,
@@ -39,6 +43,12 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+# -------------------------------
+# endregion
+# region Action
+# -------------------------------
 
 
 @pytest.mark.asyncio
@@ -94,3 +104,8 @@ async def test_add_preset_button(mock_coord: MagicMock):
     assert called_arg.data.name == "1"
     assert called_arg.data.distance == 0
     assert called_arg.data.rotation == 0
+
+
+# -------------------------------
+# region Setup
+# -------------------------------

@@ -43,6 +43,9 @@ def mock_coord(mock_data: MagicMock):
         instance.disconnect = AsyncMock()
         instance.select_preset = AsyncMock()
         instance.set_preset = AsyncMock()
+        instance.set_tv_width = AsyncMock()
+        instance.set_rotation = AsyncMock()
+        instance.set_distance = AsyncMock()
         mock_coord.return_value = instance
         yield instance
 

@@ -53,7 +53,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     _attr_icon = "mdi:ruler"
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the state of the entity."""
         if not self.coordinator.data:
             return None
