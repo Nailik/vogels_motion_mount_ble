@@ -54,6 +54,14 @@ def mock_bluetooth_scanner():
 
 
 @pytest.fixture(autouse=True)
+def mock_bluetooth_integration():
+    """Mock Bluetooth integration to prevent actual initialization."""
+    with patch("homeassistant.components.bluetooth.async_setup") as mock_setup:
+        mock_setup.return_value = True
+        yield mock_setup
+
+
+@pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations in HA for tests."""
     return
