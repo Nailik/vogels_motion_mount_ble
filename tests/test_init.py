@@ -1,4 +1,4 @@
-"""Tests the intialization of the Vogels Motion Mount (BLE) integration."""
+"""Tests the initialization of the Vogels Motion Mount (BLE) integration."""
 
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -38,8 +38,11 @@ async def test_async_setup_version_too_old(
     mock_config_entry: MagicMock, hass: HomeAssistant
 ):
     """Test that async_setup raises RuntimeError if HA version is too old."""
-    with patch("custom_components.vogels_motion_mount_ble.ha_version", "2025.5.0"), pytest.raises(IntegrationError):
-            await async_setup(hass, mock_config_entry)
+    with (
+        patch("custom_components.vogels_motion_mount_ble.ha_version", "2025.5.0"),
+        pytest.raises(IntegrationError),
+    ):
+        await async_setup(hass, mock_config_entry)
 
 
 @pytest.mark.asyncio

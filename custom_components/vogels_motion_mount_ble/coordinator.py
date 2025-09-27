@@ -168,7 +168,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             )
 
     async def set_multi_pin_features(self, features: VogelsMotionMountMultiPinFeatures):
-        """Set features the authorised user is elegible to change."""
+        """Set features the authorised user is eligible to change."""
         await self._client.set_multi_pin_features(features)
         actual = await self._client.read_multi_pin_features()
         self.async_set_updated_data(replace(self.data, multi_pin_features=actual))
