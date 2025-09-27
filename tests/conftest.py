@@ -42,22 +42,15 @@ MOCKED_CONFIG: dict[str, Any] = {
 }
 
 
-def pytest_sessionstart(session):
-    """Patch BLE before any tests run."""
-    patcher = patch(
-        "homeassistant.components.bluetooth.__init__.BaseHaScanner",
-        autospec=True,
-    )
-    mock_scanner = patcher.start()
-    mock_scanner.return_value._async_expire_devices_schedule_next = AsyncMock()  # noqa: SLF001
-    mock_scanner.return_value.async_start = AsyncMock()
-    mock_scanner.return_value.async_stop = AsyncMock()
-    session._ble_patcher = patcher  # noqa: SLF001
-
-
-def pytest_sessionfinish(session, exitstatus):
-    """Stop patching after tests."""
-    session._ble_patcher.stop()  # noqa: SLF001
+@pytest.fixture(autouse=True)
+def mock_bluetooth_scanner():
+    """Mock Bluetooth scanner and timers to prevent actual scanning and timer scheduling."""
+    with patch("homeassistant.components.bluetooth.BaseHaScanner") as MockScanner:
+        mock_instance = MockScanner.return_value
+        mock_instance.async_start = AsyncMock()
+        mock_instance.async_stop = AsyncMock()
+        mock_instance._async_expire_devices_schedule_next = AsyncMock()  # noqa: SLF001
+        yield mock_instance
 
 
 @pytest.fixture(autouse=True)
