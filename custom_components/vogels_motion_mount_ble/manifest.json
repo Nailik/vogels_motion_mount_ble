@@ -1,6 +1,6 @@
 {
   "domain": "vogels_motion_mount_ble",
-  "name": "Vogels MotionMount (BLE)",
+  "name": "Vogels Motion Mount (BLE)",
   "bluetooth": [
     {
       "service_uuid": "030013ac-4202-2d8e-ea11-3959c46ca10e"
