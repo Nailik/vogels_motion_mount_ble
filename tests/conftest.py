@@ -42,6 +42,12 @@ MOCKED_CONFIG: dict[str, Any] = {
 }
 
 
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable custom integrations in HA for tests."""
+    return enable_custom_integrations
+
+
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
@@ -97,11 +103,6 @@ def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant):
     mock_config_entry.runtime_data = mock_coord
     mock_config_entry.add_to_hass(hass)
     return mock_config_entry
-
-
-@pytest.fixture(autouse=True)
-async def auto_enable_custom_integrations(enable_custom_integrations):
-    """Enable custom integrations."""
 
 
 @pytest.fixture(autouse=True)
