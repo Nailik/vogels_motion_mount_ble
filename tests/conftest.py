@@ -54,6 +54,16 @@ def mock_bluetooth(enable_bluetooth):
     return
 
 
+@pytest.fixture(autouse=True)
+def mock_ble_backend():
+    """Patch BLE scanner so no timers are scheduled at all."""
+    with patch(
+        "homeassistant.components.bluetooth.__init__.BaseHaScanner", autospec=True
+    ) as mock_scanner:
+        mock_scanner.return_value._async_expire_devices_schedule_next = AsyncMock()  # noqa: SLF001
+        yield
+
+
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
