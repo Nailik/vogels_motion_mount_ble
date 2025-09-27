@@ -16,7 +16,6 @@ from custom_components.vogels_motion_mount_ble.sensor import (
 )
 
 # -------------------------------
-# endregion
 # region Setup
 # -------------------------------
 

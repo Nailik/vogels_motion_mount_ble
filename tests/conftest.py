@@ -10,7 +10,9 @@ from . import (
     DOMAIN,
     MOCKED_CONF_MAC,
     MOCKED_CONF_NAME,
+    MOCKED_CONF_DEVICE_ID,
 )
+from homeassistant.core import HomeAssistant
 
 from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountAuthenticationType,
@@ -24,6 +26,7 @@ from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountPresetData,
     VogelsMotionMountVersions,
 )
+from custom_components.vogels_motion_mount_ble import VogelsMotionMountBleCoordinator
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +34,7 @@ def mock_coord(mock_data: MagicMock):
     with patch(
         "custom_components.vogels_motion_mount_ble.VogelsMotionMountBleCoordinator"
     ) as mock_coord:
-        instance = MagicMock()
+        instance = MagicMock(spec=VogelsMotionMountBleCoordinator)
         instance.address = MOCKED_CONF_MAC
         instance.name = MOCKED_CONF_NAME
         instance._read_data = AsyncMock()
@@ -46,6 +49,8 @@ def mock_coord(mock_data: MagicMock):
         instance.set_tv_width = AsyncMock()
         instance.set_rotation = AsyncMock()
         instance.set_distance = AsyncMock()
+        instance.set_authorised_user_pin = AsyncMock()
+        instance._async_update_data = AsyncMock()
         mock_coord.return_value = instance
         yield instance
 
@@ -56,7 +61,7 @@ def mock_bluetooth(enable_bluetooth):
 
 
 @pytest.fixture(autouse=True)
-def mock_config_entry(mock_coord: MagicMock) -> MockConfigEntry:
+def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -66,13 +71,14 @@ def mock_config_entry(mock_coord: MagicMock) -> MockConfigEntry:
         entry_id=MOCKED_CONF_ENTRY_ID,
     )
     mock_config_entry.runtime_data = mock_coord
+    mock_config_entry.add_to_hass(hass)
     return mock_config_entry
 
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations."""
-    return
+    return enable_custom_integrations
 
 
 @pytest.fixture(autouse=True)
@@ -82,15 +88,6 @@ def mock_conn():
     ) as mock_conn:
         mock_conn.return_value = AsyncMock()
         yield mock_conn
-
-
-@pytest.fixture(autouse=True)
-def mock_async_update_data():
-    with patch(
-        "custom_components.vogels_motion_mount_ble.VogelsMotionMountBleCoordinator._async_update_data",
-        new_callable=AsyncMock,
-    ):
-        yield
 
 
 @pytest.fixture(autouse=True)
@@ -200,7 +197,7 @@ def mock_data():
 
 
 @pytest.fixture(autouse=True)
-def mock_dev(request):
+def mock_dev():
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address"
     ) as mock_dev:
@@ -208,3 +205,20 @@ def mock_dev(request):
             address=MOCKED_CONF_MAC, name=MOCKED_CONF_NAME, details={}
         )
         yield mock_dev
+
+
+@pytest.fixture(autouse=True)
+def mock_device():
+    with patch(
+        "homeassistant.helpers.device_registry.DeviceRegistry.async_get"
+    ) as mock_async_get:
+        device = MagicMock()
+        device.config_entries = {MOCKED_CONF_ENTRY_ID}
+
+        def _side_effect(device_id: str):
+            if device_id == MOCKED_CONF_DEVICE_ID:
+                return device
+            return None
+
+        mock_async_get.side_effect = _side_effect
+        yield mock_async_get

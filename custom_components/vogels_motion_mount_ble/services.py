@@ -4,7 +4,9 @@ import logging
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.helpers import device_registry
+from homeassistant.helpers.device_registry import async_get
+
+from homeassistant.config_entries import ConfigEntry
 
 from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
@@ -44,7 +46,8 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
             translation_domain=DOMAIN,
             translation_key="device_id_not_specified",
         )
-    registry = device_registry.async_get(call.hass)
+    hass: HomeAssistant = call.hass
+    registry = async_get(hass)
     device = registry.async_get(device_id)
     if not device:
         raise NoEntitySpecifiedError(
@@ -55,7 +58,7 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
             },
         )
     entry_id = next(iter(device.config_entries))
-    entry = call.hass.config_entries.async_get_entry(entry_id)
+    entry: ConfigEntry = hass.config_entries.async_get_entry(entry_id)
     if entry is None:
         raise NoEntitySpecifiedError(
             translation_domain=DOMAIN,
