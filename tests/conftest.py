@@ -45,7 +45,13 @@ MOCKED_CONFIG: dict[str, Any] = {
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations in HA for tests."""
-    return enable_custom_integrations
+    return
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Mock bluetooth."""
+    return
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -82,12 +88,6 @@ def mock_coord(mock_data: MagicMock):
         instance.last_update_success = True
         mock_coord.return_value = instance
         yield instance
-
-
-@pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
-    """Mock bluetooth."""
-    return enable_bluetooth
 
 
 @pytest.fixture(autouse=True)
