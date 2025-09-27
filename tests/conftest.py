@@ -54,6 +54,15 @@ def mock_bluetooth(enable_bluetooth):
     return
 
 
+@pytest.fixture(autouse=True)
+def patch_bluetooth_timers():
+    """Patch Bluetooth scanner to prevent lingering timers."""
+    with patch(
+        "homeassistant.components.bluetooth.BaseHaScanner._async_expire_devices_schedule_next"
+    ):
+        yield
+
+
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)

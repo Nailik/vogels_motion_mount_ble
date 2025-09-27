@@ -303,7 +303,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             permissions=permissions,
         )
 
-    async def _check_permission_status(self, permissions: VogelsMotionMountPermissions):
+    def _check_permission_status(self, permissions: VogelsMotionMountPermissions):
         if (
             permissions.auth_status.auth_type
             == VogelsMotionMountAuthenticationType.Wrong
