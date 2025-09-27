@@ -42,6 +42,24 @@ MOCKED_CONFIG: dict[str, Any] = {
 }
 
 
+def pytest_sessionstart(session):
+    """Patch BLE before any tests run."""
+    patcher = patch(
+        "homeassistant.components.bluetooth.__init__.BaseHaScanner",
+        autospec=True,
+    )
+    mock_scanner = patcher.start()
+    mock_scanner.return_value._async_expire_devices_schedule_next = AsyncMock()  # noqa: SLF001
+    mock_scanner.return_value.async_start = AsyncMock()
+    mock_scanner.return_value.async_stop = AsyncMock()
+    session._ble_patcher = patcher  # noqa: SLF001
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Stop patching after tests."""
+    session._ble_patcher.stop()  # noqa: SLF001
+
+
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations in HA for tests."""
@@ -52,25 +70,6 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 def mock_bluetooth(enable_bluetooth):
     """Mock bluetooth."""
     return
-
-
-@pytest.fixture(autouse=True)
-def disable_ble_integration(monkeypatch):
-    """Disable BLE scanner and timers for all tests."""
-    # Patch the BaseHaScanner class before HA loads Bluetooth
-    patcher = patch(
-        "homeassistant.components.bluetooth.__init__.BaseHaScanner",
-        autospec=True,
-    )
-    mock_scanner = patcher.start()
-
-    # Prevent timers from scheduling anything
-    mock_scanner.return_value._async_expire_devices_schedule_next = AsyncMock()  # noqa: SLF001
-    mock_scanner.return_value.async_start = AsyncMock()
-    mock_scanner.return_value.async_stop = AsyncMock()
-
-    yield
-    patcher.stop()
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
