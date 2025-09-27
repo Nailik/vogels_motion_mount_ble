@@ -17,6 +17,7 @@ from .const import (
     CHAR_AUTOMOVE_UUID,
     CHAR_CALIBRATE_UUID,
     CHAR_CHANGE_PIN_UUID,
+    CHAR_DISABLE_CHANNEL,
     CHAR_DISTANCE_UUID,
     CHAR_FREEZE_UUID,
     CHAR_MULTI_PIN_FEATURES_UUID,
@@ -30,7 +31,6 @@ from .const import (
     CHAR_VERSIONS_CEB_UUID,
     CHAR_VERSIONS_MCP_UUID,
     CHAR_WIDTH_UUID,
-    CHAR_DISABLE_CHANNEL,
 )
 from .data import (
     VogelsMotionMountAuthenticationStatus,
@@ -178,7 +178,7 @@ class VogelsMotionMountBluetoothClient:
 
     async def read_tv_width(self) -> int:
         """Read and return the width of the TV from the Vogels Motion Mount."""
-        return (await self._read(CHAR_NAME_UUID))[0]
+        return (await self._read(CHAR_WIDTH_UUID))[0]
 
     async def read_versions(self) -> VogelsMotionMountVersions:
         """Read and return the firmware and hardware version information from the Vogels Motion Mount."""

@@ -1,8 +1,7 @@
-# todo how to control disable channel - awaiting app update
-# todo check if tv width change is also possible with control permission
-# todo check if it works setting authorised user permission if there is no multi pin and pin gets set later (both authorised user and supervisior)
-# todo in the docs write with which version it was tested
+
+
 # todo add tv width to setup process (as well as calibration) because it's super important
+# todo add information about control level after setup/reauth/reconfig
 
 
 # test services:

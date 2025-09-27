@@ -282,7 +282,7 @@ async def test_read_tv_width(
     result = await client.read_tv_width()
 
     assert result == 120
-    mock_session.client.read_gatt_char.assert_awaited_once_with(CHAR_NAME_UUID)
+    mock_session.client.read_gatt_char.assert_awaited_once_with(CHAR_WIDTH_UUID)
 
 
 @pytest.mark.asyncio

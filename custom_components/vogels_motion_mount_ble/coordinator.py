@@ -9,12 +9,13 @@ from bleak.backends.device import BLEDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .client import VogelsMotionMountBluetoothClient
 from .const import CONF_PIN, DOMAIN
 from .data import (
+    VogelsMotionMountAuthenticationType,
     VogelsMotionMountAutoMoveType,
     VogelsMotionMountData,
     VogelsMotionMountMultiPinFeatures,
@@ -262,6 +263,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         if self.data is not None:
             _LOGGER.debug("_permissions_changed %s", permissions)
             self.async_set_updated_data(replace(self.data, permissions=permissions))
+        self._check_permission_status(permissions)
 
     def _connection_changed(self, connected: bool):
         if self.data is not None:
@@ -283,6 +285,9 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def _read_data(self) -> VogelsMotionMountData:
         """Fetch data from device."""
+        permissions = await self._client.read_permissions()
+        self._check_permission_status(permissions)
+
         return VogelsMotionMountData(
             automove=await self._client.read_automove(),
             connected=self.data.connected if self.data is not None else False,
@@ -295,5 +300,15 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             rotation=await self._client.read_rotation(),
             tv_width=await self._client.read_tv_width(),
             versions=await self._client.read_versions(),
-            permissions=await self._client.read_permissions(),
+            permissions=permissions,
         )
+
+    async def _check_permission_status(self, permissions: VogelsMotionMountPermissions):
+        if (
+            permissions.auth_status.auth_type
+            == VogelsMotionMountAuthenticationType.Wrong
+        ):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="error_invalid_authentication",
+            )

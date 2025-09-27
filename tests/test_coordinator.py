@@ -5,10 +5,15 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from custom_components.vogels_motion_mount_ble.client import (
+    VogelsMotionMountBluetoothClient,
+)
 from custom_components.vogels_motion_mount_ble.coordinator import (
     VogelsMotionMountBleCoordinator,
 )
 from custom_components.vogels_motion_mount_ble.data import (
+    VogelsMotionMountAuthenticationStatus,
+    VogelsMotionMountAuthenticationType,
     VogelsMotionMountAutoMoveType,
     VogelsMotionMountData,
     VogelsMotionMountMultiPinFeatures,
@@ -18,12 +23,12 @@ from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountPresetData,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 
 
 # Example fixtures (already split)
 @pytest.fixture
-async def mock_client():
+async def mock_client() -> VogelsMotionMountBluetoothClient:
     """Mock the bluetooth client interface."""
     client = AsyncMock()
     client.read_distance.return_value = 10
@@ -83,7 +88,8 @@ async def coordinator(
 
 @pytest.mark.asyncio
 async def test_unload(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test unloading of coordinator."""
     unsub_called = False
@@ -101,7 +107,8 @@ async def test_unload(
 
 @pytest.mark.asyncio
 async def test_refresh_data(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test refresh data action."""
     await coordinator.refresh_data()
@@ -115,7 +122,8 @@ async def test_refresh_data(
 
 @pytest.mark.asyncio
 async def test_select_preset(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test select preset action."""
     await coordinator.select_preset(3)
@@ -124,7 +132,8 @@ async def test_select_preset(
 
 @pytest.mark.asyncio
 async def test_start_calibration(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test start calibtration action."""
     await coordinator.start_calibration()
@@ -138,7 +147,8 @@ async def test_start_calibration(
 
 @pytest.mark.asyncio
 async def test_request_distance(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test requesting distance."""
     await coordinator.request_distance(42)
@@ -148,7 +158,8 @@ async def test_request_distance(
 
 @pytest.mark.asyncio
 async def test_request_rotation(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test requesting rotation."""
     await coordinator.request_rotation(15)
@@ -158,7 +169,8 @@ async def test_request_rotation(
 
 @pytest.mark.asyncio
 async def test_set_authorised_user_pin_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting authorised user pin."""
     mock_client.read_pin_settings.return_value = VogelsMotionMountPinSettings.Single
@@ -168,7 +180,8 @@ async def test_set_authorised_user_pin_success(
 
 @pytest.mark.asyncio
 async def test_set_authorised_user_pin_failure(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test failure setting authorised user pin."""
     mock_client.read_pin_settings.return_value = (
@@ -180,7 +193,8 @@ async def test_set_authorised_user_pin_failure(
 
 @pytest.mark.asyncio
 async def test_set_automove_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting automove type."""
     mock_client.read_automove.return_value = VogelsMotionMountAutoMoveType.Hdmi_2_On
@@ -204,7 +218,8 @@ async def test_set_automove_failure(
 
 @pytest.mark.asyncio
 async def test_set_freeze_preset_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting freeze preset index."""
     mock_client.read_freeze_preset_index.return_value = 2
@@ -225,7 +240,8 @@ async def test_set_freeze_preset_failure(
 
 @pytest.mark.asyncio
 async def test_set_multi_pin_features_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting multi pin features."""
     new_features = replace(coordinator.data.multi_pin_features, change_name=False)
@@ -250,7 +266,8 @@ async def test_set_multi_pin_features_failure(
 
 @pytest.mark.asyncio
 async def test_set_name_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting name."""
     mock_client.read_name.return_value = "NewName"
@@ -272,7 +289,8 @@ async def test_set_name_failure(
 
 @pytest.mark.asyncio
 async def test_set_preset_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting preset data."""
     preset = VogelsMotionMountPreset(
@@ -287,7 +305,8 @@ async def test_set_preset_success(
 
 @pytest.mark.asyncio
 async def test_set_preset_failure(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test failure setting preset data."""
     preset = VogelsMotionMountPreset(
@@ -305,7 +324,8 @@ async def test_set_preset_failure(
 
 @pytest.mark.asyncio
 async def test_set_supervisior_pin_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting supervisior pin."""
     mock_client.read_pin_settings.return_value = VogelsMotionMountPinSettings.Multi
@@ -315,7 +335,8 @@ async def test_set_supervisior_pin_success(
 
 @pytest.mark.asyncio
 async def test_set_supervisior_pin_failure(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test failure setting supervisior pin."""
     mock_client.read_pin_settings.return_value = (
@@ -327,7 +348,8 @@ async def test_set_supervisior_pin_failure(
 
 @pytest.mark.asyncio
 async def test_set_tv_width_success(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client: AsyncMock
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test successful setting tv width."""
     mock_client.read_tv_width.return_value = 100
@@ -338,7 +360,8 @@ async def test_set_tv_width_success(
 
 @pytest.mark.asyncio
 async def test_set_tv_width_failure(
-    coordinator: VogelsMotionMountBleCoordinator, mock_client
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test failure setting tv width."""
     coordinator.data = replace(coordinator.data, tv_width=100)
@@ -375,3 +398,30 @@ def test_rotation_changed(coordinator: VogelsMotionMountBleCoordinator):
     """Test rotation change callback."""
     coordinator._rotation_changed(90)  # noqa: SLF001
     assert coordinator.data.rotation == 90
+
+
+# -------------------------------
+# region internal
+# -------------------------------
+
+
+@pytest.mark.asyncio
+async def test_check_permission_status_raises_error(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """It should raise ConfigEntryAuthFailed when auth_type is Wrong."""
+    permissions = VogelsMotionMountPermissions(
+        auth_status=VogelsMotionMountAuthenticationStatus(
+            auth_type=VogelsMotionMountAuthenticationType.Wrong
+        ),
+        change_settings=False,
+        change_default_position=False,
+        change_name=False,
+        change_presets=False,
+        change_tv_on_off_detection=False,
+        disable_channel=False,
+        start_calibration=False,
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._check_permission_status(permissions)  # noqa: SLF001

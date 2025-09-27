@@ -233,6 +233,7 @@ mode: single
 
 The Vogles Motion Mount BLE integration currently has the following limitations:
 
+- Setting disabled channel (disabling infrared/ethernet etc) is not yet supported
 - Readonly mode is not supported, the integration will always fail to authorize if there is a pin set up in the Vogels Motion Mount because it is expected that a user wants to control the Mount when it is connected to Home Assistant.
 - The Mount will disconnect BLE automatically, therefore no permanent connection is possible.
 - Checking for software updates is currently not supported.
