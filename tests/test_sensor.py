@@ -15,6 +15,11 @@ from custom_components.vogels_motion_mount_ble.sensor import (
     RotationSensor,
 )
 
+# -------------------------------
+# endregion
+# region Setup
+# -------------------------------
+
 
 async def test_all_entities(
     hass: HomeAssistant,
