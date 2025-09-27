@@ -305,7 +305,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     def _check_permission_status(self, permissions: VogelsMotionMountPermissions):
         if (
-            permissions.auth_status.auth_type
+            permissions.auth_status is not None and permissions.auth_status.auth_type
             == VogelsMotionMountAuthenticationType.Wrong
         ):
             raise ConfigEntryAuthFailed(
