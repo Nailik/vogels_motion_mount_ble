@@ -1,6 +1,6 @@
 """Tests for base entities."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -24,7 +24,7 @@ async def test_handle_coordinator_update_triggers_state_write(
     entity = VogelsMotionMountBleBaseEntity(mock_coord)
 
     # Patch async_write_ha_state
-    entity.async_write_ha_state = AsyncMock()
+    entity.async_write_ha_state = MagicMock()
 
     hass.async_add_job(entity._handle_coordinator_update)  # noqa: SLF001
     await hass.async_block_till_done()
