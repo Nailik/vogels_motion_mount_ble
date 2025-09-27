@@ -81,7 +81,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         await self._async_update_data()
 
     # -------------------------------
-    # endregion
     # region Control
     # -------------------------------
 
@@ -95,10 +94,9 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         await self._client.start_calibration()
 
     # -------------------------------
-    # endregion
     # region Config
     # -------------------------------
-    # TODO the changes not applied error has to be raised in coordinator after! updating data (else inconsistent)
+
     async def set_authorised_user_pin(self, pin: str):
         await self._client.set_authorised_user_pin(pin)
         remove = pin == "0000"
@@ -144,7 +142,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_freeze_preset(self, preset_index: int):
         await self._client.set_freeze_preset(preset_index)
-        actual = self._client.read_freeze_preset_index()
+        actual = await self._client.read_freeze_preset_index()
         self.async_set_updated_data(replace(self.data, freeze_preset_index=actual))
         if actual != preset_index:
             raise ServiceValidationError(
@@ -244,7 +242,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             )
 
     # -------------------------------
-    # endregion
     # region Notifications
     # -------------------------------
 
@@ -265,7 +262,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             self.async_set_updated_data(replace(self.data, rotation=rotation))
 
     # -------------------------------
-    # endregion
     # region internal
     # -------------------------------
 
@@ -285,7 +281,3 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             versions=await self._client.read_versions(),
             permissions=await self._client.read_permissions(),
         )
-
-    # -------------------------------
-    # endregion
-    # -------------------------------
