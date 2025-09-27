@@ -29,6 +29,7 @@ Use cases:
 ## Supported device(s)
 
 - [Vogel’s MotionMount TVM 7675](https://www.vogels.com/de-de/c/tvm-7675-elektrische-tv-wandhalterung-schwarz)
+  > Tested with CEB BL Version 1.5.1 and MCP Versions BL 2.5, FW 2.12, HW 2.2.0
   > PRO Version possibly works as well but was not tested
 
 ## Requirements & prerequisites
