@@ -104,9 +104,7 @@ class VogelsMotionMountBluetoothClient:
 
     async def read_permissions(self) -> VogelsMotionMountPermissions:
         """Read and return the current permissions for the connected Vogels Motion Mount."""
-        pers = (await self._connect()).permissions
-        _LOGGER.debug("Read permissions %s", pers)
-        return pers
+        return (await self._connect()).permissions
 
     async def read_automove(self) -> VogelsMotionMountAutoMoveType:
         """Read and return the current automove type for the Vogels Motion Mount."""
@@ -458,6 +456,7 @@ async def _get_auth_status(
     """Read the auth type for the current user."""
     # read pin permission
     _auth_info = await client.read_gatt_char(CHAR_PIN_CHECK_UUID)
+    _LOGGER.debug("_get_auth_status %s", _auth_info)
     if _auth_info.startswith(b"\x80\x80"):
         return VogelsMotionMountAuthenticationStatus(
             auth_type=VogelsMotionMountAuthenticationType.Full,

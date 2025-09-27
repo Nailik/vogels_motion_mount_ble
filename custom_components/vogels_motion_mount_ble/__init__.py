@@ -43,12 +43,12 @@ async def async_setup(
     hass: HomeAssistant, entry: VogelsMotionMountBleConfigEntry
 ) -> bool:
     """Set up Vogels Motion Mount integration services."""
+    _LOGGER.debug("async_setup called with config_entry: %s", entry)
     if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
         raise IntegrationError(
             translation_key="invalid_ha_version",
             translation_placeholders={"version": MIN_HA_VERSION},
         )
-    _LOGGER.debug("async_setup called with config_entry: %s", entry)
     async_setup_services(hass)
     return True
 
@@ -125,7 +125,6 @@ async def async_unload_entry(
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        _LOGGER.debug("async_unload_entry pop")
         coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
         await coordinator.unload()
         bluetooth.async_rediscover_address(hass, config_entry.data[CONF_MAC])
