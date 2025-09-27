@@ -100,9 +100,8 @@ def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant):
 
 
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
+async def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations."""
-    return enable_custom_integrations
 
 
 @pytest.fixture(autouse=True)
