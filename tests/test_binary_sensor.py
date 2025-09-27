@@ -1,15 +1,18 @@
-from syrupy.assertion import SnapshotAssertion
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from unittest.mock import patch
+"""Tests for binary sensor entities."""
 
-from . import setup_integration
+from unittest.mock import patch
 
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .conftest import setup_integration  # noqa: TID251
 
 
 async def test_all_entities(

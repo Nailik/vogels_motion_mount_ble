@@ -1,16 +1,14 @@
 """Select entities to define properties for Vogels Motion Mount BLE entities."""
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
-from .data import (
-    VogelsMotionMountAutoMoveType,
-)
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
-from homeassistant.const import EntityCategory
+from .data import VogelsMotionMountAutoMoveType
 
 
 async def async_setup_entry(

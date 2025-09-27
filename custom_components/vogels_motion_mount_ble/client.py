@@ -59,7 +59,6 @@ class VogelsMotionMountClientAuthenticationError(Exception):
         self.cooldown = cooldown
 
     # -------------------------------
-    # endregion
     # region Setup
     # -------------------------------
 
@@ -99,7 +98,6 @@ class VogelsMotionMountBluetoothClient:
         self._session_data: _VogelsMotionMountSessionData | None = None
 
     # -------------------------------
-    # endregion
     # region Read
     # -------------------------------
 
@@ -191,7 +189,6 @@ class VogelsMotionMountBluetoothClient:
         )
 
     # -------------------------------
-    # endregion
     # region Control
     # -------------------------------
 
@@ -210,9 +207,24 @@ class VogelsMotionMountBluetoothClient:
         await self._write(CHAR_CALIBRATE_UUID, bytes([1]))
 
     # -------------------------------
-    # endregion
     # region Write
     # -------------------------------
+
+    async def request_distance(self, distance: int):
+        """Set the distance value on the Vogels Motion Mount."""
+        assert distance in range(101)
+        await self._write(
+            char_uuid=CHAR_DISTANCE_UUID,
+            data=int(distance).to_bytes(2, byteorder="big"),
+        )
+
+    async def request_rotation(self, rotation: int):
+        """Set the rotation value on the Vogels Motion Mount."""
+        assert rotation in range(-100, 101)
+        await self._write(
+            char_uuid=CHAR_ROTATION_UUID,
+            data=int(rotation).to_bytes(2, byteorder="big"),
+        )
 
     async def set_authorised_user_pin(self, pin: str):
         """Set the authorised user PIN on the Vogels Motion Mount."""
@@ -228,14 +240,6 @@ class VogelsMotionMountBluetoothClient:
         await self._write(
             char_uuid=CHAR_AUTOMOVE_UUID,
             data=int(automove.value).to_bytes(2, byteorder="big"),
-        )
-
-    async def set_distance(self, distance: int):
-        """Set the distance value on the Vogels Motion Mount."""
-        assert distance in range(101)
-        await self._write(
-            char_uuid=CHAR_DISTANCE_UUID,
-            data=int(distance).to_bytes(2, byteorder="big"),
         )
 
     async def set_freeze_preset(self, preset_index: int):
@@ -293,14 +297,6 @@ class VogelsMotionMountBluetoothClient:
             data=data[20:].ljust(17, b"\x00"),
         )
 
-    async def set_rotation(self, rotation: int):
-        """Set the rotation value on the Vogels Motion Mount."""
-        assert rotation in range(-100, 101)
-        await self._write(
-            char_uuid=CHAR_ROTATION_UUID,
-            data=int(rotation).to_bytes(2, byteorder="big"),
-        )
-
     async def set_supervisior_pin(self, pin: str):
         """Set the supervisior PIN on the Vogels Motion Mount."""
         assert len(pin) == 4
@@ -318,7 +314,6 @@ class VogelsMotionMountBluetoothClient:
         )
 
     # -------------------------------
-    # endregion
     # region Connection
     # -------------------------------
 
@@ -375,7 +370,6 @@ class VogelsMotionMountBluetoothClient:
         )
 
     # -------------------------------
-    # endregion
     # region Permission
     # -------------------------------
 
@@ -473,7 +467,3 @@ def _encode_supervisior_pin(pin: int) -> bytes:
 class _VogelsMotionMountSessionData:
     client: BleakClient
     permissions: VogelsMotionMountPermissions
-
-    # -------------------------------
-    # endregion
-    # -------------------------------

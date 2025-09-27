@@ -1,9 +1,9 @@
-import pytest
+"""Tests for service setup."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.core import ServiceCall, HomeAssistant
-from homeassistant.exceptions import NoEntitySpecifiedError
-from . import MOCKED_CONF_DEVICE_ID, MOCKED_CONF_ENTRY_ID
+import pytest
+
 from custom_components.vogels_motion_mount_ble import services
 from custom_components.vogels_motion_mount_ble.services import (
     DOMAIN,
@@ -12,10 +12,15 @@ from custom_components.vogels_motion_mount_ble.services import (
     HA_SERVICE_SET_AUTHORISED_USER_PIN,
     HA_SERVICE_SET_SUPERVISIOR_PIN,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import NoEntitySpecifiedError
+
+from .conftest import MOCKED_CONF_DEVICE_ID, MOCKED_CONF_ENTRY_ID  # noqa: TID251
 
 
 @pytest.fixture(autouse=True)
 def mock_device():
+    """Mock the device from device registry."""
     with patch(
         "homeassistant.helpers.device_registry.DeviceRegistry.async_get"
     ) as mock_async_get:
@@ -37,6 +42,7 @@ def mock_device():
 
 
 def test_services_registered(hass: HomeAssistant):
+    """Test services registered correctly."""
     # Patch async_register so we can spy on calls
 
     services.async_setup_services(hass)
@@ -51,7 +57,6 @@ def test_services_registered(hass: HomeAssistant):
 
 
 # -------------------------------
-# endregion
 # region Success
 # -------------------------------
 
@@ -60,6 +65,7 @@ def test_services_registered(hass: HomeAssistant):
 async def test_set_authorised_user_pin_success(
     hass: HomeAssistant, mock_config_entry: AsyncMock
 ):
+    """Test set authorised user pin calls correctly."""
     call = ServiceCall(
         domain=DOMAIN,
         service=HA_SERVICE_SET_AUTHORISED_USER_PIN,
@@ -67,7 +73,7 @@ async def test_set_authorised_user_pin_success(
         hass=hass,
     )
 
-    await services._set_authorised_user_pin(call)
+    await services._set_authorised_user_pin(call)  # noqa: SLF001
     mock_config_entry.runtime_data.set_authorised_user_pin.assert_awaited_once_with(
         "1111"
     )
@@ -77,6 +83,7 @@ async def test_set_authorised_user_pin_success(
 async def test_set_supervisior_pin_success(
     hass: HomeAssistant, mock_config_entry: AsyncMock
 ):
+    """Test set supervisior pin calls correctly."""
     call = ServiceCall(
         domain=DOMAIN,
         service=HA_SERVICE_SET_SUPERVISIOR_PIN,
@@ -84,18 +91,18 @@ async def test_set_supervisior_pin_success(
         hass=hass,
     )
 
-    await services._set_supervisior_pin(call)
+    await services._set_supervisior_pin(call)  # noqa: SLF001
     mock_config_entry.runtime_data.set_supervisior_pin.assert_awaited_once_with("2222")
 
 
 # -------------------------------
-# endregion
 # region Coordinator
 # -------------------------------
 
 
 @pytest.mark.asyncio
 async def test_get_coordinator_missing_device_id_raises(hass: HomeAssistant):
+    """Test missing device id."""
     call = ServiceCall(
         domain=DOMAIN,
         service=HA_SERVICE_SET_AUTHORISED_USER_PIN,
@@ -103,11 +110,12 @@ async def test_get_coordinator_missing_device_id_raises(hass: HomeAssistant):
         hass=hass,
     )
     with pytest.raises(NoEntitySpecifiedError):
-        services._get_coordinator(call)
+        services._get_coordinator(call)  # noqa: SLF001
 
 
 @pytest.mark.asyncio
 async def test_get_coordinator_invalid_device_raises(hass: HomeAssistant):
+    """Test invalid device id."""
     call = ServiceCall(
         domain=DOMAIN,
         service=HA_SERVICE_SET_AUTHORISED_USER_PIN,
@@ -115,11 +123,12 @@ async def test_get_coordinator_invalid_device_raises(hass: HomeAssistant):
         hass=hass,
     )
     with pytest.raises(NoEntitySpecifiedError):
-        services._get_coordinator(call)
+        services._get_coordinator(call)  # noqa: SLF001
 
 
 @pytest.mark.asyncio
 async def test_get_coordinator_invalid_entry_raises(hass: HomeAssistant):
+    """Test missing entry in device."""
     hass.config_entries.async_get_entry = MagicMock(return_value=None)
     hass.config_entries.async_unload = AsyncMock()
 
@@ -130,13 +139,14 @@ async def test_get_coordinator_invalid_entry_raises(hass: HomeAssistant):
         hass=hass,
     )
     with pytest.raises(NoEntitySpecifiedError):
-        services._get_coordinator(call)
+        services._get_coordinator(call)  # noqa: SLF001
 
 
 @pytest.mark.asyncio
 async def test_get_coordinator_invalid_runtime_data_raises(
     hass: HomeAssistant, mock_config_entry: AsyncMock
 ):
+    """Test invalid device id."""
     hass.config_entries.async_get_entry = MagicMock(return_value=mock_config_entry)
     mock_config_entry.runtime_data = None
 
@@ -147,9 +157,4 @@ async def test_get_coordinator_invalid_runtime_data_raises(
         hass=hass,
     )
     with pytest.raises(NoEntitySpecifiedError):
-        services._get_coordinator(call)
-
-
-# -------------------------------
-# endregion
-# -------------------------------
+        services._get_coordinator(call)  # noqa: SLF001

@@ -1,16 +1,16 @@
 """Button entities to define actions for Vogels Motion Mount BLE entities."""
 
+from dataclasses import replace
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from dataclasses import replace
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
-from homeassistant.const import EntityCategory
 
 
 async def async_setup_entry(

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
-from homeassistant.const import __version__ as ha_version
+
 from packaging import version
+
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -15,13 +18,11 @@ from homeassistant.exceptions import (
     IntegrationError,
 )
 from homeassistant.util import dt as dt_util
-from datetime import timedelta
-from homeassistant.components import bluetooth
 
-from .data import VogelsMotionMountAuthenticationType
-from .coordinator import VogelsMotionMountBleCoordinator
-from .services import async_setup_services
 from .const import CONF_MAC, MIN_HA_VERSION
+from .coordinator import VogelsMotionMountBleCoordinator
+from .data import VogelsMotionMountAuthenticationType
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 

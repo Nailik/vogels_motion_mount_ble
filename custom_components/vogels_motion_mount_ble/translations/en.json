@@ -218,13 +218,13 @@
         "name": "CEB BL Version"
       },
       "mcp_hw_version": {
-        "name": "MCP BL Version"
+        "name": "MCP HW Version"
       },
       "mcp_bl_version": {
         "name": "MCP BL Version"
       },
       "mcp_fw_version": {
-        "name": "MCP BL Version"
+        "name": "MCP FW Version"
       },
       "pin_settings": {
         "name": "Pin Settings",

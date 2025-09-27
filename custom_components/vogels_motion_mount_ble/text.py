@@ -1,16 +1,16 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-from .data import VogelsMotionMountPresetData
 from dataclasses import replace
 
 from homeassistant.components.text import TextEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
-from homeassistant.const import EntityCategory
+from .data import VogelsMotionMountPresetData
 
 
 async def async_setup_entry(

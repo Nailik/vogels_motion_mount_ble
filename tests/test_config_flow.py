@@ -1,41 +1,38 @@
+"""Tests for config flow."""
+
+from typing import Any
+from unittest.mock import AsyncMock, create_autospec, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch
-from homeassistant.data_entry_flow import FlowResultType
-from typing import Any, Dict
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from . import (
+import voluptuous as vol
+
+from custom_components.vogels_motion_mount_ble.data import (
+    VogelsMotionMountAuthenticationStatus,
+    VogelsMotionMountAuthenticationType,
+    VogelsMotionMountPermissions,
+)
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    UnknownEntry,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import NumberSelector, TextSelector
+
+from .conftest import (  # noqa: TID251
+    CONF_ERROR,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PIN,
+    DOMAIN,
     MOCKED_CONF_MAC,
     MOCKED_CONF_NAME,
     MOCKED_CONF_PIN,
     MOCKED_CONFIG,
-    CONF_MAC,
-    DOMAIN,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_ERROR,
-)
-
-from homeassistant.core import HomeAssistant
-
-from homeassistant.helpers.selector import (
-    NumberSelector,
-    TextSelector,
-)
-from homeassistant.config_entries import (
-    SOURCE_USER,
-    SOURCE_BLUETOOTH,
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-)
-import voluptuous as vol
-
-from homeassistant.config_entries import UnknownEntry
-from unittest.mock import create_autospec
-
-from custom_components.vogels_motion_mount_ble.data import (
-    VogelsMotionMountAuthenticationType,
-    VogelsMotionMountPermissions,
-    VogelsMotionMountAuthenticationStatus,
 )
 
 
@@ -95,11 +92,11 @@ async def test_user_flow_invalid_mac(
     mock_get_permissions: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test flow rejects invalid MAC address."""
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
+    configure_result: dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         {**MOCKED_CONFIG, CONF_MAC: "INVALID-MAC"},
     )
@@ -118,11 +115,11 @@ async def test_user_flow_authentication_error(
         auth_type=VogelsMotionMountAuthenticationType.Wrong,
     )
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
+    configure_result: dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )
@@ -134,6 +131,7 @@ async def test_user_flow_authentication_error(
 
 @pytest.fixture
 def mock_discovery():
+    """Mock discovery of bluetooth device."""
     mock_instance: Any = create_autospec(Any, instance=True)
     mock_instance.address = MOCKED_CONF_MAC
     mock_instance.name = MOCKED_CONF_NAME
@@ -150,7 +148,7 @@ def mock_discovery():
 
 
 @pytest.mark.parametrize(
-    "cooldown,expected_error",
+    ("cooldown", "expected_error"),
     [
         (30, "error_invalid_authentication_cooldown"),
         (0, "error_invalid_authentication"),
@@ -170,11 +168,11 @@ async def test_user_flow_authentication_cooldown(
         cooldown=cooldown,
     )
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
+    configure_result: dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )
@@ -192,13 +190,14 @@ async def test_user_flow_authentication_cooldown(
 async def test_user_flow_device_not_found(
     mock_dev: AsyncMock, hass: HomeAssistant
 ) -> None:
+    """Test error when device is not found."""
     mock_dev.return_value = None
 
     """Test flow when device is not found."""
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
+    configure_result: dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )
@@ -213,10 +212,10 @@ async def test_user_flow_connection_error(
     """Test flow when connection cannot be made."""
     mock_dev.side_effect = Exception("Device error")
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    configure_result: Dict[str, Any] = await hass.config_entries.flow.async_configure(
+    configure_result: dict[str, Any] = await hass.config_entries.flow.async_configure(
         flow_result["flow_id"],
         MOCKED_CONFIG,
     )
@@ -230,10 +229,10 @@ async def test_user_flow_unknown_error(
 ) -> None:
     """Test flow when unknown error occurs."""
     mock_conn.side_effect = Exception("Connection failed")
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017, PT012
         await mock_conn()
 
-        flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
         configure_result = await hass.config_entries.flow.async_configure(
@@ -253,14 +252,14 @@ async def test_user_flow_unknown_error(
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
 async def test_bluetooth_flow_creates_entry(
-    mock_get_permissions: AsyncMock, hass: HomeAssistant, mock_discovery: Dict[str, Any]
+    mock_get_permissions: AsyncMock, hass: HomeAssistant, mock_discovery: dict[str, Any]
 ) -> None:
     """Test Bluetooth discovery creates a form."""
     mock_get_permissions.return_value = make_permissions(
         auth_type=VogelsMotionMountAuthenticationType.Full,
     )
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=mock_discovery
     )
     assert flow_result["type"] is FlowResultType.FORM
@@ -269,7 +268,7 @@ async def test_bluetooth_flow_creates_entry(
 @pytest.mark.asyncio
 @patch("custom_components.vogels_motion_mount_ble.config_flow.get_permissions")
 async def test_bluetooth_id_already_exists(
-    mock_get_permissions: AsyncMock, hass: HomeAssistant, mock_discovery: Dict[str, Any]
+    mock_get_permissions: AsyncMock, hass: HomeAssistant, mock_discovery: dict[str, Any]
 ) -> None:
     """Test Bluetooth discovery aborts if entry already exists."""
     entry = MockConfigEntry(
@@ -277,7 +276,7 @@ async def test_bluetooth_id_already_exists(
     )
     entry.add_to_hass(hass)
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=mock_discovery
     )
 
@@ -307,7 +306,7 @@ async def test_reauth_flow(
     )
     entry.add_to_hass(hass)
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
         data={CONF_MAC: MOCKED_CONF_MAC},
@@ -333,7 +332,7 @@ async def test_reauth_entry_does_not_exist(
             context={"source": SOURCE_REAUTH, "entry_id": "non-existing"},
             data=MOCKED_CONFIG,
         )
-    mock_get_permissions.assert_not_called
+    mock_get_permissions.assert_not_called()
 
 
 # -------------------------------
@@ -357,7 +356,7 @@ async def test_reconfigure_flow(
     )
     entry.add_to_hass(hass)
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
         data=MOCKED_CONFIG,
@@ -383,7 +382,7 @@ async def test_reconfigure_entry_does_not_exist(
             context={"source": SOURCE_RECONFIGURE, "entry_id": "non-existing"},
             data=MOCKED_CONFIG,
         )
-    mock_get_permissions.assert_not_called
+    mock_get_permissions.assert_not_called()
 
 
 # -------------------------------
@@ -394,10 +393,10 @@ async def test_reconfigure_entry_does_not_exist(
 
 @pytest.mark.asyncio
 async def test_prefilled_discovery_form(
-    hass: HomeAssistant, mock_discovery: Dict[str, Any]
+    hass: HomeAssistant, mock_discovery: dict[str, Any]
 ) -> None:
     """Test prefilled form when discovery info is present."""
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=mock_discovery
     )
 
@@ -414,7 +413,7 @@ async def test_prefilled_discovery_form(
     assert name_field.config["read_only"] is False
     assert pin_field.validators[0].config["read_only"] is False
 
-    validated: Dict[str, Any] = schema({})
+    validated: dict[str, Any] = schema({})
     assert validated[CONF_MAC] == MOCKED_CONF_MAC
     assert validated[CONF_NAME] == MOCKED_CONF_NAME
 
@@ -427,7 +426,7 @@ async def test_prefilled_reauth_flow_form(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id}
     )
 
@@ -453,7 +452,7 @@ async def test_prefilled_reconfigure_flow_form(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    flow_result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+    flow_result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id}
     )
 
@@ -470,7 +469,7 @@ async def test_prefilled_reconfigure_flow_form(hass: HomeAssistant) -> None:
     assert name_field.config["read_only"] is False
     assert pin_field.validators[0].config["read_only"] is False
 
-    validated: Dict[str, Any] = schema({})
+    validated: dict[str, Any] = schema({})
     assert validated[CONF_MAC] == MOCKED_CONF_MAC
     assert validated[CONF_NAME] == MOCKED_CONF_NAME
     assert validated[CONF_PIN] == MOCKED_CONF_PIN

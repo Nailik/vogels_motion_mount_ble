@@ -12,6 +12,7 @@ Home Assistant integration allows to control the Vogel's MotionMount (TVM 7675) 
 ## High-level description & use cases
 
 This integration exposes the MotionMount as local devices and entities in Home Assistant so you can:
+
 - Move the mount forward/backward and rotate left/right (percentage-based control).
 - Call named presets and add/delete presets.
 - Set a freeze preset used when the TV is turned off and how the TV status is detected.
@@ -20,6 +21,7 @@ This integration exposes the MotionMount as local devices and entities in Home A
 - Read firmware/hardware version information.
 
 Use cases:
+
 - Move to a named preset when the TV turns on/off or based on another trigger.
 - Automatically rotate or adjust distance based on other sensors or automations.
 - Expose device status and firmware versions for inventory/monitoring.
@@ -27,37 +29,38 @@ Use cases:
 ## Supported device(s)
 
 - [Vogel’s MotionMount TVM 7675](https://www.vogels.com/de-de/c/tvm-7675-elektrische-tv-wandhalterung-schwarz)
-> PRO Version possibly works as well but was not tested
+  > PRO Version possibly works as well but was not tested
 
 ## Requirements & prerequisites
 
-- Home Assistant **2025.6.0 or newer**  
-- Bluetooth support on the host (integration depends on HA’s `bluetooth` integration)  
+- Home Assistant **2025.6.0 or newer**
+- Bluetooth support on the host (integration depends on HA’s `bluetooth` integration)
 - Python package: **`bleak>=0.21.1`**
 
 ## Installation
 
 ### Recommended: HACS
 
-1. Add this repository to HACS (Integrations → Custom repositories) or click the “Open in HACS” badge above.  
-2. Install the integration from HACS → Integrations.  
+1. Add this repository to HACS (Integrations → Custom repositories) or click the “Open in HACS” badge above.
+2. Install the integration from HACS → Integrations.
 3. Restart Home Assistant.
 
 ### Manual installation
 
-1. Copy the `custom_components/vogels_motion_mount_ble` folder into `<config>/custom_components/`.  
-2. Restart Home Assistant.  
+1. Copy the `custom_components/vogels_motion_mount_ble` folder into `<config>/custom_components/`.
+2. Restart Home Assistant.
 3. Configure via **Settings → Devices & Services → Add integration → Vogels MotionMount (BLE)**.
 
 ## Setup
 
 During setup, the integration asks for:
 
-- **MAC** — the BLE MAC address of the device.  
-- **Device name** — a friendly name for the device (optional).  
+- **MAC** — the BLE MAC address of the device.
+- **Device name** — a friendly name for the device (optional).
 - **PIN** — PIN to be used, can be changed later
-  - *Authorised user PIN*: can control the device or change settings.  
-  - *Supervisor PIN*: allows additional control and restrictions.
+
+  - _Authorised user PIN_: can control the device or change settings.
+  - _Supervisor PIN_: allows additional control and restrictions.
 
 - The integration can **automatically detect the Mount via Bluetooth**.
 
@@ -73,99 +76,113 @@ You can disable it in the system options of your added device.
 
 #### Binary Sensors
 
-- **Connected**  
+- **Connected**
   - **Description**: Indicates whether the MotionMount device is currently connected via Bluetooth.
 
 #### Buttons
 
-- **Start Calibration**  
+- **Start Calibration**
+
   - **Description**: Starts the calibration process for the mount.
 
-- **Refresh Data**  
+- **Refresh Data**
+
   - **Description**: Read current data from the mount.
 
-- **Disconnect**  
+- **Disconnect**
+
   - **Description**: Disconnects the mount from Home Assistant.
 
-- **Select default preset**  
+- **Select default preset**
+
   - **Description**: Homes the mount into the default position.
 
-- **Add Preset**  
+- **Add Preset**
+
   - **Description**: Adds preset at the specific index.
 
-- **Delete Preset**  
+- **Delete Preset**
+
   - **Description**: Deletes a stored preset from the mount.
 
-- **Select Preset**  
+- **Select Preset**
   - **Description**: Moves the mount to a stored preset.
 
 #### Numbers
 
-- **Distance**  
-  - **Description**: Distance of the mount from the wall.  
-  - **Range**: 0 to 100  
+- **Distance**
+
+  - **Description**: Distance of the mount from the wall.
+  - **Range**: 0 to 100
   - **Step**: 1
 
-- **Rotation**  
-  - **Description**: Rotation angle of the mount.  
-  - **Range**: -100 to 100  
+- **Rotation**
+
+  - **Description**: Rotation angle of the mount.
+  - **Range**: -100 to 100
   - **Step**: 1
 
-- **TV Width**  
-  - **Description**: Width of the TV in centimeters.  
-  - **Maximum**: 243  
+- **TV Width**
+
+  - **Description**: Width of the TV in centimeters.
+  - **Maximum**: 243
   - **Step**: 1
 
-- **Preset Distance**  
-  - **Description**: Distance for each preset.  
-  - **Range**: 0 to 100  
+- **Preset Distance**
+
+  - **Description**: Distance for each preset.
+  - **Range**: 0 to 100
   - **Step**: 1
 
-- **Preset Rotation**  
-  - **Description**: Rotation angle for each preset.  
-  - **Range**: -100 to 100  
+- **Preset Rotation**
+  - **Description**: Rotation angle for each preset.
+  - **Range**: -100 to 100
   - **Step**: 1
 
 #### Selects
 
-- **Automove**  
-  - **Description**: Configures automove based on HDMI input.  
+- **Automove**
+
+  - **Description**: Configures automove based on HDMI input.
   - **Options**: `"off"`, `"hdmi_1"`, `"hdmi_2"`, `"hdmi_3"`, `"hdmi_4"`, `"hdmi_5"`
 
-- **Freeze**  
+- **Freeze**
   - **Description**: Sets the preset to move to when automove is triggered.
   - **Options**: `"0"` (default wall), `"1"`–`"7"` (custom presets)
 
 #### Sensors
 
-- **Distance**  
-  - **Description**: Current distance of the mount from the wall.  
-  - **Range**: 0 to 100  
+- **Distance**
 
-- **Rotation**  
-  - **Description**: Current rotation of the mount.  
-  - **Range**: -100 to 100  
+  - **Description**: Current distance of the mount from the wall.
+  - **Range**: 0 to 100
 
-- **Firmware Version**  
+- **Rotation**
+
+  - **Description**: Current rotation of the mount.
+  - **Range**: -100 to 100
+
+- **Firmware Version**
+
   - **Description**: Current firmware version
 
-- **Hardware Version**  
+- **Hardware Version**
   - **Description**: Hardware version
 
 #### Switches
 
-- **Multi-PIN Features**  
-  - **Description**: Enables or disables multi-PIN feature access.  
+- **Multi-PIN Features**
+  - **Description**: Enables or disables multi-PIN feature access.
   - **Note**: Only works if both authorised user and supervisor PINs are set up.
 
 #### Texts
 
-- **Name**  
+- **Name**
+
   - **Description**: Mount name (max 32 characters)
 
-- **Preset Name**  
+- **Preset Name**
   - **Description**: Names for each preset (max 32 characters)
-
 
 ## Actions
 
@@ -201,13 +218,13 @@ description: "Automatically move the Motion Mount to the Dining Room preset when
 trigger:
   - platform: state
     entity_id: input_boolean.user_wants_to_eat
-    to: 'on'
+    to: "on"
 condition: []
 action:
   - service: vogels_motion_mount_ble.select_preset
     data:
       device_id: YOUR_DEVICE_ID_HERE
-      preset: "1"   # Preset 1 corresponds to "Dining Room"
+      preset: "1" # Preset 1 corresponds to "Dining Room"
 mode: single
 ```
 
@@ -215,8 +232,9 @@ mode: single
 
 The Vogles Motion Mount BLE integration currently has the following limitations:
 
-The Mount will disconnect BLE automatically, therefore no permanent connection is possible.
-Checking for updates is currently not supported.
+- Readonly mode is not supported, the integration will always fail to authorize if there is a pin set up in the Vogels Motion Mount because it is expected that a user wants to control the Mount when it is connected to Home Assistant.
+- The Mount will disconnect BLE automatically, therefore no permanent connection is possible.
+- Checking for software updates is currently not supported.
 
 ## Troubleshooting
 

@@ -1,16 +1,16 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-from .data import VogelsMotionMountPresetData
 from dataclasses import replace
 
 from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
-from homeassistant.const import EntityCategory
+from .data import VogelsMotionMountPresetData
 
 
 async def async_setup_entry(
@@ -63,7 +63,7 @@ class DistanceNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
-        await self.coordinator.set_distance(int(value))
+        await self.coordinator.request_distance(int(value))
 
 
 class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
@@ -88,7 +88,7 @@ class RotationNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""
-        await self.coordinator.set_rotation(int(value))
+        await self.coordinator.request_rotation(int(value))
 
 
 class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):

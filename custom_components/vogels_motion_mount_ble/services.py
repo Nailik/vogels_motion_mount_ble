@@ -2,11 +2,10 @@
 
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.device_registry import async_get
-
-from homeassistant.config_entries import ConfigEntry
 
 from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator

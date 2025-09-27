@@ -1,19 +1,22 @@
-from syrupy.assertion import SnapshotAssertion
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from unittest.mock import patch
+"""Tests for sensor entities."""
 
-from . import setup_integration
+from unittest.mock import patch
 
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
+
 from custom_components.vogels_motion_mount_ble.sensor import (
     DistanceSensor,
     RotationSensor,
 )
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .conftest import setup_integration  # noqa: TID251
 
 # -------------------------------
 # region Setup
@@ -27,7 +30,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch(
+    with patch(  # noqa: SIM117
         "custom_components.vogels_motion_mount_ble.PLATFORMS", [Platform.SENSOR]
     ):
         with patch.object(

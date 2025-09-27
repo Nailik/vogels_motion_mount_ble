@@ -1,31 +1,33 @@
+"""Tests for switch entities."""
+
+from dataclasses import replace
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from syrupy.assertion import SnapshotAssertion
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from unittest.mock import patch
-
-from . import setup_integration
-
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
 
+from custom_components.vogels_motion_mount_ble.coordinator import (
+    VogelsMotionMountBleCoordinator,
+)
 from custom_components.vogels_motion_mount_ble.switch import (
-    MultiPinFeatureChangePresetsSwitch,
-    MultiPinFeatureChangeNameSwitch,
-    MultiPinFeatureDisableChannelSwitch,
-    MultiPinFeatureChangeTvOnOffDetectionSwitch,
     MultiPinFeatureChangeDefaultPositionSwitch,
+    MultiPinFeatureChangeNameSwitch,
+    MultiPinFeatureChangePresetsSwitch,
+    MultiPinFeatureChangeTvOnOffDetectionSwitch,
+    MultiPinFeatureDisableChannelSwitch,
     MultiPinFeatureStartCalibrationSwitch,
 )
-from unittest.mock import AsyncMock
-from dataclasses import replace
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
+from .conftest import setup_integration  # noqa: TID251
 
 # -------------------------------
-# endregion
 # region Setup
 # -------------------------------
 
@@ -46,14 +48,13 @@ async def test_all_entities(
 
 
 # -------------------------------
-# endregion
 # region Actions
 # -------------------------------
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "switch_cls, field",
+    ("switch_cls", "field"),
     [
         (MultiPinFeatureChangePresetsSwitch, "change_presets"),
         (MultiPinFeatureChangeNameSwitch, "change_name"),
@@ -63,7 +64,10 @@ async def test_all_entities(
         (MultiPinFeatureStartCalibrationSwitch, "start_calibration"),
     ],
 )
-async def test_switch_toggle_actions(mock_coord, switch_cls, field):
+async def test_multi_pin_features_switch_toggle_actions(
+    mock_coord: VogelsMotionMountBleCoordinator, switch_cls, field
+):
+    """Test all switch actions for multi pin features."""
     # Ensure initial field is False
     features = replace(mock_coord.data.multi_pin_features, **{field: False})
     mock_coord.data.multi_pin_features = features
@@ -87,8 +91,3 @@ async def test_switch_toggle_actions(mock_coord, switch_cls, field):
     await entity.async_turn_off()
     called_features = mock_coord.set_multi_pin_features.await_args[0][0]
     assert getattr(called_features, field) is False
-
-
-# -------------------------------
-# endregion
-# -------------------------------

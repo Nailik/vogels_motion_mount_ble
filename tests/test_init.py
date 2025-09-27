@@ -1,17 +1,19 @@
+"""Tests the intialization of the Vogels Motion Mount (BLE) integration."""
+
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
 import pytest
 
+from custom_components.vogels_motion_mount_ble import (
+    PLATFORMS,
+    async_reload_entry,
+    async_setup,
+    async_setup_entry,
+    async_unload_entry,
+)
 from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountAuthenticationType,
 )
-from custom_components.vogels_motion_mount_ble import (
-    async_unload_entry,
-    async_setup,
-    async_setup_entry,
-    async_reload_entry,
-    PLATFORMS,
-)
-
-
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -20,17 +22,13 @@ from homeassistant.exceptions import (
     IntegrationError,
 )
 
-from unittest.mock import AsyncMock, patch, MagicMock, Mock
-
-from . import (
-    MOCKED_CONF_ENTRY_ID,
+from .conftest import (  # noqa: TID251
     MIN_HA_VERSION,
+    MOCKED_CONF_ENTRY_ID,
     MOCKED_CONF_MAC,
 )
 
-
 # -------------------------------
-# endregion
 # region Async setup
 # -------------------------------
 
@@ -40,8 +38,7 @@ async def test_async_setup_version_too_old(
     mock_config_entry: MagicMock, hass: HomeAssistant
 ):
     """Test that async_setup raises RuntimeError if HA version is too old."""
-    with patch("custom_components.vogels_motion_mount_ble.ha_version", "2025.5.0"):
-        with pytest.raises(IntegrationError):
+    with patch("custom_components.vogels_motion_mount_ble.ha_version", "2025.5.0"), pytest.raises(IntegrationError):
             await async_setup(hass, mock_config_entry)
 
 
@@ -51,11 +48,12 @@ async def test_async_setup_version_ok(
     mock_config_entry: MagicMock, hass: HomeAssistant
 ):
     """Test that async_setup succeeds if HA version is sufficient."""
-    with patch(
-        "custom_components.vogels_motion_mount_ble.ha_version", MIN_HA_VERSION
-    ), patch(
-        "custom_components.vogels_motion_mount_ble.async_setup_services", new=Mock()
-    ) as mock_services:
+    with (
+        patch("custom_components.vogels_motion_mount_ble.ha_version", MIN_HA_VERSION),
+        patch(
+            "custom_components.vogels_motion_mount_ble.async_setup_services", new=Mock()
+        ) as mock_services,
+    ):
         result = await async_setup(hass, mock_config_entry)
         mock_services.assert_called_once_with(hass)
         assert result is True
@@ -68,6 +66,7 @@ async def test_async_setup(
     mock_config_entry: MagicMock,
     hass: HomeAssistant,
 ):
+    """Setup Integration."""
     # Mock HomeAssistant and config entry
     config_entry = mock_config_entry
     result = await async_setup(hass, config_entry)
@@ -78,7 +77,6 @@ async def test_async_setup(
 
 
 # -------------------------------
-# endregion
 # region Async setup entry
 # -------------------------------
 
@@ -161,7 +159,7 @@ async def test_async_setup_entry_wrong_permissions_with_cooldown(
     )
     mock_config_entry.runtime_data.data.permissions.auth_status.cooldown = 120
 
-    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:  # noqa: PT012
         await async_setup_entry(hass, mock_config_entry)
 
         # Ensure the exception contains retry_at
@@ -169,13 +167,13 @@ async def test_async_setup_entry_wrong_permissions_with_cooldown(
 
 
 # -------------------------------
-# endregion
 # region Reload
 # -------------------------------
 
 
 @pytest.mark.asyncio
 async def test_async_reload_entry(mock_config_entry: MagicMock):
+    """Reloading entry."""
     # Mock HomeAssistant and config_entry
     hass = MagicMock(spec=HomeAssistant)
     hass.config_entries.async_reload = AsyncMock()
@@ -187,7 +185,6 @@ async def test_async_reload_entry(mock_config_entry: MagicMock):
 
 
 # -------------------------------
-# endregion
 # region Unload
 # -------------------------------
 
