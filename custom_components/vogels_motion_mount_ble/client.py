@@ -283,13 +283,13 @@ class VogelsMotionMountBluetoothClient:
             assert preset.data.rotation in range(-100, 101)
             assert len(preset.data.name) in range(1, 33)
             data = (
-                bytes(0x01)
+                b"\x01"
                 + int(preset.data.distance).to_bytes(2, byteorder="big")
                 + int(preset.data.rotation).to_bytes(2, byteorder="big", signed=True)
                 + preset.data.name.encode("utf-8")
             )
         else:
-            data = bytes(0x00)
+            data = b"\x00"
 
         await self._write(
             char_uuid=CHAR_PRESET_UUIDS[preset.index],
@@ -398,7 +398,7 @@ class VogelsMotionMountBluetoothClient:
     def _handle_rotation_change(
         self, _: BleakGATTCharacteristic | None, data: bytearray
     ):
-        self._rotation_callback(int.from_bytes(data, "big"))
+        self._rotation_callback(int.from_bytes(data, "big", signed=True))
 
     # -------------------------------
     # region Permission

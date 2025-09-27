@@ -36,10 +36,6 @@ class VogelsMotionMountAutoMoveType(Enum):
     Hdmi_5_On = 16
     Hdmi_5_Off = 17
 
-    def is_on(self) -> bool:
-        """Return True if this enum represents an 'On' state."""
-        return self.value % 4 == 0
-
 
 @dataclass
 class VogelsMotionMountAuthenticationStatus:

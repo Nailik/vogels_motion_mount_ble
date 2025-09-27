@@ -39,10 +39,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return (
-            self.coordinator.data.permissions.change_tv_on_off_detection
-            and self.coordinator.data.automove.is_on()
-        )
+        return self.coordinator.data.permissions.change_tv_on_off_detection
 
     @property
     def current_option(self) -> str | None:

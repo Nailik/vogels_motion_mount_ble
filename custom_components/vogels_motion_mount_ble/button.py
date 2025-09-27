@@ -183,6 +183,6 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     def available(self) -> bool:
         """Set availability of this index of Preset entity based on the lengths of presets in the data."""
         return (
-            self.coordinator.data.presets[self._preset_index] is None
+            self.coordinator.data.presets[self._preset_index].data is None
             and self.coordinator.data.permissions.change_presets
         )

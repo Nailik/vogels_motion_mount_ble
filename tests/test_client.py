@@ -636,8 +636,8 @@ async def test_rotation_callback_fires(
     client: VogelsMotionMountBluetoothClient, callbacks
 ):
     """Rotation callback is called when notification arrives."""
-    client._handle_rotation_change(None, (20).to_bytes(2, "big", signed=True))  # noqa: SLF001
-    callbacks["rotation"].assert_called_once_with(20)
+    client._handle_rotation_change(None, (-20).to_bytes(2, "big", signed=True))  # noqa: SLF001
+    callbacks["rotation"].assert_called_once_with(-20)
 
 
 # -------------------------------

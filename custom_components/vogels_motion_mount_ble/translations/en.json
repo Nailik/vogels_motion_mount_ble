@@ -199,7 +199,7 @@
       "freeze_preset": {
         "name": "Freeze preset",
         "state": {
-          "0": "Preset 0",
+          "0": "Default",
           "1": "Preset 1",
           "2": "Preset 2",
           "3": "Preset 3",

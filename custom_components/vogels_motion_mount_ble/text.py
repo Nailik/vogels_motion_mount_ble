@@ -10,7 +10,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VogelsMotionMountBleConfigEntry
 from .base import VogelsMotionMountBleBaseEntity, VogelsMotionMountBlePresetBaseEntity
 from .coordinator import VogelsMotionMountBleCoordinator
-from .data import VogelsMotionMountPresetData
 
 
 async def async_setup_entry(
@@ -85,12 +84,6 @@ class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
     async def async_set_value(self, value: str) -> None:
         """Set the preset name value from the UI."""
         preset_data = self._preset.data
-        if preset_data is None:
-            preset_data = VogelsMotionMountPresetData(
-                name="",
-                distance=0,
-                rotation=0,
-            )
         await self.coordinator.set_preset(
             replace(self._preset, data=replace(preset_data, name=value))
         )
