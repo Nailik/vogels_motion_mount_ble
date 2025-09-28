@@ -6,9 +6,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import VogelsMotionMountPreset
 from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
+from .data import VogelsMotionMountPreset
 
 
 class VogelsMotionMountBleBaseEntity(
@@ -25,7 +25,7 @@ class VogelsMotionMountBleBaseEntity(
             name=self.coordinator.name,
             manufacturer="Vogel's",
             model="Motion Mount",
-            identifiers={(DOMAIN, self.coordinator.mac)},
+            identifiers={(DOMAIN, self.coordinator.address)},
         )
 
     @callback
@@ -45,28 +45,14 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
         """Initialise entity."""
         super().__init__(coordinator=coordinator)
         self._preset_index = preset_index
-        self._attr_translation_placeholders = {"preset": self._prop_preset_index}
+        self._attr_translation_placeholders = {"preset": str(preset_index)}
 
     @property
     def available(self) -> bool:
-        """Set availability of this index of Preset entity based if the preset is available in the data."""
-        return self._preset is not None
+        """Set availability of this index of Preset entity based if there is dat astored in the preset."""
+        return self._preset.data is not None
 
     @property
-    def _prop_preset_index(self) -> str:
-        """Index of the preset."""
-        # Note: seems to be required to use _preset, when using _preset_index it is not correctly working and will change it's entity id when recreating entities
-        if self._preset:
-            return f"{self._preset.index}"
-        return f"{self._preset_index}"
-
-    @property
-    def _preset(self) -> VogelsMotionMountPreset | None:
-        """Preset if available or none."""
-        if (
-            self.coordinator.data
-            and self.coordinator.data.presets
-            and self._preset_index in self.coordinator.data.presets
-        ):
-            return self.coordinator.data.presets[self._preset_index]
-        return None
+    def _preset(self) -> VogelsMotionMountPreset:
+        """Preset."""
+        return self.coordinator.data.presets[self._preset_index]

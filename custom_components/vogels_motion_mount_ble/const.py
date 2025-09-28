@@ -1,6 +1,8 @@
 """Constants for the Vogels Motion Mount BLE integration."""
 
 DOMAIN = "vogels_motion_mount_ble"
+# for this version read_only was added to config selectors
+MIN_HA_VERSION = "2025.6.0"
 
 CONF_MAC = "conf_mac"
 CONF_NAME = "conf_name"
@@ -40,6 +42,4 @@ CHAR_CHANGE_PIN_UUID = "c005fa2f-0651-4800-b000-000000000000"
 CHAR_PIN_SETTINGS_UUID = "c005fa39-0651-4800-b000-000000000000"
 CHAR_MULTI_PIN_FEATURES_UUID = "c005fa31-0651-4800-b000-000000000000"
 CHAR_CALIBRATE_UUID = "c005fa03-0651-4800-b000-000000000000"
-
-CHAR_AUTOMOVE_OFF_OPTIONS = [1, 5, 9, 13, 17]
-CHAR_AUTOMOVE_ON_OPTIONS = [0, 4, 8, 12, 16]
+CHAR_DISABLE_CHANNEL = ""

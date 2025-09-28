@@ -1,11 +1,9 @@
 """Number entities to define properties that can be changed for Vogels Motion Mount BLE entities."""
 
-from custom_components.vogels_motion_mount_ble.api import (
-    SettingsRequestType,
-    VogelsMotionMountActionType,
-)
+from dataclasses import replace
 
 from homeassistant.components.text import TextEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -38,58 +36,53 @@ class NameText(VogelsMotionMountBleBaseEntity, TextEntity):
     _attr_native_min = 1
     _attr_native_max = 20
     _attr_icon = "mdi:rename-box-outline"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the state of the entity."""
         return self.coordinator.data.name
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if user has permission."""
-        return self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.change_name,
-        )
+        return self.coordinator.data.permissions.change_name
 
     async def async_set_value(self, value: str) -> None:
         """Set the name value from the UI."""
-        await self.coordinator.api.set_name(value)
+        await self.coordinator.set_name(value)
 
 
 class PresetNameText(VogelsMotionMountBlePresetBaseEntity, TextEntity):
-    """Implementation of a sensor."""
+    """Implementation of a the Preset Name text."""
 
     _attr_translation_key = "preset_name_custom"
     _attr_native_min = 1
     _attr_native_max = 32
     _attr_icon = "mdi:form-textbox"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, coordinator: VogelsMotionMountBleCoordinator, preset_index: int
     ) -> None:
         """Initialize unique_id because it's derived from preset_index."""
         super().__init__(coordinator, preset_index)
-        self._attr_unique_id = f"preset_name_{self._prop_preset_index}"
+        self._attr_unique_id = f"preset_name_{preset_index}"
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return super().available and self.coordinator.api.has_permission(
-            action_type=VogelsMotionMountActionType.Settings,
-            settings_request_type=SettingsRequestType.change_presets,
-        )
+        return super().available and self.coordinator.data.permissions.change_presets
 
     @property
-    def native_value(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def native_value(self):
         """Return the current value."""
-        if self._preset:
-            return self._preset.name
+        if self._preset.data:
+            return self._preset.data.name
         return None
 
     async def async_set_value(self, value: str) -> None:
         """Set the preset name value from the UI."""
-        await self.coordinator.api.set_preset(
-            preset_index=self._preset_index,
-            name=value,
+        await self.coordinator.set_preset(
+            replace(self._preset, data=replace( self._preset.data, name=value))
         )

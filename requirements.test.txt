@@ -5,3 +5,4 @@ pytest-homeassistant-custom-component
 pyserial
 bleak
 pyudev
+aiousbwatcher

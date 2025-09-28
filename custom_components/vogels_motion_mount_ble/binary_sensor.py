@@ -1,7 +1,5 @@
 """Binary sensor entities to define properties for Vogels Motion Mount BLE entities."""
 
-from propcache.api import cached_property
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -27,23 +25,16 @@ async def async_setup_entry(
 class ConnectionBinarySensor(VogelsMotionMountBleBaseEntity, BinarySensorEntity):
     """Sensor to indicate if the Vogels Motion Mount is connected."""
 
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_unique_id = "connection"
     _attr_translation_key = _attr_unique_id
-
-    @cached_property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Set availability if preset exists and user has permission."""
-        return True
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
-    def is_on(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def is_on(self):
         """Return if the MotionMount is currently connected."""
-        if not self.coordinator.data:
-            return None
         return self.coordinator.data.connected
 
     @property
-    def icon(self):  # pyright: ignore[reportIncompatibleVariableOverride]
+    def icon(self):
         """Return icon."""
         return "mdi:wifi" if self.is_on else "mdi:wifi-off"

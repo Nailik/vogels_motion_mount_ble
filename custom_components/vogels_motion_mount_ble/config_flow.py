@@ -8,28 +8,26 @@ import logging
 import re
 from typing import Any
 
+from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
 import voluptuous as vol
 from voluptuous.schema_builder import UNDEFINED
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import (
-    NumberSelector,  # pyright: ignore[reportUnknownVariableType]
+    NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    TextSelector,  # pyright: ignore[reportUnknownVariableType]
+    TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 from homeassistant.util import dt as dt_util
 
-from .api import (
-    API,
-    APIAuthenticationError,
-    APIConnectionDeviceNotFoundError,
-    APIConnectionError,
-)
+from .client import get_permissions
 from .const import CONF_ERROR, CONF_MAC, CONF_NAME, CONF_PIN, DOMAIN
+from .data import VogelsMotionMountAuthenticationType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +109,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def validate_input(self, user_input: dict[str, Any]) -> ValidationResult:
         """Set up the entry from user data."""
+        _LOGGER.debug("validate_input %s", user_input)
         if not bool(
             re.match(
                 r"^([0-9A-Fa-f]{2}([-:])){5}([0-9A-Fa-f]{2})$", user_input[CONF_MAC]
@@ -120,30 +119,50 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             return ValidationResult({CONF_ERROR: "invalid_mac_code"})
 
         try:
-            await API(
+            _LOGGER.debug("await async_ble_device_from_address")
+            device = bluetooth.async_ble_device_from_address(
                 hass=self.hass,
-                mac=user_input[CONF_MAC],
-                pin=user_input.get(CONF_PIN),
-                callback=None,
-            ).test_connection()
-            _LOGGER.debug("Successfully tested connection to %s", user_input[CONF_MAC])
-        except APIConnectionDeviceNotFoundError as err:
-            _LOGGER.error("Setting APIConnectionDeviceNotFoundError: %s", err)
-            return ValidationResult({CONF_ERROR: "error_device_not_found"})
-        except APIAuthenticationError as err:
-            _LOGGER.error("Setting APIAuthenticationError: %s", err)
-            if err.cooldown > 0:
-                retry_time = dt_util.now() + timedelta(seconds=err.cooldown)
-                return ValidationResult(
-                    errors={CONF_ERROR: "error_auth_cooldown"},
-                    description_placeholders={
-                        "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
-                    },
-                )
-            return ValidationResult({CONF_ERROR: "error_invalid_authentication"})
-        except APIConnectionError as err:
-            _LOGGER.error("Setting APIConnectionError: %s", err)
-            return ValidationResult({CONF_ERROR: "error_cannot_connect"})
+                address=user_input[CONF_MAC],
+                connectable=True,
+            )
+
+            if device is None:
+                return ValidationResult({CONF_ERROR: "error_device_not_found"})
+
+            _LOGGER.debug("await establish_connection")
+            client = await establish_connection(
+                client_class=BleakClientWithServiceCache,
+                device=device,
+                name=device.name or "Unknown Device",
+            )
+
+            _LOGGER.debug("await get_permissions")
+            permissions = await get_permissions(client, user_input.get(CONF_PIN))
+            _LOGGER.debug("get_permission returned %s", permissions)
+            if (
+                permissions.auth_status.auth_type
+                == VogelsMotionMountAuthenticationType.Wrong
+            ):
+                if (
+                    permissions.auth_status.cooldown
+                    and permissions.auth_status.cooldown > 0
+                ):
+                    retry_time = dt_util.now() + timedelta(
+                        seconds=permissions.auth_status.cooldown
+                    )
+                    return ValidationResult(
+                        errors={CONF_ERROR: "error_invalid_authentication_cooldown"},
+                        description_placeholders={
+                            "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
+                        },
+                    )
+                return ValidationResult({CONF_ERROR: "error_invalid_authentication"})
+
+            _LOGGER.debug(
+                "Successfully tested connection to %s pers %s",
+                user_input[CONF_MAC],
+                permissions,
+            )
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Setting Exception: %s", err)
             return ValidationResult(

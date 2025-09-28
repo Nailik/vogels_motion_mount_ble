@@ -2,20 +2,26 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
-from homeassistant.const import __version__ as ha_version
+
 from packaging import version
+
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    IntegrationError,
 )
+from homeassistant.util import dt as dt_util
 
-from .api import APIAuthenticationError, APIConnectionDeviceNotFoundError
+from .const import CONF_MAC, MIN_HA_VERSION
 from .coordinator import VogelsMotionMountBleCoordinator
+from .data import VogelsMotionMountAuthenticationType
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,20 +38,17 @@ PLATFORMS: list[Platform] = [
 
 type VogelsMotionMountBleConfigEntry = ConfigEntry[VogelsMotionMountBleCoordinator]
 
-# for this version read_only was added to config selectors
-MIN_HA_VERSION = "2025.6.0"
-
-if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
-    raise RuntimeError(
-        f"Vogels Motion Mount BLE requires Home Assistant {MIN_HA_VERSION}+"
-    )
-
 
 async def async_setup(
     hass: HomeAssistant, entry: VogelsMotionMountBleConfigEntry
 ) -> bool:
     """Set up Vogels Motion Mount integration services."""
     _LOGGER.debug("async_setup called with config_entry: %s", entry)
+    if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
+        raise IntegrationError(
+            translation_key="invalid_ha_version",
+            translation_placeholders={"version": MIN_HA_VERSION},
+        )
     async_setup_services(hass)
     return True
 
@@ -60,26 +63,47 @@ async def async_setup_entry(
     unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
 
     # Initialise the coordinator that manages data updates from your api.
+    device = bluetooth.async_ble_device_from_address(
+        hass=hass,
+        address=config_entry.data[CONF_MAC],
+        connectable=True,
+    )
+
+    if device is None:
+        raise ConfigEntryNotReady("error_device_not_found")
+
     coordinator = VogelsMotionMountBleCoordinator(
         hass=hass,
         config_entry=config_entry,
+        device=device,
         unsub_options_update_listener=unsub_update_listener,
     )
     config_entry.runtime_data = coordinator
 
     try:
-        await coordinator.api.refresh_data()
-    except APIConnectionDeviceNotFoundError as err:
-        raise ConfigEntryNotReady("error_device_not_found") from err
-    except APIAuthenticationError as err:
-        raise ConfigEntryAuthFailed("error_invalid_athentication") from err
+        await coordinator.async_config_entry_first_refresh()
     except Exception as err:
         raise ConfigEntryError(
-            translation_key=f"Something went wrong {err}",
+            translation_key="error_unknown",
             translation_placeholders={"error": str(err)},
         ) from err
 
+    permissions = coordinator.data.permissions
+    if permissions.auth_status.auth_type == VogelsMotionMountAuthenticationType.Wrong:
+        if permissions.auth_status.cooldown and permissions.auth_status.cooldown > 0:
+            retry_time = dt_util.now() + timedelta(
+                seconds=permissions.auth_status.cooldown
+            )
+            raise ConfigEntryAuthFailed(
+                translation_key="error_invalid_authentication_cooldown",
+                translation_placeholders={
+                    "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
+                },
+            )
+        raise ConfigEntryAuthFailed("error_invalid_authentication")
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 
@@ -101,8 +125,8 @@ async def async_unload_entry(
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        _LOGGER.debug("async_unload_entry pop")
         coordinator: VogelsMotionMountBleCoordinator = config_entry.runtime_data
         await coordinator.unload()
+        bluetooth.async_rediscover_address(hass, config_entry.data[CONF_MAC])
 
     return unload_ok

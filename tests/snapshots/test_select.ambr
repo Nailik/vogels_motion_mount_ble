@@ -1,0 +1,137 @@
+# serializer version: 1
+# name: test_all_entities[select.mount_automove_setting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mount_automove_setting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:autorenew',
+    'original_name': 'Automove setting',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_move',
+    'unique_id': 'auto_move',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.mount_automove_setting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Automove setting',
+      'icon': 'mdi:autorenew',
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mount_automove_setting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[select.mount_freeze_preset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Gaming Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mount_freeze_preset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:snowflake',
+    'original_name': 'Freeze preset',
+    'platform': 'vogels_motion_mount_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freeze_preset',
+    'unique_id': 'freeze_preset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.mount_freeze_preset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mount Freeze preset',
+      'icon': 'mdi:snowflake',
+      'options': list([
+        '0',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Gaming Mode',
+        'Movie Mode',
+        'Movie Mode',
+        'Movie Mode',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mount_freeze_preset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---

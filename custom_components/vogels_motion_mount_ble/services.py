@@ -2,10 +2,12 @@
 
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.helpers import device_registry
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 
+from .client import VogelsMotionMountClientAuthenticationError
 from .const import DOMAIN
 from .coordinator import VogelsMotionMountBleCoordinator
 
@@ -16,10 +18,12 @@ HA_SERVICE_SET_AUTHORISED_USER_PIN = "set_authorised_user_pin"
 HA_SERVICE_SET_SUPERVISIOR_PIN = "set_supervisior_pin"
 HA_SERVICE_PIN_ID = "pin"
 
+PARALLEL_UPDATES = 1
+
 
 def async_setup_services(hass: HomeAssistant):
     """Set up my integration services."""
-    _LOGGER.debug("async_setup_services called ")
+    _LOGGER.debug("async_setup_services calledx ")
 
     hass.services.async_register(
         DOMAIN,
@@ -38,14 +42,15 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
     """Extract device_ids from service call and return list of coordinators."""
     device_id = call.data.get(HA_SERVICE_DEVICE_ID)
     if not device_id:
-        raise NoEntitySpecifiedError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_id_not_specified",
         )
-    registry = device_registry.async_get(call.hass)
+    hass: HomeAssistant = call.hass
+    registry = dr.async_get(hass)
     device = registry.async_get(device_id)
     if not device:
-        raise NoEntitySpecifiedError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_missing_entry",
             translation_placeholders={
@@ -53,9 +58,9 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
             },
         )
     entry_id = next(iter(device.config_entries))
-    entry = call.hass.config_entries.async_get_entry(entry_id)
+    entry: ConfigEntry = hass.config_entries.async_get_entry(entry_id)
     if entry is None:
-        raise NoEntitySpecifiedError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_missing_entry",
             translation_placeholders={
@@ -64,7 +69,7 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
         )
     runtime_data = entry.runtime_data
     if not isinstance(runtime_data, VogelsMotionMountBleCoordinator):
-        raise NoEntitySpecifiedError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_invalid_runtime_data",
             translation_placeholders={
@@ -77,11 +82,23 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
 
 async def _set_authorised_user_pin(call: ServiceCall) -> None:
     _LOGGER.debug("Set authorised user pin service called with data: %s", call.data)
-    await _get_coordinator(call).api.set_authorised_user_pin(
-        call.data[HA_SERVICE_PIN_ID]
-    )
+    try:
+        await _get_coordinator(call).set_authorised_user_pin(
+            call.data[HA_SERVICE_PIN_ID]
+        )
+    except VogelsMotionMountClientAuthenticationError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_permission",
+        ) from err
 
 
 async def _set_supervisior_pin(call: ServiceCall) -> None:
     _LOGGER.debug("Set supervisior pin service called with data: %s", call.data)
-    await _get_coordinator(call).api.set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
+    try:
+        await _get_coordinator(call).set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
+    except VogelsMotionMountClientAuthenticationError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_permission",
+        ) from err
