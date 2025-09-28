@@ -31,5 +31,3 @@ jobs:
       - name: Run pytest
         run: |
           pytest \tests --disable-warnings -q -v
-        env:
-          PYTEST_EXPECT_LINGERING_TIMERS: "1"
