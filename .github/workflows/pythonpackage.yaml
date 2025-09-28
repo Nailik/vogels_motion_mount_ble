@@ -30,6 +30,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest \tests --disable-warnings -q
+          pytest \tests --disable-warnings -q -v
         env:
           PYTEST_DISABLE_HOMEASSISTANT_CLEANUP: "1"
+          PYTEST_EXPECT_LINGERING_TIMERS: "1"
