@@ -43,18 +43,6 @@ MOCKED_CONFIG: dict[str, Any] = {
 
 
 @pytest.fixture(autouse=True)
-def allow_lingering_timers(monkeypatch):
-    """Override pytest-homeassistant check to allow lingering timers."""
-    monkeypatch.setenv("PYTEST_EXPECT_LINGERING_TIMERS", "1")
-
-
-@pytest.fixture
-def expected_lingering_timers() -> bool:
-    """Fixture used by pytest-homeassistant to decide if timers are ok."""
-    return True
-
-
-@pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations in HA for tests."""
     return
