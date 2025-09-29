@@ -97,7 +97,7 @@ def mock_coord(mock_data: MagicMock):
 
 
 @pytest.fixture(autouse=True)
-def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant):
+def mock_config_entry(mock_coord: MagicMock, hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -128,6 +128,7 @@ def mock_data():
         "custom_components.vogels_motion_mount_ble.data.VogelsMotionMountData"
     ) as mock_data:
         instance = VogelsMotionMountData(
+            available=True,
             automove=VogelsMotionMountAutoMoveType.Hdmi_1_On,
             connected=True,
             distance=100,
@@ -229,14 +230,20 @@ def mock_data():
 
 
 @pytest.fixture(autouse=True)
-def mock_dev():
+def mock_dev(mock_bledevice: BLEDevice):
     """Mock a found bluetooth device."""
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address"
     ) as mock_dev:
-        mock_dev.return_value = BLEDevice(
-            address=MOCKED_CONF_MAC,
-            name=MOCKED_CONF_NAME,
-            details={},
-        )
+        mock_dev.return_value = mock_bledevice
         yield mock_dev
+
+
+@pytest.fixture(autouse=True)
+def mock_bledevice() -> BLEDevice:
+    """Mocks a BLE device."""
+    return BLEDevice(
+        address=MOCKED_CONF_MAC,
+        name=MOCKED_CONF_NAME,
+        details={},
+    )

@@ -7,10 +7,15 @@ import logging
 
 from bleak.backends.device import BLEDevice
 
+from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .client import VogelsMotionMountBluetoothClient
 from .const import CONF_PIN, DOMAIN
@@ -46,10 +51,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         """Initialize coordinator and setup client."""
         _LOGGER.debug("Startup coordinator with %s", config_entry.data)
 
-        # Store setup data
-        self._unsub_options_update_listener = unsub_options_update_listener
-        self.address = device.address
-
         # Create client
         self._client = VogelsMotionMountBluetoothClient(
             pin=config_entry.data.get(CONF_PIN),
@@ -66,15 +67,31 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             _LOGGER,
             name=config_entry.title,
             config_entry=config_entry,
-            update_method=self._read_data,
             update_interval=timedelta(minutes=5),
         )
+
+        # Store setup data
+        self.address = device.address
+        self._unsub_options_update_listener = unsub_options_update_listener
+        self._unsub_unavailable_update_listener = bluetooth.async_track_unavailable(hass, self._unavailable_callback, self.address, connectable=True)
+        self._unsub_available_update_listener = bluetooth.async_register_callback(hass, self._available_callback,{"address": self.address, "connectable": True}, BluetoothScanningMode.ACTIVE)
+
         _LOGGER.debug("Coordinator startup finished")
+
+    def _available_callback(self, info: BluetoothServiceInfoBleak) -> None:
+        _LOGGER.debug("%s is discovered again", info.address)
+        self.async_set_updated_data(replace(self.data, available=True))
+
+    def _unavailable_callback(self, info: BluetoothServiceInfoBleak) -> None:
+        _LOGGER.debug("%s is no longer seen", info.address)
+        self.async_set_updated_data(replace(self.data, available=False))
 
     async def unload(self):
         """Disconnect and unload."""
         _LOGGER.debug("unload coordinator")
         self._unsub_options_update_listener()
+        self._unsub_unavailable_update_listener()
+        self._unsub_available_update_listener()
         await self._client.disconnect()
 
     async def refresh_data(self):
@@ -283,25 +300,30 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
     # region internal
     # -------------------------------
 
-    async def _read_data(self) -> VogelsMotionMountData:
+    async def _async_update_data(self) -> VogelsMotionMountData:
         """Fetch data from device."""
-        permissions = await self._client.read_permissions()
-        self._check_permission_status(permissions)
+        try:
+            permissions = await self._client.read_permissions()
+            self._check_permission_status(permissions)
 
-        return VogelsMotionMountData(
-            automove=await self._client.read_automove(),
-            connected=self.data.connected if self.data is not None else False,
-            distance=await self._client.read_distance(),
-            freeze_preset_index=await self._client.read_freeze_preset_index(),
-            multi_pin_features=await self._client.read_multi_pin_features(),
-            name=await self._client.read_name(),
-            pin_setting=await self._client.read_pin_settings(),
-            presets=await self._client.read_presets(),
-            rotation=await self._client.read_rotation(),
-            tv_width=await self._client.read_tv_width(),
-            versions=await self._client.read_versions(),
-            permissions=permissions,
-        )
+            return VogelsMotionMountData(
+                available=True,
+                automove=await self._client.read_automove(),
+                connected=self.data.connected if self.data is not None else False,
+                distance=await self._client.read_distance(),
+                freeze_preset_index=await self._client.read_freeze_preset_index(),
+                multi_pin_features=await self._client.read_multi_pin_features(),
+                name=await self._client.read_name(),
+                pin_setting=await self._client.read_pin_settings(),
+                presets=await self._client.read_presets(),
+                rotation=await self._client.read_rotation(),
+                tv_width=await self._client.read_tv_width(),
+                versions=await self._client.read_versions(),
+                permissions=permissions,
+            )
+        except Exception as err:
+            # Device unreachable → tell HA gracefully
+            raise UpdateFailed(f"Update failed due to: {err}") from err
 
     def _check_permission_status(self, permissions: VogelsMotionMountPermissions):
         if (
