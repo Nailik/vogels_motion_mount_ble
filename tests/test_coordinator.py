@@ -1,9 +1,11 @@
 """Tests for the coordinator."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
+from bleak.backends.device import BLEDevice
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vogels_motion_mount_ble.client import (
     VogelsMotionMountBluetoothClient,
@@ -24,6 +26,7 @@ from custom_components.vogels_motion_mount_ble.data import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 # Example fixtures (already split)
@@ -64,8 +67,8 @@ async def mock_client() -> VogelsMotionMountBluetoothClient:
 @pytest.fixture
 async def coordinator(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_dev,
+    mock_config_entry: MockConfigEntry,
+    mock_bledevice: BLEDevice,
     mock_client: AsyncMock,
     mock_data: VogelsMotionMountData,
 ):
@@ -73,7 +76,7 @@ async def coordinator(
     coordinator = VogelsMotionMountBleCoordinator(
         hass=hass,
         config_entry=mock_config_entry,
-        device=mock_dev,
+        device=mock_bledevice,
         unsub_options_update_listener=lambda: None,
     )
     coordinator.data = mock_data
@@ -87,22 +90,51 @@ async def coordinator(
 
 
 @pytest.mark.asyncio
+async def test_available_and_unavailable_callbacks(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Test availability callbacks."""
+    # Device becomes available
+    assert coordinator.data.available
+
+    coordinator._unavailable_callback(MagicMock())  # noqa: SLF001
+    assert not coordinator.data.available
+
+    coordinator._available_callback(MagicMock())  # noqa: SLF001
+    assert coordinator.data.available
+
+
+@pytest.mark.asyncio
 async def test_unload(
     coordinator: VogelsMotionMountBleCoordinator,
     mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test unloading of coordinator."""
     unsub_called = False
+    unsub_unavailable_called = False
+    unsub_available_called = False
 
     def unsub():
         nonlocal unsub_called
         unsub_called = True
 
+    def unsub_unavailable():
+        nonlocal unsub_unavailable_called
+        unsub_unavailable_called = True
+
+    def unsub_available():
+        nonlocal unsub_available_called
+        unsub_available_called = True
+
     coordinator._unsub_options_update_listener = unsub  # noqa: SLF001
+    coordinator._unsub_unavailable_update_listener = unsub_unavailable  # noqa: SLF001
+    coordinator._unsub_available_update_listener = unsub_available  # noqa: SLF001
 
     await coordinator.unload()
     mock_client.disconnect.assert_awaited()
     assert unsub_called
+    assert unsub_unavailable
+    assert unsub_available
 
 
 @pytest.mark.asyncio
@@ -403,6 +435,17 @@ def test_rotation_changed(coordinator: VogelsMotionMountBleCoordinator):
 # -------------------------------
 # region internal
 # -------------------------------
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_raises_updatefailed_on_exception(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws UpdateFailed on exception."""
+    coordinator._client.read_permissions.side_effect = RuntimeError("boom")  # noqa: SLF001
+
+    with pytest.raises(UpdateFailed, match="boom"):
+        await coordinator._async_update_data()  # noqa: SLF001
 
 
 @pytest.mark.asyncio

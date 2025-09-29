@@ -44,7 +44,7 @@ class MultiPinFeatureChangePresetsSwitch(VogelsMotionMountBleBaseEntity, SwitchE
     @property
     def available(self) -> bool:
         """Set availability of multi pin features."""
-        return self.coordinator.data.permissions.change_settings
+        return super().available and self.coordinator.data.permissions.change_settings
 
     @property
     def is_on(self) -> bool:
@@ -79,7 +79,7 @@ class MultiPinFeatureChangeNameSwitch(VogelsMotionMountBleBaseEntity, SwitchEnti
     @property
     def available(self) -> bool:
         """Set availability of multi pin features."""
-        return self.coordinator.data.permissions.change_settings
+        return super().available and self.coordinator.data.permissions.change_settings
 
     @property
     def is_on(self) -> bool:
@@ -114,7 +114,7 @@ class MultiPinFeatureDisableChannelSwitch(VogelsMotionMountBleBaseEntity, Switch
     @property
     def available(self) -> bool:
         """Set availability of multi pin features."""
-        return self.coordinator.data.permissions.change_settings
+        return super().available and self.coordinator.data.permissions.change_settings
 
     @property
     def is_on(self) -> bool:
@@ -151,7 +151,7 @@ class MultiPinFeatureChangeTvOnOffDetectionSwitch(
     @property
     def available(self) -> bool:
         """Set availability of multi pin features."""
-        return self.coordinator.data.permissions.change_settings
+        return super().available and self.coordinator.data.permissions.change_settings
 
     @property
     def is_on(self) -> bool:
@@ -189,7 +189,7 @@ class MultiPinFeatureChangeDefaultPositionSwitch(
     @property
     def available(self) -> bool:
         """Set availability of multi pin features."""
-        return self.coordinator.data.permissions.change_settings
+        return super().available and self.coordinator.data.permissions.change_settings
 
     @property
     def is_on(self) -> bool:
@@ -227,7 +227,7 @@ class MultiPinFeatureStartCalibrationSwitch(
     @property
     def available(self) -> bool:
         """Set availability of multi pin features."""
-        return self.coordinator.data.permissions.change_settings
+        return super().available and self.coordinator.data.permissions.change_settings
 
     @property
     def is_on(self) -> bool:

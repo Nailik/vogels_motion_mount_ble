@@ -89,6 +89,7 @@ class VogelsMotionMountData:
     """Holds the data of the device."""
 
     automove: VogelsMotionMountAutoMoveType
+    available: bool
     connected: bool
     distance: int
     freeze_preset_index: int

@@ -110,7 +110,7 @@ class TVWidthNumber(VogelsMotionMountBleBaseEntity, NumberEntity):
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return self.coordinator.data.permissions.change_settings
+        return super().available and self.coordinator.data.permissions.change_settings
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value from the UI."""

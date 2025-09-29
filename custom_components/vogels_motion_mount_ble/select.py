@@ -39,7 +39,7 @@ class AutomoveSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Set availability if preset exists and user has permission."""
-        return self.coordinator.data.permissions.change_tv_on_off_detection
+        return super().available and self.coordinator.data.permissions.change_tv_on_off_detection
 
     @property
     def current_option(self) -> str | None:
@@ -97,7 +97,7 @@ class FreezePresetSelect(VogelsMotionMountBleBaseEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Set availability if automove is turned on."""
-        return self.coordinator.data.permissions.change_default_position
+        return super().available and self.coordinator.data.permissions.change_default_position
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""

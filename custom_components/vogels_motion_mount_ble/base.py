@@ -28,6 +28,11 @@ class VogelsMotionMountBleBaseEntity(
             identifiers={(DOMAIN, self.coordinator.address)},
         )
 
+    @property
+    def available(self) -> bool:
+        """Set availability of this index of Preset entity based if there is dat astored in the preset."""
+        return self.coordinator.data.available
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
@@ -50,7 +55,7 @@ class VogelsMotionMountBlePresetBaseEntity(VogelsMotionMountBleBaseEntity):
     @property
     def available(self) -> bool:
         """Set availability of this index of Preset entity based if there is dat astored in the preset."""
-        return self._preset.data is not None
+        return super().available and self._preset.data is not None
 
     @property
     def _preset(self) -> VogelsMotionMountPreset:
