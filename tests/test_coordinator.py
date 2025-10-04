@@ -100,7 +100,7 @@ async def test_available_and_unavailable_callbacks(
     coordinator._unavailable_callback(MagicMock())  # noqa: SLF001
     assert not coordinator.data.available
 
-    coordinator._available_callback(MagicMock())  # noqa: SLF001
+    coordinator._available_callback(MagicMock(), MagicMock())  # noqa: SLF001
     assert coordinator.data.available
 
 
