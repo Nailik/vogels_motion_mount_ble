@@ -9,6 +9,7 @@ from bleak.backends.device import BLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
@@ -78,7 +79,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
         _LOGGER.debug("Coordinator startup finished")
 
-    def _available_callback(self, info: BluetoothServiceInfoBleak) -> None:
+    def _available_callback(self, info: BluetoothServiceInfoBleak, change: BluetoothChange) -> None:
         _LOGGER.debug("%s is discovered again", info.address)
         self.async_set_updated_data(replace(self.data, available=True))
 
