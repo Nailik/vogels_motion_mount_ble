@@ -30,7 +30,7 @@ class VogelsMotionMountBleBaseEntity(
 
     @property
     def available(self) -> bool:
-        """Set availability of this index of Preset entity based if there is dat astored in the preset."""
+        """Set availability of the entities only when the ble device is available."""
         return self.coordinator.data.available
 
     @callback
