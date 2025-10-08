@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -97,6 +98,7 @@ class VogelsMotionMountBluetoothClient:
         self._distance_callback = distance_callback
         self._rotation_callback = rotation_callback
         self._session_data: _VogelsMotionMountSessionData | None = None
+        self._connect_lock = asyncio.Lock()
 
     # -------------------------------
     # region Read
@@ -320,26 +322,27 @@ class VogelsMotionMountBluetoothClient:
 
     async def _connect(self) -> _VogelsMotionMountSessionData:
         """Connect to the device if not already connected. Read auth status and store it in session data."""
-        if self._session_data:
+        async with self._connect_lock:
+            if self._session_data:
+                return self._session_data
+
+            client = await establish_connection(
+                client_class=BleakClientWithServiceCache,
+                device=self._device,
+                name=self._device.name or "Unknown Device",
+                disconnected_callback=self._handle_disconnect,
+            )
+
+            pers = await get_permissions(client, self._pin)
+            _LOGGER.debug("Connected with permissions %s", pers)
+            self._session_data = _VogelsMotionMountSessionData(
+                client=client,
+                permissions=pers,
+            )
+            await self._setup_notifications(client)
+            self._permission_callback(self._session_data.permissions)
+            self._connection_callback(self._session_data.client.is_connected)
             return self._session_data
-
-        client = await establish_connection(
-            client_class=BleakClientWithServiceCache,
-            device=self._device,
-            name=self._device.name or "Unknown Device",
-            disconnected_callback=self._handle_disconnect,
-        )
-
-        pers = await get_permissions(client, self._pin)
-        _LOGGER.debug("Connected with permissions %s", pers)
-        self._session_data = _VogelsMotionMountSessionData(
-            client=client,
-            permissions=pers,
-        )
-        await self._setup_notifications(client)
-        self._permission_callback(self._session_data.permissions)
-        self._connection_callback(self._session_data.client.is_connected)
-        return self._session_data
 
     def _handle_disconnect(self, _: BleakClient):
         """Reset session and call connection callback."""
@@ -349,7 +352,9 @@ class VogelsMotionMountBluetoothClient:
     async def _read(self, char_uuid: str) -> bytes:
         """Read data by first connecting and then returning the read data."""
         session_data = await self._connect()
-        return await session_data.client.read_gatt_char(char_uuid)
+        data = await session_data.client.read_gatt_char(char_uuid)
+        _LOGGER.debug("Read data %s | %s", char_uuid, data)
+        return data
 
     async def _write(self, char_uuid: str, data: bytes):
         """Writes data by first connecting, checking permission status and then writing data. Also reads updated data that is then returned to be verified."""
@@ -357,6 +362,7 @@ class VogelsMotionMountBluetoothClient:
         if not self._has_write_permission(char_uuid, session_data.permissions):
             raise VogelsMotionMountClientAuthenticationError(cooldown=0)
         await session_data.client.write_gatt_char(char_uuid, data)
+        _LOGGER.debug("Wrote data %s | %s", char_uuid, data)
 
     def _has_write_permission(
         self, char_uuid: str, permissions: VogelsMotionMountPermissions

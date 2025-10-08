@@ -15,6 +15,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
     IntegrationError,
 )
 from homeassistant.util import dt as dt_util
@@ -82,6 +83,8 @@ async def async_setup_entry(
 
     try:
         await coordinator.async_config_entry_first_refresh()
+    except HomeAssistantError:
+        raise
     except Exception as err:
         raise ConfigEntryError(
             translation_key="error_unknown",
@@ -100,7 +103,9 @@ async def async_setup_entry(
                     "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
                 },
             )
-        raise ConfigEntryAuthFailed("error_invalid_authentication")
+        raise ConfigEntryAuthFailed(
+            translation_key="error_invalid_authentication",
+        )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -114,7 +119,8 @@ async def async_reload_entry(
     _LOGGER.debug(
         "async_reload_entry async_reload with pin %s", config_entry.data["conf_pin"]
     )
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await async_unload_entry(hass, config_entry)
+    await async_setup_entry(hass, config_entry)
 
 
 async def async_unload_entry(

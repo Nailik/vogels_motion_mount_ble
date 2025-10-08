@@ -42,7 +42,7 @@ Use cases:
 
 ### Recommended: HACS
 
-1. Add this repository to HACS (Integrations → Custom repositories) or click the “Open in HACS” badge above.
+1. Use the “Open in HACS” badge above.
 2. Install the integration from HACS → Integrations.
 3. Restart Home Assistant.
 
