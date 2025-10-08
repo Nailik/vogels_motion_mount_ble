@@ -1,5 +1,6 @@
 """Tests for bluetooth client interface."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakClient
@@ -522,6 +523,44 @@ async def test_set_tv_width_writes(
 # -------------------------------
 # region Connection tests
 # -------------------------------
+
+
+@pytest.mark.asyncio
+async def test_connect_is_singleton(monkeypatch):
+    """Multiple concurrent _connect calls result in a single connection attempt."""
+
+    connect_calls = 0
+
+    async def fake_establish_connection(*args, **kwargs):
+        nonlocal connect_calls
+        connect_calls += 1
+        await asyncio.sleep(0.1)  # Simulate delay to expose race condition
+        return AsyncMock(spec=BleakClient)
+
+    monkeypatch.setattr(
+        "custom_components.vogels_motion_mount_ble.client.establish_connection",
+        fake_establish_connection,
+    )
+
+    client = VogelsMotionMountBluetoothClient(
+        pin=None,
+        device=AsyncMock(),
+        permission_callback=lambda x: None,
+        connection_callback=lambda x: None,
+        distance_callback=lambda x: None,
+        rotation_callback=lambda x: None,
+    )
+
+    # Act
+    results = await asyncio.gather(
+        client._connect(),  # noqa: SLF001
+        client._connect(),  # noqa: SLF001
+        client._connect(),  # noqa: SLF001
+    )
+
+    # Assert
+    assert connect_calls == 1
+    assert all(r is client._session_data for r in results)  # noqa: SLF001
 
 
 @pytest.mark.asyncio
