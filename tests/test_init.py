@@ -143,7 +143,7 @@ async def test_async_setup_entry_wrong_permissions_no_cooldown(
     )
     mock_config_entry.runtime_data.data.permissions.auth_status.cooldown = 0
 
-    with pytest.raises(ConfigEntryAuthFailed, match="error_invalid_authentication"):
+    with pytest.raises(ConfigEntryAuthFailed):
         await async_setup_entry(hass, mock_config_entry)
 
 
@@ -163,6 +163,22 @@ async def test_async_setup_entry_wrong_permissions_with_cooldown(
 
         # Ensure the exception contains retry_at
         assert "retry_at" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_setup_entry_propagates_homeassistant_error(
+    mock_config_entry: MagicMock, hass: HomeAssistant
+):
+    """Test that HomeAssistantError is propagated and not wrapped as ConfigEntryError."""
+
+    # Patch coordinator to raise ConfigEntryAuthFailed on first refresh
+    mock_config_entry.runtime_data.async_config_entry_first_refresh.side_effect = (
+        ConfigEntryAuthFailed("auth failed")
+    )
+
+    # Test: Should raise ConfigEntryAuthFailed, not ConfigEntryError
+    with pytest.raises(ConfigEntryAuthFailed, match="auth failed"):
+        await async_setup_entry(hass, mock_config_entry)
 
 
 # -------------------------------
