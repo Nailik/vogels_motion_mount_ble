@@ -349,7 +349,9 @@ class VogelsMotionMountBluetoothClient:
     async def _read(self, char_uuid: str) -> bytes:
         """Read data by first connecting and then returning the read data."""
         session_data = await self._connect()
-        return await session_data.client.read_gatt_char(char_uuid)
+        data = await session_data.client.read_gatt_char(char_uuid)
+        _LOGGER.debug("Read data %s | %s", char_uuid, data)
+        return data
 
     async def _write(self, char_uuid: str, data: bytes):
         """Writes data by first connecting, checking permission status and then writing data. Also reads updated data that is then returned to be verified."""
@@ -357,6 +359,7 @@ class VogelsMotionMountBluetoothClient:
         if not self._has_write_permission(char_uuid, session_data.permissions):
             raise VogelsMotionMountClientAuthenticationError(cooldown=0)
         await session_data.client.write_gatt_char(char_uuid, data)
+        _LOGGER.debug("Wrote data %s | %s", char_uuid, data)
 
     def _has_write_permission(
         self, char_uuid: str, permissions: VogelsMotionMountPermissions
