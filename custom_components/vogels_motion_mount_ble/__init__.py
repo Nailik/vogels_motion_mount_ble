@@ -114,7 +114,8 @@ async def async_reload_entry(
     _LOGGER.debug(
         "async_reload_entry async_reload with pin %s", config_entry.data["conf_pin"]
     )
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await async_unload_entry(hass, config_entry)
+    await async_setup_entry(hass, config_entry)
 
 
 async def async_unload_entry(

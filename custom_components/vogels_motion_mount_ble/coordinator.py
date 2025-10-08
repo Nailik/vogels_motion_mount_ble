@@ -52,6 +52,9 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         """Initialize coordinator and setup client."""
         _LOGGER.debug("Startup coordinator with %s", config_entry.data)
 
+        # Store setup data
+        self.address = device.address
+
         # Create client
         self._client = VogelsMotionMountBluetoothClient(
             pin=config_entry.data.get(CONF_PIN),
@@ -71,8 +74,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             update_interval=timedelta(minutes=5),
         )
 
-        # Store setup data
-        self.address = device.address
+        # Setup listeners
         self._unsub_options_update_listener = unsub_options_update_listener
         self._unsub_unavailable_update_listener = bluetooth.async_track_unavailable(hass, self._unavailable_callback, self.address, connectable=True)
         self._unsub_available_update_listener = bluetooth.async_register_callback(hass, self._available_callback,{"address": self.address, "connectable": True}, BluetoothScanningMode.ACTIVE)
