@@ -105,6 +105,19 @@ async def test_available_and_unavailable_callbacks(
 
 
 @pytest.mark.asyncio
+async def test_available_and_unavailable_callbacks_without_data(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Test availability callbacks."""
+    # Device becomes available
+    coordinator.data = None
+    assert not coordinator.data
+
+    coordinator._unavailable_callback(MagicMock())  # noqa: SLF001
+    coordinator._available_callback(MagicMock(), MagicMock())  # noqa: SLF001
+
+
+@pytest.mark.asyncio
 async def test_unload(
     coordinator: VogelsMotionMountBleCoordinator,
     mock_client: VogelsMotionMountBluetoothClient,
