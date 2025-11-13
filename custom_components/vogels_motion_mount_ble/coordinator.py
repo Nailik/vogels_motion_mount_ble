@@ -83,10 +83,14 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     def _available_callback(self, info: BluetoothServiceInfoBleak, change: BluetoothChange) -> None:
         _LOGGER.debug("%s is discovered again", info.address)
+        if(self.data is None): # may be called before data is available
+            return
         self.async_set_updated_data(replace(self.data, available=True))
 
     def _unavailable_callback(self, info: BluetoothServiceInfoBleak) -> None:
         _LOGGER.debug("%s is no longer seen", info.address)
+        if(self.data is None): # may be called before data is available
+            return
         self.async_set_updated_data(replace(self.data, available=False))
 
     async def unload(self):
