@@ -76,21 +76,30 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
         # Setup listeners
         self._unsub_options_update_listener = unsub_options_update_listener
-        self._unsub_unavailable_update_listener = bluetooth.async_track_unavailable(hass, self._unavailable_callback, self.address, connectable=True)
-        self._unsub_available_update_listener = bluetooth.async_register_callback(hass, self._available_callback,{"address": self.address, "connectable": True}, BluetoothScanningMode.ACTIVE)
+        self._unsub_unavailable_update_listener = bluetooth.async_track_unavailable(
+            hass, self._unavailable_callback, self.address, connectable=True
+        )
+        self._unsub_available_update_listener = bluetooth.async_register_callback(
+            hass,
+            self._available_callback,
+            {"address": self.address, "connectable": True},
+            BluetoothScanningMode.ACTIVE,
+        )
 
         _LOGGER.debug("Coordinator startup finished")
 
-    def _available_callback(self, info: BluetoothServiceInfoBleak, change: BluetoothChange) -> None:
+    def _available_callback(
+        self, info: BluetoothServiceInfoBleak, change: BluetoothChange
+    ) -> None:
         _LOGGER.debug("%s is discovered again", info.address)
-        if(self.data is None): # may be called before data is available
-            self._async_update_data() # load the data
+        if self.data is None:  # may be called before data is available
+            self.hass.add_job(self.async_request_refresh())  # load the data
             return
         self.async_set_updated_data(replace(self.data, available=True))
 
     def _unavailable_callback(self, info: BluetoothServiceInfoBleak) -> None:
         _LOGGER.debug("%s is no longer seen", info.address)
-        if(self.data is None): # may be called before data is available
+        if self.data is None:  # may be called before data is available
             return
         self.async_set_updated_data(replace(self.data, available=False))
 
@@ -329,13 +338,17 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
                 versions=await self._client.read_versions(),
                 permissions=permissions,
             )
+        except ConfigEntryAuthFailed as err:
+            # reraise auth issues
+            raise err from err
         except Exception as err:
             # Device unreachable → tell HA gracefully
             raise UpdateFailed(f"Update failed due to: {err}") from err
 
     def _check_permission_status(self, permissions: VogelsMotionMountPermissions):
         if (
-            permissions.auth_status is not None and permissions.auth_status.auth_type
+            permissions.auth_status is not None
+            and permissions.auth_status.auth_type
             == VogelsMotionMountAuthenticationType.Wrong
         ):
             raise ConfigEntryAuthFailed(
