@@ -451,6 +451,17 @@ def test_rotation_changed(coordinator: VogelsMotionMountBleCoordinator):
 
 
 @pytest.mark.asyncio
+async def test_async_update_data_propagates_entryauthfailed_on_exception(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws UpdateFailed on exception."""
+    coordinator._client.read_permissions.side_effect = ConfigEntryAuthFailed("boom")  # noqa: SLF001
+
+    with pytest.raises(ConfigEntryAuthFailed, match="boom"):
+        await coordinator._async_update_data()  # noqa: SLF001
+
+
+@pytest.mark.asyncio
 async def test_async_update_data_raises_updatefailed_on_exception(
     coordinator: VogelsMotionMountBleCoordinator,
 ):
