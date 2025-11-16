@@ -60,9 +60,6 @@ async def async_setup_entry(
     """Set up Vogels Motion Mount Integration from a config entry."""
     _LOGGER.debug("async_setup_entry called with config_entry: %s", config_entry)
 
-    # Registers update listener to update config entry when options are updated.
-    unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
-
     # Initialise the coordinator that manages data updates from your api.
     device = bluetooth.async_ble_device_from_address(
         hass=hass,
@@ -72,6 +69,9 @@ async def async_setup_entry(
 
     if device is None:
         raise ConfigEntryNotReady("error_device_not_found")
+
+    # Registers update listener to update config entry when options are updated.
+    unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
 
     coordinator = VogelsMotionMountBleCoordinator(
         hass=hass,
@@ -84,8 +84,12 @@ async def async_setup_entry(
     try:
         await coordinator.async_config_entry_first_refresh()
     except HomeAssistantError:
+        # do not reload if setup failed
+        unsub_update_listener()
         raise
     except Exception as err:
+        # do not reload if setup failed
+        unsub_update_listener()
         raise ConfigEntryError(
             translation_key="error_unknown",
             translation_placeholders={"error": str(err)},
@@ -128,6 +132,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry")
+
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
