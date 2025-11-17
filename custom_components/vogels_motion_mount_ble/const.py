@@ -8,6 +8,7 @@ CONF_MAC = "conf_mac"
 CONF_NAME = "conf_name"
 CONF_PIN = "conf_pin"
 CONF_ERROR = "base"
+BLE_CALLBACK = "unregister_ble_callback"
 
 CHAR_NAME_UUID = "c005fa37-0651-4800-b000-000000000000"
 CHAR_WIDTH_UUID = "c005fa2b-0651-4800-b000-000000000000"

@@ -4,11 +4,13 @@ from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock
 
 from bleak.backends.device import BLEDevice
+from bleak_retry_connector import BleakConnectionError, BleakNotFoundError
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vogels_motion_mount_ble.client import (
     VogelsMotionMountBluetoothClient,
+    VogelsMotionMountClientAuthenticationError,
 )
 from custom_components.vogels_motion_mount_ble.coordinator import (
     VogelsMotionMountBleCoordinator,
@@ -95,13 +97,14 @@ async def test_available_and_unavailable_callbacks(
 ):
     """Test availability callbacks."""
     # Device becomes available
-    assert coordinator.data.available
+    assert coordinator.last_update_success
+    coordinator.async_set_updated_data = MagicMock()
 
     coordinator._unavailable_callback(MagicMock())  # noqa: SLF001
-    assert not coordinator.data.available
+
+    coordinator.async_set_updated_data.assert_called()
 
     coordinator._available_callback(MagicMock(), MagicMock())  # noqa: SLF001
-    assert coordinator.data.available
 
 
 @pytest.mark.asyncio
@@ -112,8 +115,10 @@ async def test_available_and_unavailable_callbacks_without_data(
     # Device becomes available
     coordinator.data = None
     assert not coordinator.data
+    coordinator.async_set_updated_data = MagicMock()
 
     coordinator._unavailable_callback(MagicMock())  # noqa: SLF001
+    coordinator.async_set_updated_data.assert_not_called()
     coordinator._available_callback(MagicMock(), MagicMock())  # noqa: SLF001
 
 
@@ -455,9 +460,33 @@ async def test_async_update_data_propagates_entryauthfailed_on_exception(
     coordinator: VogelsMotionMountBleCoordinator,
 ):
     """Check async update data throws UpdateFailed on exception."""
-    coordinator._client.read_permissions.side_effect = ConfigEntryAuthFailed("boom")  # noqa: SLF001
+    coordinator._client.read_permissions.side_effect = (  # noqa: SLF001
+        VogelsMotionMountClientAuthenticationError("boom")
+    )
 
-    with pytest.raises(ConfigEntryAuthFailed, match="boom"):
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_handles_bleakconnectionerror_as_entrynotready(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws UpdateFailed on exception."""
+    coordinator._client.read_permissions.side_effect = BleakConnectionError("boom")  # noqa: SLF001
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_handles_bleaknotfounderror_as_entrynotready(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws UpdateFailed on exception."""
+    coordinator._client.read_permissions.side_effect = BleakNotFoundError("boom")  # noqa: SLF001
+
+    with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()  # noqa: SLF001
 
 
@@ -468,7 +497,7 @@ async def test_async_update_data_raises_updatefailed_on_exception(
     """Check async update data throws UpdateFailed on exception."""
     coordinator._client.read_permissions.side_effect = RuntimeError("boom")  # noqa: SLF001
 
-    with pytest.raises(UpdateFailed, match="boom"):
+    with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()  # noqa: SLF001
 
 

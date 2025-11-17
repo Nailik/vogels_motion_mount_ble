@@ -90,7 +90,6 @@ def mock_coord(mock_data: MagicMock):
         instance.set_rotation = AsyncMock()
         instance.set_distance = AsyncMock()
         instance.set_authorised_user_pin = AsyncMock()
-        instance._async_update_data = AsyncMock()  # noqa: SLF001
         instance.last_update_success = True
         mock_coord.return_value = instance
         yield instance
@@ -128,7 +127,6 @@ def mock_data():
         "custom_components.vogels_motion_mount_ble.data.VogelsMotionMountData"
     ) as mock_data:
         instance = VogelsMotionMountData(
-            available=True,
             automove=VogelsMotionMountAutoMoveType.Hdmi_1_On,
             connected=True,
             distance=100,

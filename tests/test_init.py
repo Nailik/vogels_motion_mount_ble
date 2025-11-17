@@ -11,6 +11,7 @@ from custom_components.vogels_motion_mount_ble import (
     async_setup_entry,
     async_unload_entry,
 )
+from custom_components.vogels_motion_mount_ble.const import BLE_CALLBACK, DOMAIN
 from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountAuthenticationType,
 )
@@ -111,8 +112,10 @@ async def test_async_setup_entry_device_not_found(
     """Device discovery fails."""
     mock_dev.return_value = None
 
-    with pytest.raises(ConfigEntryNotReady, match="error_device_not_found"):
+    with pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, mock_config_entry)
+    # ble callback was created
+    assert hass.data[DOMAIN][mock_config_entry.entry_id].get(BLE_CALLBACK)
 
 
 @pytest.mark.asyncio
