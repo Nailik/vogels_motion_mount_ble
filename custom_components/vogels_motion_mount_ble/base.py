@@ -31,7 +31,7 @@ class VogelsMotionMountBleBaseEntity(
     @property
     def available(self) -> bool:
         """Set availability of the entities only when the ble device is available."""
-        return self.coordinator.last_update_success
+        return self.coordinator.data and self.coordinator.data.available
 
     @callback
     def _handle_coordinator_update(self) -> None:

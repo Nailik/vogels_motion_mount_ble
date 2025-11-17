@@ -128,6 +128,7 @@ def mock_data():
     ) as mock_data:
         instance = VogelsMotionMountData(
             automove=VogelsMotionMountAutoMoveType.Hdmi_1_On,
+            available=True,
             connected=True,
             distance=100,
             freeze_preset_index=0,

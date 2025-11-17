@@ -18,7 +18,6 @@ from homeassistant.const import Platform, __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
     IntegrationError,
@@ -117,16 +116,24 @@ async def async_setup_entry(
 
     try:
         await coordinator.async_config_entry_first_refresh()
-    except HomeAssistantError as err:
+    except ConfigEntryAuthFailed as err:
         # do not reload if setup failed
-        _LOGGER.debug("async_setup_entry HomeAssistantError %s", str(err))
+        _LOGGER.debug("async_setup_entry ConfigEntryAuthFailed %s", str(err))
         unsub_update_listener()
         raise err from err
+    except HomeAssistantError as err:
+        _LOGGER.debug("async_setup_entry HomeAssistantError %s", str(err))
+        # do not reload if setup failed
+        unsub_update_listener()
+        raise ConfigEntryNotReady(
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        ) from err
     except Exception as err:
         _LOGGER.debug("async_setup_entry Exception %s", str(err))
         # do not reload if setup failed
         unsub_update_listener()
-        raise ConfigEntryError(
+        raise ConfigEntryNotReady(
             translation_key="error_unknown",
             translation_placeholders={"error": repr(err)},
         ) from err

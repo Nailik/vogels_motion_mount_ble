@@ -23,7 +23,7 @@ from .client import (
     VogelsMotionMountBluetoothClient,
     VogelsMotionMountClientAuthenticationError,
 )
-from .const import CONF_PIN, DOMAIN
+from .const import CONF_MAC, CONF_PIN, DOMAIN
 from .data import (
     VogelsMotionMountAuthenticationType,
     VogelsMotionMountAutoMoveType,
@@ -324,6 +324,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
             return VogelsMotionMountData(
                 automove=await self._client.read_automove(),
+                available=True,
                 connected=self.data.connected if self.data is not None else False,
                 distance=await self._client.read_distance(),
                 freeze_preset_index=await self._client.read_freeze_preset_index(),
@@ -337,6 +338,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
                 permissions=permissions,
             )
         except VogelsMotionMountClientAuthenticationError as err:
+            self._set_unavailable()
             # reraise auth issues
             _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
             raise ConfigEntryAuthFailed from err
@@ -344,10 +346,12 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             # treat BleakConnectionError as device not found
             raise UpdateFailed(translation_key="error_device_not_found") from err
         except BleakNotFoundError as err:
+            self._set_unavailable()
             _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
             # treat BleakNotFoundError as device not found
             raise UpdateFailed(translation_key="error_device_not_found") from err
         except Exception as err:
+            self._set_unavailable()
             # Device unreachable → tell HA gracefully
             _LOGGER.debug("_async_update_data Exception %s", repr(err))
             raise UpdateFailed(
@@ -397,9 +401,10 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             ) from err
 
     def _set_unavailable(self):
-        self.last_update_success = False
         _LOGGER.debug("_set_unavailable width data %s", str(self.data))
+        # trigger rediscovery for the device
+        bluetooth.async_rediscover_address(self.hass, self.config_entry.data[CONF_MAC])
         if self.data is None:  # may be called before data is available
             return
         # tell HA to refresh all entities
-        self.async_set_updated_data(self.data)
+        self.async_set_updated_data(replace(self.data, available=False))

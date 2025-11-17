@@ -19,8 +19,8 @@ from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
     IntegrationError,
 )
 
@@ -170,7 +170,33 @@ async def test_async_setup_entry_refresh_failure(
     )
     mock_config_entry.runtime_data.data.permissions.auth_status.cooldown = 0
 
-    with pytest.raises(ConfigEntryError, match="refresh failed"):
+    with pytest.raises(ConfigEntryNotReady, match="refresh failed"):
+        await async_setup_entry(hass, mock_config_entry)
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_propagates_auth_error(
+    mock_config_entry: MagicMock, hass: HomeAssistant
+):
+    """Coordinator refresh raises exception."""
+    mock_config_entry.runtime_data.async_config_entry_first_refresh.side_effect = (
+        ConfigEntryAuthFailed("refresh failed")
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed, match="refresh failed"):
+        await async_setup_entry(hass, mock_config_entry)
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_propagates_homeassistanterror_as_entry_not_ready(
+    mock_config_entry: MagicMock, hass: HomeAssistant
+):
+    """Coordinator refresh raises exception."""
+    mock_config_entry.runtime_data.async_config_entry_first_refresh.side_effect = (
+        HomeAssistantError("refresh failed")
+    )
+
+    with pytest.raises(ConfigEntryNotReady, match="refresh failed"):
         await async_setup_entry(hass, mock_config_entry)
 
 

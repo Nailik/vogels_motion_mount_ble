@@ -97,7 +97,7 @@ async def test_available_and_unavailable_callbacks(
 ):
     """Test availability callbacks."""
     # Device becomes available
-    assert coordinator.last_update_success
+    assert coordinator.data.available
     coordinator.async_set_updated_data = MagicMock()
 
     coordinator._unavailable_callback(MagicMock())  # noqa: SLF001
@@ -105,6 +105,7 @@ async def test_available_and_unavailable_callbacks(
     coordinator.async_set_updated_data.assert_called()
 
     coordinator._available_callback(MagicMock(), MagicMock())  # noqa: SLF001
+    assert coordinator.data.available
 
 
 @pytest.mark.asyncio

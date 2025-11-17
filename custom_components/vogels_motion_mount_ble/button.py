@@ -66,6 +66,11 @@ class RefreshDataButton(VogelsMotionMountBleBaseEntity, ButtonEntity):
     _attr_icon = "mdi:refresh"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @property
+    def available(self) -> bool:
+        """Always available to try refresh data."""
+        return True
+
     async def async_press(self):
         """Execute data refresh."""
         await self.coordinator.refresh_data()
@@ -186,7 +191,11 @@ class AddPresetButton(VogelsMotionMountBlePresetBaseEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Set availability of this index of Preset entity based on the lengths of presets in the data."""
-        return super(VogelsMotionMountBleBaseEntity, self).available and (
-            self.coordinator.data.presets[self._preset_index].data is None
-            and self.coordinator.data.permissions.change_presets
+        return (
+            self.coordinator.data
+            and self.coordinator.data.available
+            and (
+                self.coordinator.data.presets[self._preset_index].data is None
+                and self.coordinator.data.permissions.change_presets
+            )
         )
