@@ -120,15 +120,15 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def disconnect(self):
         """Disconnect form client."""
-        await self.call(self._client.disconnect)
+        await self._call(self._client.disconnect)
 
     async def select_preset(self, preset_index: int):
         """Select a preset to move to."""
-        await self.call(self._client.select_preset, preset_index)
+        await self._call(self._client.select_preset, preset_index)
 
     async def start_calibration(self):
         """Start calibration process."""
-        await self.call(self._client.start_calibration)
+        await self._call(self._client.start_calibration)
 
     # -------------------------------
     # region Config
@@ -136,19 +136,19 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def request_distance(self, distance: int):
         """Request a distance to move to."""
-        await self.call(self._client.request_distance, distance)
+        await self._call(self._client.request_distance, distance)
         self.async_set_updated_data(replace(self.data, requested_distance=distance))
 
     async def request_rotation(self, rotation: int):
         """Request a rotation to move to."""
-        await self.call(self._client.request_rotation, rotation)
+        await self._call(self._client.request_rotation, rotation)
         self.async_set_updated_data(replace(self.data, requested_rotation=rotation))
 
     async def set_authorised_user_pin(self, pin: str):
         """Set or remove pin for authorised user."""
-        await self.call(self._client.set_authorised_user_pin, pin)
+        await self._call(self._client.set_authorised_user_pin, pin)
         remove = pin == "0000"
-        pin_setting = await self.call(self._client.read_pin_settings)
+        pin_setting = await self._call(self._client.read_pin_settings)
         if remove and pin_setting != VogelsMotionMountPinSettings.Deactivated:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -167,13 +167,13 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
                     "expected": str(VogelsMotionMountPinSettings.Deactivated),
                 },
             )
-        await self.call(self.disconnect)
+        await self._call(self.disconnect)
         self.async_set_updated_data(await self._async_update_data())
 
     async def set_automove(self, automove: VogelsMotionMountAutoMoveType):
         """Set type of automove."""
-        await self.call(self._client.set_automove, automove)
-        actual = await self.call(self._client.read_automove)
+        await self._call(self._client.set_automove, automove)
+        actual = await self._call(self._client.read_automove)
         self.async_set_updated_data(replace(self.data, automove=actual))
         if actual != automove:
             raise ServiceValidationError(
@@ -187,8 +187,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_freeze_preset(self, preset_index: int):
         """Set a preset to move to when automove is executed."""
-        await self.call(self._client.set_freeze_preset, preset_index)
-        actual = await self.call(self._client.read_freeze_preset_index)
+        await self._call(self._client.set_freeze_preset, preset_index)
+        actual = await self._call(self._client.read_freeze_preset_index)
         self.async_set_updated_data(replace(self.data, freeze_preset_index=actual))
         if actual != preset_index:
             raise ServiceValidationError(
@@ -202,8 +202,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_multi_pin_features(self, features: VogelsMotionMountMultiPinFeatures):
         """Set features the authorised user is eligible to change."""
-        await self.call(self._client.set_multi_pin_features, features)
-        actual = await self.call(self._client.read_multi_pin_features)
+        await self._call(self._client.set_multi_pin_features, features)
+        actual = await self._call(self._client.read_multi_pin_features)
         self.async_set_updated_data(replace(self.data, multi_pin_features=actual))
         if actual != features:
             raise ServiceValidationError(
@@ -217,8 +217,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_name(self, name: str):
         """Set name of the Vogels Motion Mount."""
-        await self.call(self._client.set_name, name)
-        actual = await self.call(self._client.read_name)
+        await self._call(self._client.set_name, name)
+        actual = await self._call(self._client.read_name)
         self.async_set_updated_data(replace(self.data, name=actual))
         if actual != name:
             raise ServiceValidationError(
@@ -232,8 +232,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_preset(self, preset: VogelsMotionMountPreset):
         """Set the data of a preset."""
-        await self.call(self._client.set_preset, preset)
-        actual = await self.call(self._client.read_preset, preset.index)
+        await self._call(self._client.set_preset, preset)
+        actual = await self._call(self._client.read_preset, preset.index)
         presets = self.data.presets.copy()
         presets[preset.index] = actual
         self.async_set_updated_data(replace(self.data, presets=presets))
@@ -249,9 +249,9 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_supervisior_pin(self, pin: str):
         """Set or remove pin for a supervisior."""
-        await self.call(self._client.set_supervisior_pin, pin)
+        await self._call(self._client.set_supervisior_pin, pin)
         remove = pin == "0000"
-        pin_setting = await self.call(self._client.read_pin_settings)
+        pin_setting = await self._call(self._client.read_pin_settings)
         if remove and pin_setting != VogelsMotionMountPinSettings.Single:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -275,8 +275,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_tv_width(self, width: int):
         """Set the width of the tv."""
-        await self.call(self._client.set_tv_width, width)
-        actual = await self.call(self._client.read_tv_width)
+        await self._call(self._client.set_tv_width, width)
+        actual = await self._call(self._client.read_tv_width)
         self.async_set_updated_data(replace(self.data, tv_width=actual))
         if actual != width:
             raise ServiceValidationError(
@@ -366,7 +366,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             )
             raise ConfigEntryAuthFailed(translation_key="error_invalid_authentication")
 
-    async def call(self, func, *args, **kwargs):
+    async def _call(self, func, *args, **kwargs):
         """Execute a BLE client call safely."""
         try:
             return await func(*args, **kwargs)

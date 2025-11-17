@@ -472,7 +472,7 @@ async def test_async_update_data_propagates_entryauthfailed_on_exception(
 async def test_async_update_data_handles_bleakconnectionerror_as_entrynotready(
     coordinator: VogelsMotionMountBleCoordinator,
 ):
-    """Check async update data throws UpdateFailed on exception."""
+    """Check async update data throws UpdateFailed on BleakConnectionError."""
     coordinator._client.read_permissions.side_effect = BleakConnectionError("boom")  # noqa: SLF001
 
     with pytest.raises(UpdateFailed):
@@ -483,7 +483,7 @@ async def test_async_update_data_handles_bleakconnectionerror_as_entrynotready(
 async def test_async_update_data_handles_bleaknotfounderror_as_entrynotready(
     coordinator: VogelsMotionMountBleCoordinator,
 ):
-    """Check async update data throws UpdateFailed on exception."""
+    """Check async update data throws UpdateFailed on BleakNotFoundError."""
     coordinator._client.read_permissions.side_effect = BleakNotFoundError("boom")  # noqa: SLF001
 
     with pytest.raises(UpdateFailed):
@@ -521,3 +521,49 @@ async def test_check_permission_status_raises_error(
 
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._check_permission_status(permissions)  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_call_propagates_entryauthfailed_on_exception(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws UpdateFailed on exception."""
+    func = AsyncMock(
+        side_effect=VogelsMotionMountClientAuthenticationError("auth fail")
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._call(func)  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_call_handles_bleakconnectionerror_as_entrynotready(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws ServiceValidationError on BleakConnectionError."""
+    func = AsyncMock(side_effect=BleakConnectionError("boom"))
+
+    with pytest.raises(ServiceValidationError):
+        await coordinator._call(func)  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_call_handles_bleaknotfounderror_as_entrynotready(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws ServiceValidationError on BleakNotFoundError."""
+    func = AsyncMock(side_effect=BleakNotFoundError("boom"))
+
+    with pytest.raises(ServiceValidationError):
+        await coordinator._call(func)  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_call_raises_updatefailed_on_exception(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """Check async update data throws ServiceValidationError on exception."""
+    func = AsyncMock(side_effect=RuntimeError("boom"))
+
+    with pytest.raises(ServiceValidationError):
+        await coordinator._call(func)  # noqa: SLF001
