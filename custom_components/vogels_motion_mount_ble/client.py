@@ -323,7 +323,9 @@ class VogelsMotionMountBluetoothClient:
     async def _connect(self) -> _VogelsMotionMountSessionData:
         """Connect to the device if not already connected. Read auth status and store it in session data."""
         async with self._connect_lock:
+            _LOGGER.debug("Connecting to device %s", self._device.address)
             if self._session_data:
+                _LOGGER.debug("Already connected")
                 return self._session_data
 
             client = await establish_connection(

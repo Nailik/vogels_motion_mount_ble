@@ -86,6 +86,12 @@
     },
     "calibration_timeout_homeing": {
       "message": "Calibration timed out while homeing, stuck at distance {distance} with rotation {rotation}, took longer than {seconds} seconds."
+    },
+    "error_device_not_found": {
+      "message": "Device not found. Please check the MAC address and ensure the device is powered on."
+    },
+    "error_unknown": {
+      "message": "An unknown error occurred while trying to connect to the device. {error}"
     }
   },
   "config": {

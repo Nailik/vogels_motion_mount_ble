@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 
 from bleak.backends.device import BLEDevice
+from bleak_retry_connector import BleakConnectionError, BleakNotFoundError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -18,8 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .client import VogelsMotionMountBluetoothClient
-from .const import CONF_PIN, DOMAIN
+from .client import (
+    VogelsMotionMountBluetoothClient,
+    VogelsMotionMountClientAuthenticationError,
+)
+from .const import CONF_MAC, CONF_PIN, DOMAIN
 from .data import (
     VogelsMotionMountAuthenticationType,
     VogelsMotionMountAutoMoveType,
@@ -76,23 +80,27 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
         # Setup listeners
         self._unsub_options_update_listener = unsub_options_update_listener
-        self._unsub_unavailable_update_listener = bluetooth.async_track_unavailable(hass, self._unavailable_callback, self.address, connectable=True)
-        self._unsub_available_update_listener = bluetooth.async_register_callback(hass, self._available_callback,{"address": self.address, "connectable": True}, BluetoothScanningMode.ACTIVE)
+        self._unsub_unavailable_update_listener = bluetooth.async_track_unavailable(
+            hass, self._unavailable_callback, self.address, connectable=True
+        )
+        self._unsub_available_update_listener = bluetooth.async_register_callback(
+            hass,
+            self._available_callback,
+            {"address": self.address, "connectable": True},
+            BluetoothScanningMode.ACTIVE,
+        )
 
         _LOGGER.debug("Coordinator startup finished")
 
-    def _available_callback(self, info: BluetoothServiceInfoBleak, change: BluetoothChange) -> None:
+    def _available_callback(
+        self, info: BluetoothServiceInfoBleak, change: BluetoothChange
+    ) -> None:
         _LOGGER.debug("%s is discovered again", info.address)
-        if(self.data is None): # may be called before data is available
-            self._async_update_data() # load the data
-            return
-        self.async_set_updated_data(replace(self.data, available=True))
+        self.hass.async_create_task(self.async_request_refresh())  # load the data
 
     def _unavailable_callback(self, info: BluetoothServiceInfoBleak) -> None:
         _LOGGER.debug("%s is no longer seen", info.address)
-        if(self.data is None): # may be called before data is available
-            return
-        self.async_set_updated_data(replace(self.data, available=False))
+        self._set_unavailable()
 
     async def unload(self):
         """Disconnect and unload."""
@@ -104,7 +112,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def refresh_data(self):
         """Load data form client."""
-        await self._async_update_data()
+        self.hass.async_create_task(self.async_request_refresh())
 
     # -------------------------------
     # region Control
@@ -112,15 +120,15 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def disconnect(self):
         """Disconnect form client."""
-        await self._client.disconnect()
+        await self._call(self._client.disconnect)
 
     async def select_preset(self, preset_index: int):
         """Select a preset to move to."""
-        await self._client.select_preset(preset_index)
+        await self._call(self._client.select_preset, preset_index)
 
     async def start_calibration(self):
         """Start calibration process."""
-        await self._client.start_calibration()
+        await self._call(self._client.start_calibration)
 
     # -------------------------------
     # region Config
@@ -128,19 +136,19 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def request_distance(self, distance: int):
         """Request a distance to move to."""
-        await self._client.request_distance(distance)
+        await self._call(self._client.request_distance, distance)
         self.async_set_updated_data(replace(self.data, requested_distance=distance))
 
     async def request_rotation(self, rotation: int):
         """Request a rotation to move to."""
-        await self._client.request_rotation(rotation)
+        await self._call(self._client.request_rotation, rotation)
         self.async_set_updated_data(replace(self.data, requested_rotation=rotation))
 
     async def set_authorised_user_pin(self, pin: str):
         """Set or remove pin for authorised user."""
-        await self._client.set_authorised_user_pin(pin)
+        await self._call(self._client.set_authorised_user_pin, pin)
         remove = pin == "0000"
-        pin_setting = await self._client.read_pin_settings()
+        pin_setting = await self._call(self._client.read_pin_settings)
         if remove and pin_setting != VogelsMotionMountPinSettings.Deactivated:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -159,13 +167,13 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
                     "expected": str(VogelsMotionMountPinSettings.Deactivated),
                 },
             )
-        await self.disconnect()
+        await self._call(self.disconnect)
         self.async_set_updated_data(await self._async_update_data())
 
     async def set_automove(self, automove: VogelsMotionMountAutoMoveType):
         """Set type of automove."""
-        await self._client.set_automove(automove)
-        actual = await self._client.read_automove()
+        await self._call(self._client.set_automove, automove)
+        actual = await self._call(self._client.read_automove)
         self.async_set_updated_data(replace(self.data, automove=actual))
         if actual != automove:
             raise ServiceValidationError(
@@ -179,8 +187,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_freeze_preset(self, preset_index: int):
         """Set a preset to move to when automove is executed."""
-        await self._client.set_freeze_preset(preset_index)
-        actual = await self._client.read_freeze_preset_index()
+        await self._call(self._client.set_freeze_preset, preset_index)
+        actual = await self._call(self._client.read_freeze_preset_index)
         self.async_set_updated_data(replace(self.data, freeze_preset_index=actual))
         if actual != preset_index:
             raise ServiceValidationError(
@@ -194,8 +202,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_multi_pin_features(self, features: VogelsMotionMountMultiPinFeatures):
         """Set features the authorised user is eligible to change."""
-        await self._client.set_multi_pin_features(features)
-        actual = await self._client.read_multi_pin_features()
+        await self._call(self._client.set_multi_pin_features, features)
+        actual = await self._call(self._client.read_multi_pin_features)
         self.async_set_updated_data(replace(self.data, multi_pin_features=actual))
         if actual != features:
             raise ServiceValidationError(
@@ -209,8 +217,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_name(self, name: str):
         """Set name of the Vogels Motion Mount."""
-        await self._client.set_name(name)
-        actual = await self._client.read_name()
+        await self._call(self._client.set_name, name)
+        actual = await self._call(self._client.read_name)
         self.async_set_updated_data(replace(self.data, name=actual))
         if actual != name:
             raise ServiceValidationError(
@@ -224,8 +232,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_preset(self, preset: VogelsMotionMountPreset):
         """Set the data of a preset."""
-        await self._client.set_preset(preset)
-        actual = await self._client.read_preset(preset.index)
+        await self._call(self._client.set_preset, preset)
+        actual = await self._call(self._client.read_preset, preset.index)
         presets = self.data.presets.copy()
         presets[preset.index] = actual
         self.async_set_updated_data(replace(self.data, presets=presets))
@@ -241,9 +249,9 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_supervisior_pin(self, pin: str):
         """Set or remove pin for a supervisior."""
-        await self._client.set_supervisior_pin(pin)
+        await self._call(self._client.set_supervisior_pin, pin)
         remove = pin == "0000"
-        pin_setting = await self._client.read_pin_settings()
+        pin_setting = await self._call(self._client.read_pin_settings)
         if remove and pin_setting != VogelsMotionMountPinSettings.Single:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -267,8 +275,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
 
     async def set_tv_width(self, width: int):
         """Set the width of the tv."""
-        await self._client.set_tv_width(width)
-        actual = await self._client.read_tv_width()
+        await self._call(self._client.set_tv_width, width)
+        actual = await self._call(self._client.read_tv_width)
         self.async_set_updated_data(replace(self.data, tv_width=actual))
         if actual != width:
             raise ServiceValidationError(
@@ -315,8 +323,8 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             self._check_permission_status(permissions)
 
             return VogelsMotionMountData(
-                available=True,
                 automove=await self._client.read_automove(),
+                available=True,
                 connected=self.data.connected if self.data is not None else False,
                 distance=await self._client.read_distance(),
                 freeze_preset_index=await self._client.read_freeze_preset_index(),
@@ -329,16 +337,74 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
                 versions=await self._client.read_versions(),
                 permissions=permissions,
             )
+        except VogelsMotionMountClientAuthenticationError as err:
+            self._set_unavailable()
+            # reraise auth issues
+            _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
+            raise ConfigEntryAuthFailed from err
+        except BleakConnectionError as err:
+            # treat BleakConnectionError as device not found
+            raise UpdateFailed(translation_key="error_device_not_found") from err
+        except BleakNotFoundError as err:
+            self._set_unavailable()
+            _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
+            # treat BleakNotFoundError as device not found
+            raise UpdateFailed(translation_key="error_device_not_found") from err
         except Exception as err:
+            self._set_unavailable()
             # Device unreachable → tell HA gracefully
-            raise UpdateFailed(f"Update failed due to: {err}") from err
+            _LOGGER.debug("_async_update_data Exception %s", repr(err))
+            raise UpdateFailed(
+                translation_key="error_unknown",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
     def _check_permission_status(self, permissions: VogelsMotionMountPermissions):
         if (
-            permissions.auth_status is not None and permissions.auth_status.auth_type
+            permissions.auth_status is not None
+            and permissions.auth_status.auth_type
             == VogelsMotionMountAuthenticationType.Wrong
         ):
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="error_invalid_authentication",
+            _LOGGER.debug(
+                "Authentication failed with auth status %s", permissions.auth_status
             )
+            raise ConfigEntryAuthFailed(translation_key="error_invalid_authentication")
+
+    async def _call(self, func, *args, **kwargs):
+        """Execute a BLE client call safely."""
+        try:
+            return await func(*args, **kwargs)
+        except VogelsMotionMountClientAuthenticationError as err:
+            # reraise auth issues
+            _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
+            raise ConfigEntryAuthFailed from err
+        except BleakConnectionError as err:
+            self._set_unavailable()
+            # treat BleakConnectionError as device not found
+            raise ServiceValidationError(
+                translation_key="error_device_not_found"
+            ) from err
+        except BleakNotFoundError as err:
+            self._set_unavailable()
+            _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
+            # treat BleakNotFoundError as device not found
+            raise ServiceValidationError(
+                translation_key="error_device_not_found"
+            ) from err
+        except Exception as err:
+            self._set_unavailable()
+            # Device unreachable → tell HA gracefully
+            _LOGGER.debug("_async_update_data Exception %s", repr(err))
+            raise ServiceValidationError(
+                translation_key="error_unknown",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
+    def _set_unavailable(self):
+        _LOGGER.debug("_set_unavailable width data %s", str(self.data))
+        # trigger rediscovery for the device
+        bluetooth.async_rediscover_address(self.hass, self.config_entry.data[CONF_MAC])
+        if self.data is None:  # may be called before data is available
+            return
+        # tell HA to refresh all entities
+        self.async_set_updated_data(replace(self.data, available=False))

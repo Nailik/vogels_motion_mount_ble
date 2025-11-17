@@ -11,14 +11,16 @@ from custom_components.vogels_motion_mount_ble import (
     async_setup_entry,
     async_unload_entry,
 )
+from custom_components.vogels_motion_mount_ble.const import BLE_CALLBACK, DOMAIN
 from custom_components.vogels_motion_mount_ble.data import (
     VogelsMotionMountAuthenticationType,
 )
+from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
     IntegrationError,
 )
 
@@ -111,8 +113,48 @@ async def test_async_setup_entry_device_not_found(
     """Device discovery fails."""
     mock_dev.return_value = None
 
-    with pytest.raises(ConfigEntryNotReady, match="error_device_not_found"):
-        await async_setup_entry(hass, mock_config_entry)
+    # Patch async_register_callback to capture the callback
+    captured_callback = None
+
+    # Patch async_register_callback to capture the callback passed by the integration
+    with patch.object(bluetooth, "async_register_callback") as mock_register:
+
+        def side_effect(hass_arg, callback, filter, mode):
+            nonlocal captured_callback
+            captured_callback = callback
+            return lambda: None  # unregister function
+
+        mock_register.side_effect = side_effect
+
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(hass, mock_config_entry)
+
+    # ble callback was created
+    assert hass.data[DOMAIN][mock_config_entry.entry_id].get(BLE_CALLBACK) is not None
+
+    # Ensure the integration passed a callback
+    assert captured_callback is not None
+
+    # Patch async_create_task to track scheduled coroutines
+    scheduled_tasks = []
+    hass.async_create_task = lambda coro: scheduled_tasks.append(coro)
+    hass.config_entries.async_reload = AsyncMock()
+
+    # Create a mock BLE device with the correct address
+    mock_info = MagicMock()
+    mock_info.address = MOCKED_CONF_MAC
+
+    # Trigger the callback manually
+    captured_callback(mock_info, None)
+
+    # Run the scheduled tasks
+    for task in scheduled_tasks:
+        await task
+
+    # Assert async_reload was called for the correct entry
+    hass.config_entries.async_reload.assert_awaited_once_with(
+        mock_config_entry.entry_id
+    )
 
 
 @pytest.mark.asyncio
@@ -128,7 +170,33 @@ async def test_async_setup_entry_refresh_failure(
     )
     mock_config_entry.runtime_data.data.permissions.auth_status.cooldown = 0
 
-    with pytest.raises(ConfigEntryError, match="refresh failed"):
+    with pytest.raises(ConfigEntryNotReady, match="refresh failed"):
+        await async_setup_entry(hass, mock_config_entry)
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_propagates_auth_error(
+    mock_config_entry: MagicMock, hass: HomeAssistant
+):
+    """Coordinator refresh raises exception."""
+    mock_config_entry.runtime_data.async_config_entry_first_refresh.side_effect = (
+        ConfigEntryAuthFailed("refresh failed")
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed, match="refresh failed"):
+        await async_setup_entry(hass, mock_config_entry)
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_propagates_homeassistanterror_as_entry_not_ready(
+    mock_config_entry: MagicMock, hass: HomeAssistant
+):
+    """Coordinator refresh raises exception."""
+    mock_config_entry.runtime_data.async_config_entry_first_refresh.side_effect = (
+        HomeAssistantError("refresh failed")
+    )
+
+    with pytest.raises(ConfigEntryNotReady, match="refresh failed"):
         await async_setup_entry(hass, mock_config_entry)
 
 
