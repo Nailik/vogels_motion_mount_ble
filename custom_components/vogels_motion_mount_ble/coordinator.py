@@ -119,7 +119,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
     # -------------------------------
 
     async def disconnect(self):
-        """Disconnect form client."""
+        """Disconnect from client."""
         await self._call(self._client.disconnect)
 
     async def select_preset(self, preset_index: int):
@@ -338,20 +338,21 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
                 permissions=permissions,
             )
         except VogelsMotionMountClientAuthenticationError as err:
-            self._set_unavailable()
+            await self._disconnect_and_set_unavailable()
             # reraise auth issues
             _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
             raise ConfigEntryAuthFailed from err
         except BleakConnectionError as err:
+            await self._disconnect_and_set_unavailable()
             # treat BleakConnectionError as device not found
             raise UpdateFailed(translation_key="error_device_not_found") from err
         except BleakNotFoundError as err:
-            self._set_unavailable()
+            await self._disconnect_and_set_unavailable()
             _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
             # treat BleakNotFoundError as device not found
             raise UpdateFailed(translation_key="error_device_not_found") from err
         except Exception as err:
-            self._set_unavailable()
+            await self._disconnect_and_set_unavailable()
             # Device unreachable → tell HA gracefully
             _LOGGER.debug("_async_update_data Exception %s", repr(err))
             raise UpdateFailed(
@@ -379,20 +380,20 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
             raise ConfigEntryAuthFailed from err
         except BleakConnectionError as err:
-            self._set_unavailable()
+            await self._disconnect_and_set_unavailable()
             # treat BleakConnectionError as device not found
             raise ServiceValidationError(
                 translation_key="error_device_not_found"
             ) from err
         except BleakNotFoundError as err:
-            self._set_unavailable()
+            await self._disconnect_and_set_unavailable()
             _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
             # treat BleakNotFoundError as device not found
             raise ServiceValidationError(
                 translation_key="error_device_not_found"
             ) from err
         except Exception as err:
-            self._set_unavailable()
+            await self._disconnect_and_set_unavailable()
             # Device unreachable → tell HA gracefully
             _LOGGER.debug("_async_update_data Exception %s", repr(err))
             raise ServiceValidationError(
@@ -400,8 +401,16 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+    async def _disconnect_and_set_unavailable(self):
+        try:
+            await self.disconnect()
+        except Exception as err:  # noqa: BLE001
+           _LOGGER.debug("disconnect_and_set_unavailable disconnect Exception %s", repr(err))
+
+        self._set_unavailable()
+
     def _set_unavailable(self):
-        _LOGGER.debug("_set_unavailable width data %s", str(self.data))
+        _LOGGER.debug("_set_unavailable with data %s", str(self.data))
         # trigger rediscovery for the device
         bluetooth.async_rediscover_address(self.hass, self.config_entry.data[CONF_MAC])
         if self.data is None:  # may be called before data is available

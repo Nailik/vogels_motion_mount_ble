@@ -1,7 +1,7 @@
 """Tests for the coordinator."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import BleakConnectionError, BleakNotFoundError
@@ -164,6 +164,18 @@ async def test_refresh_data(
     """Test refresh data action."""
     await coordinator.refresh_data()
     mock_client.read_distance.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_refresh_data_error(
+    coordinator: VogelsMotionMountBleCoordinator,
+    mock_client: VogelsMotionMountBluetoothClient,
+):
+    """Test refresh data failure action."""
+    mock_client.read_permissions = Mock(side_effect=Exception("Error message"))
+    coordinator.disconnect = MagicMock()
+    await coordinator.refresh_data()
+    coordinator.disconnect.assert_called()
 
 
 # -----------------------------
