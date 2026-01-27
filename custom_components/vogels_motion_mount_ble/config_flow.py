@@ -119,12 +119,17 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             return ValidationResult({CONF_ERROR: "invalid_mac_code"})
 
         try:
-            _LOGGER.debug("await async_ble_device_from_address")
-            device = bluetooth.async_ble_device_from_address(
-                hass=self.hass,
-                address=user_input[CONF_MAC],
-                connectable=True,
-            )
+            # Use device from discovery_info if available
+            if self._discovery_info is not None:
+                _LOGGER.debug("Using device from discovery_info")
+                device = self._discovery_info.device
+            else:
+                _LOGGER.debug("await async_ble_device_from_address")
+                device = bluetooth.async_ble_device_from_address(
+                    hass=self.hass,
+                    address=user_input[CONF_MAC],
+                    connectable=True,
+                )
 
             if device is None:
                 return ValidationResult({CONF_ERROR: "error_device_not_found"})
