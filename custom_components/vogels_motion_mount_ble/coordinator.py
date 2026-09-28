@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .client import (
     VogelsMotionMountBluetoothClient,
     VogelsMotionMountClientAuthenticationError,
+    VogelsMotionMountClientPermissionError,
 )
 from .const import CONF_MAC, CONF_PIN, DOMAIN
 from .data import (
@@ -37,6 +38,13 @@ from .data import (
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
+
+
+def _pin_modes(bedingung) -> str:
+    """List the pin modes satisfying a condition, for an error message."""
+    return ", ".join(
+        str(modus) for modus in VogelsMotionMountPinSettings if bedingung(modus)
+    )
 
 
 class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountData]):
@@ -149,22 +157,22 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         await self._call(self._client.set_authorised_user_pin, pin)
         remove = pin == "0000"
         pin_setting = await self._call(self._client.read_pin_settings)
-        if remove and pin_setting != VogelsMotionMountPinSettings.Deactivated:
+        if remove and pin_setting.authorised_user_pin_set:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="not_saved_remove_authorised_user_pin",
                 translation_placeholders={
                     "actual": str(pin_setting),
-                    "expected": str(VogelsMotionMountPinSettings.Deactivated),
+                    "expected": _pin_modes(lambda m: not m.authorised_user_pin_set),
                 },
             )
-        if not remove and pin_setting == VogelsMotionMountPinSettings.Deactivated:
+        if not remove and not pin_setting.authorised_user_pin_set:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="not_saved_authorised_user_pin",
                 translation_placeholders={
                     "actual": str(pin_setting),
-                    "expected": str(VogelsMotionMountPinSettings.Deactivated),
+                    "expected": _pin_modes(lambda m: m.authorised_user_pin_set),
                 },
             )
         await self._call(self.disconnect)
@@ -252,22 +260,22 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         await self._call(self._client.set_supervisior_pin, pin)
         remove = pin == "0000"
         pin_setting = await self._call(self._client.read_pin_settings)
-        if remove and pin_setting != VogelsMotionMountPinSettings.Single:
+        if remove and pin_setting.supervisor_pin_set:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="not_saved_remove_supervisior_pin",
                 translation_placeholders={
                     "actual": str(pin_setting),
-                    "expected": str(VogelsMotionMountPinSettings.Single),
+                    "expected": _pin_modes(lambda m: not m.supervisor_pin_set),
                 },
             )
-        if not remove and pin_setting != VogelsMotionMountPinSettings.Multi:
+        if not remove and not pin_setting.supervisor_pin_set:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="not_saved_supervisior_pin",
                 translation_placeholders={
                     "actual": str(pin_setting),
-                    "expected": str(VogelsMotionMountPinSettings.Multi),
+                    "expected": _pin_modes(lambda m: m.supervisor_pin_set),
                 },
             )
         await self.disconnect()
@@ -351,6 +359,16 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
             # treat BleakNotFoundError as device not found
             raise UpdateFailed(translation_key="error_device_not_found") from err
+        except ConfigEntryAuthFailed as err:
+            await self._disconnect_and_set_unavailable()
+            # _check_permission_status raises this directly when the mount no
+            # longer accepts what is stored, which happens as soon as its
+            # access level is changed in the app. It has to reach Home
+            # Assistant as an auth failure: wrapped by the broad handler below
+            # it becomes a plain UpdateFailed, no reauth flow is ever started,
+            # and the entry retries forever on a pin that cannot work again.
+            _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
+            raise
         except Exception as err:
             await self._disconnect_and_set_unavailable()
             # Device unreachable → tell HA gracefully
@@ -375,6 +393,15 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         """Execute a BLE client call safely."""
         try:
             return await func(*args, **kwargs)
+        except VogelsMotionMountClientPermissionError as err:
+            # The pin is right, this write is not allowed with it. Treating it
+            # as an auth failure asked the user to sign in again with a pin
+            # that already works, and escaped config flows as a 500 instead of
+            # a message.
+            _LOGGER.debug("_call missing permission %s", str(err))
+            raise ServiceValidationError(
+                translation_key="missing_permission",
+            ) from err
         except VogelsMotionMountClientAuthenticationError as err:
             # reraise auth issues
             _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
@@ -405,7 +432,9 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         try:
             await self.disconnect()
         except Exception as err:  # noqa: BLE001
-           _LOGGER.debug("disconnect_and_set_unavailable disconnect Exception %s", repr(err))
+            _LOGGER.debug(
+                "disconnect_and_set_unavailable disconnect Exception %s", repr(err)
+            )
 
         self._set_unavailable()
 

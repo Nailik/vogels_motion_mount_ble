@@ -7,11 +7,30 @@ from enum import Enum
 
 
 class VogelsMotionMountPinSettings(Enum):
-    """Pin settings."""
+    """Which pins the mount currently has set.
+
+    The low two bits say which one exists: bit 0 the authorised user's, bit 1
+    the supervisor's. Leaving out a combination is not a cosmetic gap — the
+    value is read on every update, so a mount in a mode with no member here
+    fails the whole fetch with "14 is not a valid VogelsMotionMountPinSettings"
+    and every entity goes unavailable. 14 is reached by opening control to
+    everyone while keeping settings for the supervisor.
+    """
 
     Deactivated = 12
     Single = 13
+    Supervisor = 14
     Multi = 15
+
+    @property
+    def authorised_user_pin_set(self) -> bool:
+        """Whether operating the mount needs a pin."""
+        return bool(self.value & 1)
+
+    @property
+    def supervisor_pin_set(self) -> bool:
+        """Whether changing settings needs the supervisor's pin."""
+        return bool(self.value & 2)
 
 
 class VogelsMotionMountAuthenticationType(Enum):
