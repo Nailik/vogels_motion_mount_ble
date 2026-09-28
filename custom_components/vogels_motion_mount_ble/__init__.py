@@ -162,12 +162,21 @@ async def async_setup_entry(
 async def async_reload_entry(
     hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
 ) -> None:
-    """Reload config entry."""
-    _LOGGER.debug(
-        "async_reload_entry async_reload with pin %s", config_entry.data["conf_pin"]
-    )
-    await async_unload_entry(hass, config_entry)
-    await async_setup_entry(hass, config_entry)
+    """Reload the entry after its data or options changed.
+
+    Unloading and setting up by hand only works from a loaded entry. An entry
+    that failed to authenticate never forwarded its platforms, so unloading
+    them raises "Config entry was never loaded!", the entry lands in
+    FAILED_UNLOAD and the setup that follows is refused as well — which is the
+    state reconfiguring a rejected pin used to leave behind, the one case
+    where reconfiguring is what a user reaches for. Home Assistant schedules a
+    reload safely from any state, and its frame helper asks update listeners
+    to use it.
+
+    The pin is no longer logged either. It only showed at debug level, which
+    is exactly what gets switched on to investigate a failing login.
+    """
+    hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(

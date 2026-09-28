@@ -92,7 +92,16 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                         read_only=not name_editable,
                     )
                 ),
-                vol.Optional(CONF_PIN, default=pin): vol.All(
+                # Prefilled, not defaulted. A default is substituted by
+                # voluptuous whenever the key is absent, so an emptied field
+                # came back carrying the old pin and no pin could ever be
+                # taken back.
+                vol.Optional(
+                    CONF_PIN,
+                    description={"suggested_value": pin}
+                    if pin is not UNDEFINED
+                    else None,
+                ): vol.All(
                     NumberSelector(
                         NumberSelectorConfig(
                             min=0,
@@ -231,7 +240,11 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
                     entry=self._get_reauth_entry(),
-                    data_updates=user_input,
+                    # Replace rather than merge. entry.data holds exactly
+                    # the fields of this form, and data_updates keeps what
+                    # the form leaves out, so a cleared pin field kept the
+                    # old pin.
+                    data=user_input,
                 )
         return self.async_show_form(
             step_id="reauth",
@@ -258,7 +271,11 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
                     entry=self._get_reconfigure_entry(),
-                    data_updates=user_input,
+                    # Replace rather than merge. entry.data holds exactly
+                    # the fields of this form, and data_updates keeps what
+                    # the form leaves out, so a cleared pin field kept the
+                    # old pin.
+                    data=user_input,
                 )
         return self.async_show_form(
             step_id="reconfigure",

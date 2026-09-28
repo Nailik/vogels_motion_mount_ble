@@ -256,27 +256,21 @@ async def test_setup_entry_propagates_homeassistant_error(
 
 @pytest.mark.asyncio
 async def test_async_reload_entry(mock_config_entry: MagicMock):
-    """Reloading entry."""
-    # Mock HomeAssistant and config_entry
+    """Reloading is handed to Home Assistant, not done by hand.
+
+    Unloading and setting up here only works from a loaded entry. After a
+    rejected pin the entry never forwarded its platforms, so unloading them
+    raised "Config entry was never loaded!" and left it in FAILED_UNLOAD,
+    where the setup that followed was refused too. Reconfiguring the pin is
+    exactly what a user does in that state.
+    """
     hass = MagicMock(spec=HomeAssistant)
-    async_unload = AsyncMock()
-    async_setup_entry = AsyncMock()
 
-    # Patch async_unload_entry and async_setup_entry to track calls
-    with (
-        patch(
-            "custom_components.vogels_motion_mount_ble.async_unload_entry", async_unload
-        ),
-        patch(
-            "custom_components.vogels_motion_mount_ble.async_setup_entry",
-            async_setup_entry,
-        ),
-    ):
-        await async_reload_entry(hass, mock_config_entry)
+    await async_reload_entry(hass, mock_config_entry)
 
-        # Assert reloading was called with correct entry_id
-        async_unload.assert_awaited_once_with(hass, mock_config_entry)
-        async_setup_entry.assert_awaited_once_with(hass, mock_config_entry)
+    hass.config_entries.async_schedule_reload.assert_called_once_with(
+        mock_config_entry.entry_id
+    )
 
 
 # -------------------------------
