@@ -81,7 +81,7 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
 
 
 async def _set_authorised_user_pin(call: ServiceCall) -> None:
-    # call.data carries the pin, which does not belong in a log file.
+    # do not log call.data, it contains the pin
     _LOGGER.debug("Set authorised user pin service called")
     try:
         await _get_coordinator(call).set_authorised_user_pin(

@@ -473,9 +473,7 @@ async def test_prefilled_reconfigure_flow_form(hass: HomeAssistant) -> None:
     assert validated[CONF_MAC] == MOCKED_CONF_MAC
     assert validated[CONF_NAME] == MOCKED_CONF_NAME
 
-    # The pin is suggested, not defaulted. A default is substituted whenever
-    # the key is absent, so an emptied field came back carrying the old pin
-    # and no pin could be removed. The form still shows it.
+    # pin is suggested, not defaulted, so it can be removed
     assert CONF_PIN not in validated
     pin_key = next(key for key in schema.schema if key == CONF_PIN)
     assert pin_key.description == {"suggested_value": MOCKED_CONF_PIN}

@@ -367,12 +367,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             ) from err
         except ConfigEntryAuthFailed as err:
             await self._disconnect_and_set_unavailable()
-            # _check_permission_status raises this directly when the mount no
-            # longer accepts what is stored, which happens as soon as its
-            # access level is changed in the app. It has to reach Home
-            # Assistant as an auth failure: wrapped by the broad handler below
-            # it becomes a plain UpdateFailed, no reauth flow is ever started,
-            # and the entry retries forever on a pin that cannot work again.
+            # reraise auth issues, so Home Assistant starts a reauth flow
             _LOGGER.debug("_async_update_data ConfigEntryAuthFailed %s", str(err))
             raise
         except Exception as err:
@@ -404,10 +399,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         try:
             return await func(*args, **kwargs)
         except VogelsMotionMountClientPermissionError as err:
-            # The pin is right, this write is not allowed with it. Treating it
-            # as an auth failure asked the user to sign in again with a pin
-            # that already works, and escaped config flows as a 500 instead of
-            # a message.
+            # pin is valid but has no permission, no reauth needed
             _LOGGER.debug("_call missing permission %s", str(err))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

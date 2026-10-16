@@ -58,12 +58,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class VogelsMotionMountClientPermissionError(Exception):
-    """The pin is accepted, but it does not carry the right for this write.
-
-    Distinct from an authentication failure on purpose. The credential is
-    correct, so asking the user to sign in again would send them to change a
-    pin that is already right.
-    """
+    """Exception class if pin is valid but has no permission for this action."""
 
 
 class VogelsMotionMountClientAuthenticationError(Exception):
@@ -128,15 +123,9 @@ class VogelsMotionMountBluetoothClient:
         return VogelsMotionMountAutoMoveType(int.from_bytes(data, "big"))
 
     async def read_distance(self) -> int:
-        """Read and return the current distance value from the Vogels Motion Mount.
-
-        Clamped the way `read_preset` clamps a stored one. The mount reports
-        slightly past its own scale at the extremes, and a live value outside
-        the range leaves the number entity outside its own min and max and can
-        never equal a stored preset, so a preset at the extreme would never be
-        recognised as the current one.
-        """
+        """Read and return the current distance value from the Vogels Motion Mount."""
         data = await self._read(CHAR_DISTANCE_UUID)
+        # mount reports slightly out of range at the extremes
         return max(0, min(int.from_bytes(data, "big"), 100))
 
     async def read_freeze_preset_index(self) -> int:
@@ -193,18 +182,9 @@ class VogelsMotionMountBluetoothClient:
         )
 
     async def read_rotation(self) -> int:
-        """Read and return the current rotation value from the Vogels Motion Mount.
-
-        Rotation is signed on the wire, which is how `request_rotation` writes
-        it, `read_preset` decodes it and the notification callback handles it.
-        Reading it unsigned turned every left turn into a number near 65536,
-        so after a restart — the one time the value is read rather than
-        received — the position matched no preset.
-
-        Clamped for the same reason `read_distance` is: a mount at its right
-        hand extreme reports 101, one past the range it accepts for writing.
-        """
+        """Read and return the current rotation value from the Vogels Motion Mount."""
         data = await self._read(CHAR_ROTATION_UUID)
+        # mount reports 101 at the right extreme
         return max(-100, min(int.from_bytes(data, "big", signed=True), 100))
 
     async def read_tv_width(self) -> int:
@@ -428,19 +408,10 @@ class VogelsMotionMountBluetoothClient:
     def _has_write_permission(
         self, char_uuid: str, permissions: VogelsMotionMountPermissions
     ) -> bool:
-        # Moving the mount and recalling a preset are control, not settings.
-        # The mount grants control to every authenticated user — that is what
-        # "allow control for authorised users" means in the app — and reports
-        # no separate flag for it. Falling through to change_settings locked
-        # an authorised user out of the one thing the role exists for.
+        # moving and recalling presets is allowed for every authenticated user
         if char_uuid in (CHAR_DISTANCE_UUID, CHAR_ROTATION_UUID, CHAR_PRESET_UUID):
             return True
 
-        # The two preset constants are lists of seven uuids, one per slot, so
-        # comparing a single uuid to them with == is never true. Both branches
-        # were dead and every preset write fell through to change_settings,
-        # which denied exactly the authorised user that change_presets exists
-        # to permit.
         return (
             (char_uuid in CHAR_PRESET_UUIDS and permissions.change_presets)
             or (char_uuid in CHAR_PRESET_NAMES_UUIDS and permissions.change_presets)
