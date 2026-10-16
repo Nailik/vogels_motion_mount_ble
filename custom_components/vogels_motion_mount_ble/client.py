@@ -350,7 +350,12 @@ class VogelsMotionMountBluetoothClient:
                 await client.disconnect()
                 await clear_cache(self._device.address)
                 client = await self._establish_connection(use_services_cache=False)
-                pers = await get_permissions(client, self._pin)
+                try:
+                    pers = await get_permissions(client, self._pin)
+                except Exception:
+                    # do not leave the retried connection open
+                    await client.disconnect()
+                    raise
 
             _LOGGER.debug("Connected with permissions %s", pers)
             self._session_data = _VogelsMotionMountSessionData(
