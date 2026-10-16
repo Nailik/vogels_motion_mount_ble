@@ -353,12 +353,18 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         except BleakConnectionError as err:
             await self._disconnect_and_set_unavailable()
             # treat BleakConnectionError as device not found
-            raise UpdateFailed(translation_key="error_device_not_found") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="error_device_not_found",
+            ) from err
         except BleakNotFoundError as err:
             await self._disconnect_and_set_unavailable()
             _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
             # treat BleakNotFoundError as device not found
-            raise UpdateFailed(translation_key="error_device_not_found") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="error_device_not_found",
+            ) from err
         except ConfigEntryAuthFailed as err:
             await self._disconnect_and_set_unavailable()
             # _check_permission_status raises this directly when the mount no
@@ -374,6 +380,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             # Device unreachable → tell HA gracefully
             _LOGGER.debug("_async_update_data Exception %s", repr(err))
             raise UpdateFailed(
+                translation_domain=DOMAIN,
                 translation_key="error_unknown",
                 translation_placeholders={"error": repr(err)},
             ) from err
@@ -387,7 +394,10 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             _LOGGER.debug(
                 "Authentication failed with auth status %s", permissions.auth_status
             )
-            raise ConfigEntryAuthFailed(translation_key="error_invalid_authentication")
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="error_invalid_authentication",
+            )
 
     async def _call(self, func, *args, **kwargs):
         """Execute a BLE client call safely."""
@@ -400,6 +410,7 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             # a message.
             _LOGGER.debug("_call missing permission %s", str(err))
             raise ServiceValidationError(
+                translation_domain=DOMAIN,
                 translation_key="missing_permission",
             ) from err
         except VogelsMotionMountClientAuthenticationError as err:
@@ -410,20 +421,23 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
             await self._disconnect_and_set_unavailable()
             # treat BleakConnectionError as device not found
             raise ServiceValidationError(
-                translation_key="error_device_not_found"
+                translation_domain=DOMAIN,
+                translation_key="error_device_not_found",
             ) from err
         except BleakNotFoundError as err:
             await self._disconnect_and_set_unavailable()
             _LOGGER.debug("_async_update_data BleakNotFoundError %s", str(err))
             # treat BleakNotFoundError as device not found
             raise ServiceValidationError(
-                translation_key="error_device_not_found"
+                translation_domain=DOMAIN,
+                translation_key="error_device_not_found",
             ) from err
         except Exception as err:
             await self._disconnect_and_set_unavailable()
             # Device unreachable → tell HA gracefully
             _LOGGER.debug("_async_update_data Exception %s", repr(err))
             raise ServiceValidationError(
+                translation_domain=DOMAIN,
                 translation_key="error_unknown",
                 translation_placeholders={"error": repr(err)},
             ) from err

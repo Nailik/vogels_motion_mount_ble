@@ -72,6 +72,9 @@
     "not_saved_supervisior_pin": {
       "message": "Pin not saved on device. Expected type {expected} for pin settings actual type {actual}."
     },
+    "not_saved_automove": {
+      "message": "Automove change not saved on device. Expected {expected} actual {actual}."
+    },
     "not_saved_freeze_preset_index": {
       "message": "Freeze preset index change not saved on device. Expected {expected} actual {actual}."
     },
@@ -92,6 +95,15 @@
     },
     "error_unknown": {
       "message": "An unknown error occurred while trying to connect to the device. {error}"
+    },
+    "error_invalid_authentication": {
+      "message": "Authentication failed, missing or invalid pin."
+    },
+    "error_invalid_authentication_cooldown": {
+      "message": "Authentication failed, too many attempts. You can try again at {retry_at}."
+    },
+    "invalid_ha_version": {
+      "message": "Vogels Motion Mount BLE requires Home Assistant Version {version}."
     }
   },
   "config": {
@@ -214,6 +226,12 @@
           "6": "Preset 6",
           "7": "Preset 7"
         }
+      },
+      "current_preset": {
+        "name": "Current preset",
+        "state": {
+          "0": "Default"
+        }
       }
     },
     "sensor": {
@@ -240,6 +258,7 @@
         "state": {
           "12": "Off",
           "13": "Single",
+          "14": "Supervisor",
           "15": "Multi"
         }
       },

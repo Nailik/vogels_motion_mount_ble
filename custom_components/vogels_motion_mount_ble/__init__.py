@@ -51,6 +51,7 @@ async def async_setup(
     _LOGGER.debug("async_setup called with config_entry: %s", entry)
     if version.parse(ha_version) < version.parse(MIN_HA_VERSION):
         raise IntegrationError(
+            translation_domain=DOMAIN,
             translation_key="invalid_ha_version",
             translation_placeholders={"version": MIN_HA_VERSION},
         )
@@ -100,6 +101,7 @@ async def async_setup_entry(
                 unregister_ble_callback
             )
         raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
             translation_key="error_device_not_found",
         )
 
@@ -126,6 +128,7 @@ async def async_setup_entry(
         # do not reload if setup failed
         unsub_update_listener()
         raise ConfigEntryNotReady(
+            translation_domain=err.translation_domain or DOMAIN,
             translation_key=err.translation_key,
             translation_placeholders=err.translation_placeholders,
         ) from err
@@ -134,6 +137,7 @@ async def async_setup_entry(
         # do not reload if setup failed
         unsub_update_listener()
         raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
             translation_key="error_unknown",
             translation_placeholders={"error": repr(err)},
         ) from err
@@ -145,12 +149,14 @@ async def async_setup_entry(
                 seconds=permissions.auth_status.cooldown
             )
             raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
                 translation_key="error_invalid_authentication_cooldown",
                 translation_placeholders={
                     "retry_at": retry_time.strftime("%Y-%m-%d %H:%M:%S")
                 },
             )
         raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
             translation_key="error_invalid_authentication",
         )
 

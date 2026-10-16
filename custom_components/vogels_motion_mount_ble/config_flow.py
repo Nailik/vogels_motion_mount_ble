@@ -37,7 +37,7 @@ class ValidationResult:
     """Result of the validation, errors is empty if successful."""
 
     errors: dict[str, str]
-    description_placeholders: dict[str, Any] | None = None
+    description_placeholders: dict[str, str] | None = None
 
 
 class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -181,7 +181,7 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Setting Exception: %s", err)
             return ValidationResult(
                 errors={CONF_ERROR: "error_unknown"},
-                description_placeholders={"error": err},
+                description_placeholders={"error": str(err) or type(err).__name__},
             )
         return ValidationResult({})
 

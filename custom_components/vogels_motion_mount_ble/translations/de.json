@@ -1,0 +1,364 @@
+{
+  "exceptions": {
+    "device_id_not_specified": {
+      "message": "Erforderliche device_id nicht angegeben."
+    },
+    "device_missing_entry": {
+      "message": "Gerät mit der ID {device_id} nicht gefunden."
+    },
+    "device_invalid_runtime_data": {
+      "message": "Gerät mit der ID {device_id} hat ein ungültiges Laufzeitdatenobjekt {runtime_data}."
+    },
+    "missing_permission": {
+      "message": "Der Benutzer hat keine Berechtigung, diese Einstellung zu ändern."
+    },
+    "invalid_distance": {
+      "message": "Ungültiger Abstand {actual}, muss in {expected} liegen."
+    },
+    "invalid_tv_width": {
+      "message": "Ungültige TV-Breite {actual}, muss in {expected} liegen."
+    },
+    "invalid_rotation": {
+      "message": "Ungültige Drehung {actual}, muss in {expected} liegen."
+    },
+    "invalid_preset_index": {
+      "message": "Ungültiger Preset-Index {actual}, muss in {expected} liegen."
+    },
+    "invalid_multi_pin_settings_not_active": {
+      "message": "Um die Multi-PIN-Funktionen zu ändern, müssen sowohl die PIN für autorisierte Benutzer als auch die Supervisor-PIN gesetzt sein."
+    },
+    "invalid_preset_index_not_exists": {
+      "message": "Ungültiger Preset-Index, das Preset an Position {preset_index} existiert nicht."
+    },
+    "invalid_name": {
+      "message": "Ungültiger Name {name} mit Länge {actual}, die maximale Länge ist {expected}."
+    },
+    "invalid_status_remove_authorised_user_supervisior_set": {
+      "message": "Die PIN für autorisierte Benutzer kann nicht entfernt werden, solange eine Supervisor-PIN gesetzt ist."
+    },
+    "invalid_status_remove_supervisior_not_set": {
+      "message": "Die Supervisor-PIN kann nicht aktiviert werden, wenn keine Supervisor-PIN gesetzt ist."
+    },
+    "invalid_status_supervisior_requires_authorised_user": {
+      "message": "Die Supervisor-PIN kann nicht gesetzt werden, solange keine PIN für autorisierte Benutzer gesetzt ist."
+    },
+    "invalid_auto_move_type": {
+      "message": "Ungültiger Automove-Typ {actual}, muss einer von {expected} sein."
+    },
+    "invalid_pin_length": {
+      "message": "Ungültige PIN-Länge {actual}, die Länge muss {expected} sein."
+    },
+    "invalid_pin_characters": {
+      "message": "Alle PIN-Zeichen müssen in [0-9] liegen."
+    },
+    "not_saved_name": {
+      "message": "Namensänderung wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
+    },
+    "not_saved_preset": {
+      "message": "Preset-Änderung wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
+    },
+    "not_saved_tv_width": {
+      "message": "Änderung der TV-Breite wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
+    },
+    "not_saved_remove_authorised_user_pin": {
+      "message": "Entfernen der PIN wurde nicht auf dem Gerät gespeichert. Erwarteter Typ der PIN-Einstellungen {expected}, tatsächlicher Typ {actual}."
+    },
+    "not_saved_authorised_user_pin": {
+      "message": "PIN wurde nicht auf dem Gerät gespeichert. Erwartet war nicht der Typ {expected} für die PIN-Einstellungen, tatsächlicher Typ {actual}."
+    },
+    "not_saved_remove_supervisior_pin": {
+      "message": "Entfernen der PIN wurde nicht auf dem Gerät gespeichert. Erwarteter Typ der PIN-Einstellungen {expected}, tatsächlicher Typ {actual}."
+    },
+    "not_saved_supervisior_pin": {
+      "message": "PIN wurde nicht auf dem Gerät gespeichert. Erwarteter Typ der PIN-Einstellungen {expected}, tatsächlicher Typ {actual}."
+    },
+    "not_saved_automove": {
+      "message": "Änderung von Automove wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
+    },
+    "not_saved_freeze_preset_index": {
+      "message": "Änderung des Freeze-Presets wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
+    },
+    "not_saved_multi_pin_features": {
+      "message": "Änderung der Multi-PIN-Funktionen wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
+    },
+    "device_not_found_while_connecting": {
+      "message": "Gerät mit {mac} beim Verbindungsversuch nicht gefunden."
+    },
+    "calibration_timeout_status": {
+      "message": "Zeitüberschreitung der Kalibrierung beim Warten auf den Status, dauerte länger als {seconds} Sekunden."
+    },
+    "calibration_timeout_homeing": {
+      "message": "Zeitüberschreitung der Kalibrierung beim Referenzieren, hängt bei Abstand {distance} mit Drehung {rotation} fest, dauerte länger als {seconds} Sekunden."
+    },
+    "error_device_not_found": {
+      "message": "Gerät nicht gefunden. Bitte die MAC-Adresse prüfen und sicherstellen, dass das Gerät eingeschaltet ist."
+    },
+    "error_unknown": {
+      "message": "Beim Verbinden mit dem Gerät ist ein unbekannter Fehler aufgetreten. {error}"
+    },
+    "error_invalid_authentication": {
+      "message": "Authentifizierung fehlgeschlagen, PIN fehlt oder ist ungültig."
+    },
+    "error_invalid_authentication_cooldown": {
+      "message": "Authentifizierung fehlgeschlagen, zu viele Versuche. Ein erneuter Versuch ist ab {retry_at} möglich."
+    },
+    "invalid_ha_version": {
+      "message": "Vogels Motion Mount BLE benötigt Home Assistant Version {version}."
+    }
+  },
+  "config": {
+    "error": {
+      "invalid_ha_version": "Vogels Motion Mount BLE benötigt Home Assistant Version {version}.",
+      "invalid_mac_code": "Die eingegebene MAC-Adresse ist ungültig.",
+      "error_device_not_found": "Gerät nicht gefunden. Bitte die MAC-Adresse prüfen und sicherstellen, dass das Gerät eingeschaltet ist.",
+      "error_invalid_authentication": "Authentifizierung fehlgeschlagen, PIN fehlt oder ist ungültig.",
+      "error_invalid_authentication_cooldown": "Authentifizierung fehlgeschlagen, zu viele Versuche. Ein erneuter Versuch ist ab {retry_at} möglich.",
+      "error_missing_permission": "Der Benutzer hat keine Berechtigung für die angeforderte Aktion.",
+      "error_unknown": "Beim Verbinden mit dem Gerät ist ein unbekannter Fehler aufgetreten. {error}"
+    },
+    "abort": {
+      "already_configured": "Das Gerät ist bereits eingerichtet.",
+      "reconfigure_successful": "Neukonfiguration erfolgreich!",
+      "reauth_successful": "Authentifizierung erfolgreich!"
+    },
+    "step": {
+      "bluetooth": {
+        "title": "Erkanntes Gerät einrichten",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Gerätename",
+          "conf_pin": "PIN"
+        }
+      },
+      "user": {
+        "title": "Neues Gerät hinzufügen",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Gerätename",
+          "conf_pin": "PIN"
+        }
+      },
+      "reauth": {
+        "title": "Authentifizierung aktualisieren",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Gerätename",
+          "conf_pin": "PIN"
+        }
+      },
+      "reconfigure": {
+        "title": "Konfiguration aktualisieren",
+        "data": {
+          "conf_mac": "MAC",
+          "conf_name": "Gerätename",
+          "conf_pin": "PIN"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connection": {
+        "name": "Verbindung"
+      }
+    },
+    "button": {
+      "start_calibration": {
+        "name": "Kalibrierung starten"
+      },
+      "refresh_data": {
+        "name": "Daten aktualisieren"
+      },
+      "disconnect": {
+        "name": "Verbindung trennen"
+      },
+      "select_preset_default": {
+        "name": "Standard-Preset auswählen"
+      },
+      "select_preset_custom": {
+        "name": "Preset {preset} auswählen"
+      },
+      "delete_preset_custom": {
+        "name": "Preset {preset} löschen"
+      },
+      "add_preset_custom": {
+        "name": "Preset {preset} hinzufügen"
+      }
+    },
+    "number": {
+      "distance": {
+        "name": "Abstand"
+      },
+      "rotation": {
+        "name": "Drehung"
+      },
+      "tv_width": {
+        "name": "TV-Breite"
+      },
+      "preset_distance_custom": {
+        "name": "Preset {preset} Abstand"
+      },
+      "preset_rotation_custom": {
+        "name": "Preset {preset} Drehung"
+      }
+    },
+    "select": {
+      "auto_move": {
+        "name": "Automove-Einstellung",
+        "state": {
+          "0": "Aus",
+          "1": "HDMI 1",
+          "2": "HDMI 2",
+          "3": "HDMI 3",
+          "4": "HDMI 4",
+          "5": "HDMI 5"
+        }
+      },
+      "freeze_preset": {
+        "name": "Freeze-Preset",
+        "state": {
+          "0": "Standard",
+          "1": "Preset 1",
+          "2": "Preset 2",
+          "3": "Preset 3",
+          "4": "Preset 4",
+          "5": "Preset 5",
+          "6": "Preset 6",
+          "7": "Preset 7"
+        }
+      },
+      "current_preset": {
+        "name": "Aktuelles Preset",
+        "state": {
+          "0": "Standard"
+        }
+      }
+    },
+    "sensor": {
+      "current_distance": {
+        "name": "Abstand"
+      },
+      "current_rotation": {
+        "name": "Drehung"
+      },
+      "ceb_bl_version": {
+        "name": "CEB-BL-Version"
+      },
+      "mcp_hw_version": {
+        "name": "MCP-HW-Version"
+      },
+      "mcp_bl_version": {
+        "name": "MCP-BL-Version"
+      },
+      "mcp_fw_version": {
+        "name": "MCP-FW-Version"
+      },
+      "pin_settings": {
+        "name": "PIN-Einstellungen",
+        "state": {
+          "12": "Aus",
+          "13": "Einzeln",
+          "14": "Supervisor",
+          "15": "Mehrfach"
+        }
+      },
+      "authentication": {
+        "name": "Authentifizierung",
+        "state": {
+          "0": "Falsch",
+          "1": "Steuerung",
+          "2": "Vollzugriff"
+        }
+      }
+    },
+    "switch": {
+      "change_presets": {
+        "name": "Presets ändern",
+        "state": {
+          "on": "An",
+          "off": "Aus"
+        }
+      },
+      "change_name": {
+        "name": "Name ändern"
+      },
+      "disable_channel": {
+        "name": "Kanal deaktivieren"
+      },
+      "change_tv_on_off_detection": {
+        "name": "TV-Ein/Aus-Erkennung ändern"
+      },
+      "change_default_position": {
+        "name": "Standardposition ändern"
+      },
+      "start_calibration": {
+        "name": "Kalibrierung starten",
+        "state": {
+          "on": "An",
+          "off": "Aus"
+        }
+      }
+    },
+    "text": {
+      "name": {
+        "name": "Name"
+      },
+      "preset_name_custom": {
+        "name": "Preset {preset} Name"
+      }
+    }
+  },
+  "selector": {
+    "preset": {
+      "options": {
+        "0": "Preset 0",
+        "1": "Preset 1",
+        "2": "Preset 2",
+        "3": "Preset 3",
+        "4": "Preset 4",
+        "5": "Preset 5",
+        "6": "Preset 6"
+      }
+    },
+    "automove": {
+      "options": {
+        "off": "Aus",
+        "hdmi_1": "HDMI 1",
+        "hdmi_2": "HDMI 2",
+        "hdmi_3": "HDMI 3",
+        "hdmi_4": "HDMI 4",
+        "hdmi_5": "HDMI 5"
+      }
+    }
+  },
+  "services": {
+    "set_authorised_user_pin": {
+      "name": "PIN für autorisierte Benutzer setzen",
+      "description": "Setzt eine PIN für autorisierte Benutzer, die die Halterung steuern und gegebenenfalls Einstellungen ändern dürfen.",
+      "fields": {
+        "device_id": {
+          "name": "Zielgerät",
+          "description": "Welches Gerät diese Aktion verwenden soll."
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "4-stellige numerische PIN. 0000 entfernt die PIN, ist aber nur möglich, wenn keine Supervisor-PIN gesetzt ist."
+        }
+      }
+    },
+    "set_supervisior_pin": {
+      "name": "Supervisor-PIN setzen",
+      "description": "Setzt eine PIN für einen Supervisor. Autorisierte Benutzer dürfen danach nur noch steuern. Nur verfügbar, wenn bereits eine PIN für autorisierte Benutzer gesetzt ist.",
+      "fields": {
+        "device_id": {
+          "name": "Zielgerät",
+          "description": "Welches Gerät diese Aktion verwenden soll."
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "4-stellige numerische PIN. 0000 entfernt die PIN."
+        }
+      }
+    }
+  }
+}

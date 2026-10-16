@@ -170,8 +170,14 @@ async def test_async_setup_entry_refresh_failure(
     )
     mock_config_entry.runtime_data.data.permissions.auth_status.cooldown = 0
 
-    with pytest.raises(ConfigEntryNotReady, match="refresh failed"):
+    with pytest.raises(ConfigEntryNotReady) as err:
         await async_setup_entry(hass, mock_config_entry)
+
+    # The message is now generated from the translation, the original error
+    # is carried in the placeholder.
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "error_unknown"
+    assert "refresh failed" in err.value.translation_placeholders["error"]
 
 
 @pytest.mark.asyncio

@@ -148,8 +148,13 @@ You can disable it in the system options of your added device.
   - **Options**: `"off"`, `"hdmi_1"`, `"hdmi_2"`, `"hdmi_3"`, `"hdmi_4"`, `"hdmi_5"`
 
 - **Freeze**
+
   - **Description**: Sets the preset to move to when automove is triggered.
   - **Options**: `"0"` (default wall), `"1"`–`"7"` (custom presets)
+
+- **Current preset**
+  - **Description**: Shows the preset the mount is currently at, detected by comparing the current distance and rotation with the presets (a deviation of up to 3 in distance and 3 in rotation is tolerated). Selecting an option moves the mount to that preset. Unknown when the mount is not at any preset.
+  - **Options**: `"0"` (default wall), names of the existing custom presets
 
 #### Sensors
 

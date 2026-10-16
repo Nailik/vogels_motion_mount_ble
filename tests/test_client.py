@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakClient
 from bleak.backends.device import BLEDevice
+from bleak.exc import BleakCharacteristicNotFoundError
 import pytest
 
 from custom_components.vogels_motion_mount_ble.client import (
@@ -25,6 +26,7 @@ from custom_components.vogels_motion_mount_ble.const import (
     CHAR_DISTANCE_UUID,
     CHAR_FREEZE_UUID,
     CHAR_NAME_UUID,
+    CHAR_PIN_CHECK_UUID,
     CHAR_PIN_SETTINGS_UUID,
     CHAR_PRESET_NAMES_UUIDS,
     CHAR_PRESET_UUID,
@@ -616,6 +618,123 @@ async def test_connect_sets_session_and_triggers_callbacks(mock_dev):
         assert isinstance(session, _VogelsMotionMountSessionData)
         permission_cb.assert_called_once_with(mock_perms)
         connection_cb.assert_called_once_with(mock_client.is_connected)
+
+
+@pytest.mark.asyncio
+async def test_connect_clears_stale_cache_and_retries(mock_dev):
+    """Ensure _connect drops an incomplete service cache and connects again."""
+    stale_client = AsyncMock(spec=BleakClient)
+    fresh_client = AsyncMock(spec=BleakClient)
+    mock_perms = VogelsMotionMountPermissions(
+        auth_status=VogelsMotionMountAuthenticationStatus(
+            auth_type=VogelsMotionMountAuthenticationType.Full
+        ),
+        change_settings=True,
+        change_default_position=True,
+        change_name=True,
+        change_presets=True,
+        change_tv_on_off_detection=True,
+        disable_channel=True,
+        start_calibration=True,
+    )
+    with (
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.establish_connection",
+            side_effect=[stale_client, fresh_client],
+        ) as mock_establish,
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.clear_cache",
+            new_callable=AsyncMock,
+        ) as mock_clear_cache,
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.get_permissions",
+            side_effect=[
+                BleakCharacteristicNotFoundError(CHAR_PIN_CHECK_UUID),
+                mock_perms,
+            ],
+        ),
+    ):
+        client = VogelsMotionMountBluetoothClient(
+            pin=None,
+            device=mock_dev,
+            permission_callback=lambda _: None,
+            connection_callback=lambda _: None,
+            distance_callback=lambda _: None,
+            rotation_callback=lambda _: None,
+        )
+        session = await client._connect()  # noqa: SLF001
+
+    assert session.client is fresh_client
+    assert session.permissions == mock_perms
+    stale_client.disconnect.assert_awaited_once()
+    mock_clear_cache.assert_awaited_once_with(MOCKED_CONF_MAC)
+    assert mock_establish.await_count == 2
+    assert mock_establish.await_args_list[0].kwargs["use_services_cache"] is True
+    assert mock_establish.await_args_list[1].kwargs["use_services_cache"] is False
+
+
+@pytest.mark.asyncio
+async def test_connect_raises_when_characteristic_missing_after_retry(mock_dev):
+    """Ensure _connect gives up when the characteristic is still missing."""
+    with (
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.establish_connection",
+            side_effect=[AsyncMock(spec=BleakClient), AsyncMock(spec=BleakClient)],
+        ),
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.clear_cache",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.get_permissions",
+            side_effect=BleakCharacteristicNotFoundError(CHAR_PIN_CHECK_UUID),
+        ),
+    ):
+        client = VogelsMotionMountBluetoothClient(
+            pin=None,
+            device=mock_dev,
+            permission_callback=lambda _: None,
+            connection_callback=lambda _: None,
+            distance_callback=lambda _: None,
+            rotation_callback=lambda _: None,
+        )
+        with pytest.raises(BleakCharacteristicNotFoundError):
+            await client._connect()  # noqa: SLF001
+        assert client._session_data is None  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_connect_disconnects_when_retry_fails(mock_dev):
+    """Ensure _connect does not leave the retried connection open when it fails."""
+    stale_client = AsyncMock(spec=BleakClient)
+    fresh_client = AsyncMock(spec=BleakClient)
+    with (
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.establish_connection",
+            side_effect=[stale_client, fresh_client],
+        ),
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.clear_cache",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.vogels_motion_mount_ble.client.get_permissions",
+            side_effect=BleakCharacteristicNotFoundError(CHAR_PIN_CHECK_UUID),
+        ),
+    ):
+        client = VogelsMotionMountBluetoothClient(
+            pin=None,
+            device=mock_dev,
+            permission_callback=lambda _: None,
+            connection_callback=lambda _: None,
+            distance_callback=lambda _: None,
+            rotation_callback=lambda _: None,
+        )
+        with pytest.raises(BleakCharacteristicNotFoundError):
+            await client._connect()  # noqa: SLF001
+
+    stale_client.disconnect.assert_awaited_once()
+    fresh_client.disconnect.assert_awaited_once()
 
 
 def test_handle_disconnect_resets_session_and_triggers_callback(mock_dev):

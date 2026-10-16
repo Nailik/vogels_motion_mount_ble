@@ -11,7 +11,12 @@ import struct
 from bleak import BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
-from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
+from bleak.exc import BleakCharacteristicNotFoundError
+from bleak_retry_connector import (
+    BleakClientWithServiceCache,
+    clear_cache,
+    establish_connection,
+)
 
 from .const import (
     CHAR_AUTHENTICATE_UUID,
@@ -354,14 +359,30 @@ class VogelsMotionMountBluetoothClient:
                 _LOGGER.debug("Already connected")
                 return self._session_data
 
-            client = await establish_connection(
-                client_class=BleakClientWithServiceCache,
-                device=self._device,
-                name=self._device.name or "Unknown Device",
-                disconnected_callback=self._handle_disconnect,
-            )
+            client = await self._establish_connection()
 
-            pers = await get_permissions(client, self._pin)
+            try:
+                pers = await get_permissions(client, self._pin)
+            except BleakCharacteristicNotFoundError:
+                # BlueZ can keep an incomplete GATT cache after a service
+                # discovery was interrupted. Connecting then still succeeds,
+                # but reading a characteristic fails although the device does
+                # offer it. Drop that cache and connect once more, this time
+                # forcing a full discovery.
+                _LOGGER.debug(
+                    "Incomplete service cache for %s, clearing it and reconnecting",
+                    self._device.address,
+                )
+                await client.disconnect()
+                await clear_cache(self._device.address)
+                client = await self._establish_connection(use_services_cache=False)
+                try:
+                    pers = await get_permissions(client, self._pin)
+                except Exception:
+                    # do not leave the retried connection open
+                    await client.disconnect()
+                    raise
+
             _LOGGER.debug("Connected with permissions %s", pers)
             self._session_data = _VogelsMotionMountSessionData(
                 client=client,
@@ -371,6 +392,18 @@ class VogelsMotionMountBluetoothClient:
             self._permission_callback(self._session_data.permissions)
             self._connection_callback(self._session_data.client.is_connected)
             return self._session_data
+
+    async def _establish_connection(
+        self, use_services_cache: bool = True
+    ) -> BleakClientWithServiceCache:
+        """Open a connection to the device."""
+        return await establish_connection(
+            client_class=BleakClientWithServiceCache,
+            device=self._device,
+            name=self._device.name or "Unknown Device",
+            disconnected_callback=self._handle_disconnect,
+            use_services_cache=use_services_cache,
+        )
 
     def _handle_disconnect(self, _: BleakClient):
         """Reset session and call connection callback."""
