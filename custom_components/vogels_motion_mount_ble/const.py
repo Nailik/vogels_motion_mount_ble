@@ -44,3 +44,8 @@ CHAR_PIN_SETTINGS_UUID = "c005fa39-0651-4800-b000-000000000000"
 CHAR_MULTI_PIN_FEATURES_UUID = "c005fa31-0651-4800-b000-000000000000"
 CHAR_CALIBRATE_UUID = "c005fa03-0651-4800-b000-000000000000"
 CHAR_DISABLE_CHANNEL = ""
+
+# Tolerances used when matching the current distance/rotation against presets,
+# the mount does not always stop at the exact requested value.
+DISTANCE_TOLERANCE = 3
+ROTATION_TOLERANCE = 3

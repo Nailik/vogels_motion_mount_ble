@@ -19,6 +19,7 @@ from custom_components.vogels_motion_mount_ble.data import (
 )
 from custom_components.vogels_motion_mount_ble.select import (
     AutomoveSelect,
+    CurrentPresetSelect,
     FreezePresetSelect,
 )
 from homeassistant.const import Platform
@@ -169,3 +170,74 @@ def test_freeze_preset_select_current_option_valid(
 
     # Options should be ["0", "one", "two"]
     assert select.current_option == "two"
+
+
+# -------------------------------
+# region Current preset
+# -------------------------------
+
+
+def _current_preset_select(
+    mock_coord: VogelsMotionMountBleCoordinator, distance: int, rotation: int
+) -> CurrentPresetSelect:
+    mock_coord.data.presets = [
+        VogelsMotionMountPreset(
+            0, VogelsMotionMountPresetData(name="one", distance=50, rotation=20)
+        ),
+        VogelsMotionMountPreset(1, None),
+        VogelsMotionMountPreset(
+            2, VogelsMotionMountPresetData(name="two", distance=54, rotation=20)
+        ),
+        VogelsMotionMountPreset(
+            3, VogelsMotionMountPresetData(name="one", distance=100, rotation=-100)
+        ),
+    ]
+    mock_coord.data.distance = distance
+    mock_coord.data.rotation = rotation
+    return CurrentPresetSelect(mock_coord)
+
+
+def test_current_preset_options(mock_coord: VogelsMotionMountBleCoordinator):
+    """Test options skip missing presets and stay unique."""
+    select = _current_preset_select(mock_coord, 0, 0)
+    assert select.options == ["0", "one", "two", "one (4)"]
+
+
+@pytest.mark.parametrize(
+    ("distance", "rotation", "expected"),
+    [
+        (0, 0, "0"),
+        (2, -3, "0"),
+        (4, 0, None),
+        (50, 20, "one"),
+        (51, 17, "one"),
+        (53, 20, "two"),
+        (54, 24, None),
+        (98, -97, "one (4)"),
+        (75, 0, None),
+    ],
+)
+def test_current_preset_current_option(
+    mock_coord: VogelsMotionMountBleCoordinator,
+    distance: int,
+    rotation: int,
+    expected: str | None,
+):
+    """Test current preset is detected within tolerance and closest match wins."""
+    select = _current_preset_select(mock_coord, distance, rotation)
+    assert select.current_option == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("option", "expected_index"),
+    [("0", 0), ("one", 1), ("two", 3), ("one (4)", 4)],
+)
+async def test_current_preset_select_option(
+    mock_coord: VogelsMotionMountBleCoordinator, option: str, expected_index: int
+):
+    """Test selecting a preset moves to the device preset index."""
+    mock_coord.select_preset = AsyncMock()
+    select = _current_preset_select(mock_coord, 0, 0)
+    await select.async_select_option(option)
+    mock_coord.select_preset.assert_awaited_once_with(expected_index)
