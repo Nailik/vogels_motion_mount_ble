@@ -105,28 +105,20 @@ async def async_setup_entry(
             translation_key="error_device_not_found",
         )
 
-    # Registers update listener to update config entry when options are updated.
-    unsub_update_listener = config_entry.add_update_listener(async_reload_entry)
-
     coordinator = VogelsMotionMountBleCoordinator(
         hass=hass,
         config_entry=config_entry,
         device=device,
-        unsub_options_update_listener=unsub_update_listener,
     )
     config_entry.runtime_data = coordinator
 
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryAuthFailed as err:
-        # do not reload if setup failed
         _LOGGER.debug("async_setup_entry ConfigEntryAuthFailed %s", str(err))
-        unsub_update_listener()
         raise err from err
     except HomeAssistantError as err:
         _LOGGER.debug("async_setup_entry HomeAssistantError %s", str(err))
-        # do not reload if setup failed
-        unsub_update_listener()
         raise ConfigEntryNotReady(
             translation_domain=err.translation_domain or DOMAIN,
             translation_key=err.translation_key,
@@ -134,8 +126,6 @@ async def async_setup_entry(
         ) from err
     except Exception as err:
         _LOGGER.debug("async_setup_entry Exception %s", str(err))
-        # do not reload if setup failed
-        unsub_update_listener()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="error_unknown",
@@ -163,13 +153,6 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
-
-
-async def async_reload_entry(
-    hass: HomeAssistant, config_entry: VogelsMotionMountBleConfigEntry
-) -> None:
-    """Reload config entry, also works if the entry never finished loading."""
-    hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(

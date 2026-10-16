@@ -410,7 +410,11 @@ class VogelsMotionMountBluetoothClient:
     ) -> bool:
         # moving and recalling presets is allowed for every authenticated user
         if char_uuid in (CHAR_DISTANCE_UUID, CHAR_ROTATION_UUID, CHAR_PRESET_UUID):
-            return True
+            return (
+                permissions.auth_status is not None
+                and permissions.auth_status.auth_type
+                != VogelsMotionMountAuthenticationType.Wrong
+            )
 
         return (
             (char_uuid in CHAR_PRESET_UUIDS and permissions.change_presets)

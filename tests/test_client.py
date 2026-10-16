@@ -97,7 +97,9 @@ def mock_ble_client() -> BleakClient:
 def mock_session(mock_ble_client: BleakClient) -> _VogelsMotionMountSessionData:
     """Create a mock session data."""
     perms = VogelsMotionMountPermissions(
-        auth_status=None,
+        auth_status=VogelsMotionMountAuthenticationStatus(
+            auth_type=VogelsMotionMountAuthenticationType.Full
+        ),
         change_settings=True,
         change_default_position=True,
         change_name=True,
@@ -1035,6 +1037,13 @@ def _rights(**overridden) -> VogelsMotionMountPermissions:
     return VogelsMotionMountPermissions(**{**base, **overridden})
 
 
+def _auth_status(auth_type: str) -> VogelsMotionMountAuthenticationStatus:
+    """Authentication status for the named auth type."""
+    return VogelsMotionMountAuthenticationStatus(
+        auth_type=VogelsMotionMountAuthenticationType[auth_type]
+    )
+
+
 @pytest.mark.parametrize(
     ("char_uuid", "permissions", "expected"),
     [
@@ -1050,9 +1059,14 @@ def _rights(**overridden) -> VogelsMotionMountPermissions:
         (CHAR_CALIBRATE_UUID, _rights(start_calibration=True), True),
         (CHAR_CALIBRATE_UUID, _rights(), False),
         # Control: moving and recalling need no settings permission at all.
-        (CHAR_DISTANCE_UUID, _rights(), True),
-        (CHAR_ROTATION_UUID, _rights(), True),
-        (CHAR_PRESET_UUID, _rights(), True),
+        (CHAR_DISTANCE_UUID, _rights(auth_status=_auth_status("Control")), True),
+        (CHAR_ROTATION_UUID, _rights(auth_status=_auth_status("Control")), True),
+        (CHAR_PRESET_UUID, _rights(auth_status=_auth_status("Control")), True),
+        # but not without a valid pin
+        (CHAR_DISTANCE_UUID, _rights(auth_status=_auth_status("Wrong")), False),
+        (CHAR_ROTATION_UUID, _rights(auth_status=_auth_status("Wrong")), False),
+        (CHAR_PRESET_UUID, _rights(auth_status=_auth_status("Wrong")), False),
+        (CHAR_PRESET_UUID, _rights(), False),
         # change_settings is the supervisor and covers everything.
         (CHAR_PRESET_UUIDS[3], _rights(change_settings=True), True),
         (CHAR_NAME_UUID, _rights(change_settings=True), True),

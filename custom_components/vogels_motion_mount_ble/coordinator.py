@@ -40,10 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-def _pin_modes(bedingung) -> str:
+def _pin_modes(condition: Callable[[VogelsMotionMountPinSettings], bool]) -> str:
     """List the pin modes satisfying a condition, for an error message."""
     return ", ".join(
-        str(modus) for modus in VogelsMotionMountPinSettings if bedingung(modus)
+        str(mode) for mode in VogelsMotionMountPinSettings if condition(mode)
     )
 
 
@@ -59,7 +59,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         device: BLEDevice,
-        unsub_options_update_listener: Callable[[], None],
     ) -> None:
         """Initialize coordinator and setup client."""
         _LOGGER.debug("Startup coordinator with %s", config_entry.data)
@@ -87,7 +86,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
         )
 
         # Setup listeners
-        self._unsub_options_update_listener = unsub_options_update_listener
         self._unsub_unavailable_update_listener = bluetooth.async_track_unavailable(
             hass, self._unavailable_callback, self.address, connectable=True
         )
@@ -113,7 +111,6 @@ class VogelsMotionMountBleCoordinator(DataUpdateCoordinator[VogelsMotionMountDat
     async def unload(self):
         """Disconnect and unload."""
         _LOGGER.debug("unload coordinator")
-        self._unsub_options_update_listener()
         self._unsub_unavailable_update_listener()
         self._unsub_available_update_listener()
         await self._client.disconnect()
