@@ -92,6 +92,15 @@
     },
     "error_unknown": {
       "message": "Beim Verbinden mit dem Gerät ist ein unbekannter Fehler aufgetreten. {error}"
+    },
+    "error_invalid_authentication": {
+      "message": "Authentifizierung fehlgeschlagen, PIN fehlt oder ist ungültig."
+    },
+    "error_invalid_authentication_cooldown": {
+      "message": "Authentifizierung fehlgeschlagen, zu viele Versuche. Ein erneuter Versuch ist ab {retry_at} möglich."
+    },
+    "invalid_ha_version": {
+      "message": "Vogels Motion Mount BLE benötigt Home Assistant Version {version}."
     }
   },
   "config": {
