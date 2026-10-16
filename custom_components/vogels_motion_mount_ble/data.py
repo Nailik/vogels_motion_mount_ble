@@ -7,11 +7,22 @@ from enum import Enum
 
 
 class VogelsMotionMountPinSettings(Enum):
-    """Pin settings."""
+    """Pin settings, bit 0: authorised user pin set, bit 1: supervisor pin set."""
 
     Deactivated = 12
     Single = 13
+    Supervisor = 14
     Multi = 15
+
+    @property
+    def authorised_user_pin_set(self) -> bool:
+        """Whether operating the mount needs a pin."""
+        return bool(self.value & 1)
+
+    @property
+    def supervisor_pin_set(self) -> bool:
+        """Whether changing settings needs the supervisor's pin."""
+        return bool(self.value & 2)
 
 
 class VogelsMotionMountAuthenticationType(Enum):

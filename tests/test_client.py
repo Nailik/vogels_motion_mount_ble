@@ -10,7 +10,7 @@ import pytest
 
 from custom_components.vogels_motion_mount_ble.client import (
     VogelsMotionMountBluetoothClient,
-    VogelsMotionMountClientAuthenticationError,
+    VogelsMotionMountClientPermissionError,
     _encode_supervisior_pin,
     _get_auth_status,
     _get_max_auth_status,
@@ -29,6 +29,7 @@ from custom_components.vogels_motion_mount_ble.const import (
     CHAR_PIN_CHECK_UUID,
     CHAR_PIN_SETTINGS_UUID,
     CHAR_PRESET_NAMES_UUIDS,
+    CHAR_PRESET_UUID,
     CHAR_PRESET_UUIDS,
     CHAR_ROTATION_UUID,
     CHAR_VERSIONS_CEB_UUID,
@@ -96,7 +97,9 @@ def mock_ble_client() -> BleakClient:
 def mock_session(mock_ble_client: BleakClient) -> _VogelsMotionMountSessionData:
     """Create a mock session data."""
     perms = VogelsMotionMountPermissions(
-        auth_status=None,
+        auth_status=VogelsMotionMountAuthenticationStatus(
+            auth_type=VogelsMotionMountAuthenticationType.Full
+        ),
         change_settings=True,
         change_default_position=True,
         change_name=True,
@@ -802,7 +805,11 @@ async def test_write_without_permission_raises(
     client: VogelsMotionMountBluetoothClient,
     mock_session: _VogelsMotionMountSessionData,
 ):
-    """Writing a characteristic without permission raises authentication error."""
+    """Writing without the right raises a permission error, not an auth error.
+
+    The pin is accepted; it simply does not carry this right. Reporting an
+    authentication failure sends the user off to change a correct pin.
+    """
     client._connect = AsyncMock(return_value=mock_session)  # noqa: SLF001
     mock_session.permissions = VogelsMotionMountPermissions(
         auth_status=None,
@@ -815,7 +822,7 @@ async def test_write_without_permission_raises(
         start_calibration=False,
     )
     client._session_data = mock_session  # noqa: SLF001
-    with pytest.raises(VogelsMotionMountClientAuthenticationError):
+    with pytest.raises(VogelsMotionMountClientPermissionError):
         await client._write(CHAR_NAME_UUID, b"test")  # noqa: SLF001
 
 
@@ -1013,3 +1020,120 @@ async def test_read_multi_pin_features_directly_maps_bits():
     assert result.change_default_position
     assert not result.change_name
     assert not result.change_tv_on_off_detection
+
+
+def _rights(**overridden) -> VogelsMotionMountPermissions:
+    """Permissions with everything denied unless named."""
+    base = {
+        "auth_status": None,
+        "change_settings": False,
+        "change_default_position": False,
+        "change_name": False,
+        "change_presets": False,
+        "change_tv_on_off_detection": False,
+        "disable_channel": False,
+        "start_calibration": False,
+    }
+    return VogelsMotionMountPermissions(**{**base, **overridden})
+
+
+def _auth_status(auth_type: str) -> VogelsMotionMountAuthenticationStatus:
+    """Authentication status for the named auth type."""
+    return VogelsMotionMountAuthenticationStatus(
+        auth_type=VogelsMotionMountAuthenticationType[auth_type]
+    )
+
+
+@pytest.mark.parametrize(
+    ("char_uuid", "permissions", "expected"),
+    [
+        # Every preset slot and every preset name, not just the first.
+        *[
+            (uuid, _rights(change_presets=True), True)
+            for uuid in (*CHAR_PRESET_UUIDS, *CHAR_PRESET_NAMES_UUIDS)
+        ],
+        (CHAR_PRESET_UUIDS[0], _rights(), False),
+        (CHAR_PRESET_NAMES_UUIDS[6], _rights(), False),
+        (CHAR_NAME_UUID, _rights(change_name=True), True),
+        (CHAR_NAME_UUID, _rights(), False),
+        (CHAR_CALIBRATE_UUID, _rights(start_calibration=True), True),
+        (CHAR_CALIBRATE_UUID, _rights(), False),
+        # Control: moving and recalling need no settings permission at all.
+        (CHAR_DISTANCE_UUID, _rights(auth_status=_auth_status("Control")), True),
+        (CHAR_ROTATION_UUID, _rights(auth_status=_auth_status("Control")), True),
+        (CHAR_PRESET_UUID, _rights(auth_status=_auth_status("Control")), True),
+        # but not without a valid pin
+        (CHAR_DISTANCE_UUID, _rights(auth_status=_auth_status("Wrong")), False),
+        (CHAR_ROTATION_UUID, _rights(auth_status=_auth_status("Wrong")), False),
+        (CHAR_PRESET_UUID, _rights(auth_status=_auth_status("Wrong")), False),
+        (CHAR_PRESET_UUID, _rights(), False),
+        # change_settings is the supervisor and covers everything.
+        (CHAR_PRESET_UUIDS[3], _rights(change_settings=True), True),
+        (CHAR_NAME_UUID, _rights(change_settings=True), True),
+    ],
+)
+def test_has_write_permission(
+    client: VogelsMotionMountBluetoothClient,
+    char_uuid: str,
+    permissions: VogelsMotionMountPermissions,
+    expected: bool,
+) -> None:
+    """An authorised user may write what the feature bits allow."""
+    assert client._has_write_permission(char_uuid, permissions) is expected  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("raw", "expected", "user", "supervisor"),
+    [
+        (12, VogelsMotionMountPinSettings.Deactivated, False, False),
+        (13, VogelsMotionMountPinSettings.Single, True, False),
+        (14, VogelsMotionMountPinSettings.Supervisor, False, True),
+        (15, VogelsMotionMountPinSettings.Multi, True, True),
+    ],
+)
+async def test_read_pin_settings_covers_every_mode(
+    client: VogelsMotionMountBluetoothClient,
+    raw: int,
+    expected: VogelsMotionMountPinSettings,
+    user: bool,
+    supervisor: bool,
+) -> None:
+    """Every combination of the two pins decodes, 14 included."""
+    client._read = AsyncMock(return_value=bytearray([raw]))  # noqa: SLF001
+
+    result = await client.read_pin_settings()
+
+    assert result is expected
+    assert result.authorised_user_pin_set is user
+    assert result.supervisor_pin_set is supervisor
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        (b"\x00\x65", 100),  # 101, what a mount at its extreme reports
+        (b"\xff\x9b", -100),  # -101 on the other side
+        (b"\x00\x0f", 15),
+        (b"\xff\xf1", -15),
+    ],
+)
+async def test_read_rotation_is_signed_and_in_range(
+    client: VogelsMotionMountBluetoothClient, raw: bytes, expected: int
+) -> None:
+    """Rotation decodes signed and never leaves the documented range."""
+    client._read = AsyncMock(return_value=bytearray(raw))  # noqa: SLF001
+
+    assert await client.read_rotation() == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("raw", "expected"), [(b"\x00\x65", 100), (b"\x00\x32", 50)])
+async def test_read_distance_stays_in_range(
+    client: VogelsMotionMountBluetoothClient, raw: bytes, expected: int
+) -> None:
+    """Distance is clamped the same way, and for the same reason."""
+    client._read = AsyncMock(return_value=bytearray(raw))  # noqa: SLF001
+
+    assert await client.read_distance() == expected

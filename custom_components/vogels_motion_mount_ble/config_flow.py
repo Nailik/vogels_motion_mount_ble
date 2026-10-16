@@ -92,7 +92,13 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                         read_only=not name_editable,
                     )
                 ),
-                vol.Optional(CONF_PIN, default=pin): vol.All(
+                # suggested_value instead of default, so the pin can be removed
+                vol.Optional(
+                    CONF_PIN,
+                    description={"suggested_value": pin}
+                    if pin is not UNDEFINED
+                    else None,
+                ): vol.All(
                     NumberSelector(
                         NumberSelectorConfig(
                             min=0,
@@ -231,7 +237,8 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
                     entry=self._get_reauth_entry(),
-                    data_updates=user_input,
+                    # replace instead of merge, so a removed pin is not kept
+                    data=user_input,
                 )
         return self.async_show_form(
             step_id="reauth",
@@ -258,7 +265,8 @@ class VogelsMotionMountConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
                     entry=self._get_reconfigure_entry(),
-                    data_updates=user_input,
+                    # replace instead of merge, so a removed pin is not kept
+                    data=user_input,
                 )
         return self.async_show_form(
             step_id="reconfigure",

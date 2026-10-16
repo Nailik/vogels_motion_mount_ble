@@ -72,6 +72,9 @@
     "not_saved_supervisior_pin": {
       "message": "PIN wurde nicht auf dem Gerät gespeichert. Erwarteter Typ der PIN-Einstellungen {expected}, tatsächlicher Typ {actual}."
     },
+    "not_saved_automove": {
+      "message": "Änderung von Automove wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
+    },
     "not_saved_freeze_preset_index": {
       "message": "Änderung des Freeze-Presets wurde nicht auf dem Gerät gespeichert. Erwartet {expected}, tatsächlich {actual}."
     },
@@ -255,6 +258,7 @@
         "state": {
           "12": "Aus",
           "13": "Einzeln",
+          "14": "Supervisor",
           "15": "Mehrfach"
         }
       },

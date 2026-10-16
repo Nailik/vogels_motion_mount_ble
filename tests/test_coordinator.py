@@ -79,7 +79,6 @@ async def coordinator(
         hass=hass,
         config_entry=mock_config_entry,
         device=mock_bledevice,
-        unsub_options_update_listener=lambda: None,
     )
     coordinator.data = mock_data
     coordinator._client = mock_client  # noqa: SLF001
@@ -129,13 +128,8 @@ async def test_unload(
     mock_client: VogelsMotionMountBluetoothClient,
 ):
     """Test unloading of coordinator."""
-    unsub_called = False
     unsub_unavailable_called = False
     unsub_available_called = False
-
-    def unsub():
-        nonlocal unsub_called
-        unsub_called = True
 
     def unsub_unavailable():
         nonlocal unsub_unavailable_called
@@ -145,15 +139,13 @@ async def test_unload(
         nonlocal unsub_available_called
         unsub_available_called = True
 
-    coordinator._unsub_options_update_listener = unsub  # noqa: SLF001
     coordinator._unsub_unavailable_update_listener = unsub_unavailable  # noqa: SLF001
     coordinator._unsub_available_update_listener = unsub_available  # noqa: SLF001
 
     await coordinator.unload()
     mock_client.disconnect.assert_awaited()
-    assert unsub_called
-    assert unsub_unavailable
-    assert unsub_available
+    assert unsub_unavailable_called
+    assert unsub_available_called
 
 
 @pytest.mark.asyncio
@@ -580,3 +572,32 @@ async def test_call_raises_updatefailed_on_exception(
 
     with pytest.raises(ServiceValidationError):
         await coordinator._call(func)  # noqa: SLF001
+
+
+@pytest.mark.asyncio
+async def test_async_update_data_propagates_rejected_permissions(
+    coordinator: VogelsMotionMountBleCoordinator,
+):
+    """A mount that rejects the stored pin must reach HA as an auth failure.
+
+    _check_permission_status raises ConfigEntryAuthFailed from inside the try
+    block of _async_update_data, so the broad handler used to turn it into a
+    plain UpdateFailed. Home Assistant then never starts a reauth flow and the
+    entry retries forever on a pin that cannot work again. Testing
+    _check_permission_status on its own does not catch that.
+    """
+    coordinator._client.read_permissions.return_value = VogelsMotionMountPermissions(  # noqa: SLF001
+        auth_status=VogelsMotionMountAuthenticationStatus(
+            auth_type=VogelsMotionMountAuthenticationType.Wrong
+        ),
+        change_settings=False,
+        change_default_position=False,
+        change_name=False,
+        change_presets=False,
+        change_tv_on_off_detection=False,
+        disable_channel=False,
+        start_calibration=False,
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()  # noqa: SLF001

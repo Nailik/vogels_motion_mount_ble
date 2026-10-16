@@ -6,7 +6,6 @@ import pytest
 
 from custom_components.vogels_motion_mount_ble import (
     PLATFORMS,
-    async_reload_entry,
     async_setup,
     async_setup_entry,
     async_unload_entry,
@@ -104,6 +103,24 @@ async def test_async_setup_entry_success(
         mock_forward.assert_awaited_once_with(mock_config_entry, PLATFORMS)
         # Setup returned True
         assert result is True
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_registers_no_update_listener(
+    mock_config_entry: MagicMock, hass: HomeAssistant
+):
+    """Config flows reload the entry themselves, a listener would reload it twice."""
+    mock_config_entry.runtime_data.data.permissions.auth_status.auth_type = (
+        VogelsMotionMountAuthenticationType.Control
+    )
+    mock_config_entry.runtime_data.data.permissions.auth_status.cooldown = 0
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups", new_callable=AsyncMock
+    ):
+        await async_setup_entry(hass, mock_config_entry)
+
+    assert mock_config_entry.update_listeners == []
 
 
 @pytest.mark.asyncio
@@ -253,36 +270,6 @@ async def test_setup_entry_propagates_homeassistant_error(
     # Test: Should raise ConfigEntryAuthFailed, not ConfigEntryError
     with pytest.raises(ConfigEntryAuthFailed, match="auth failed"):
         await async_setup_entry(hass, mock_config_entry)
-
-
-# -------------------------------
-# region Reload
-# -------------------------------
-
-
-@pytest.mark.asyncio
-async def test_async_reload_entry(mock_config_entry: MagicMock):
-    """Reloading entry."""
-    # Mock HomeAssistant and config_entry
-    hass = MagicMock(spec=HomeAssistant)
-    async_unload = AsyncMock()
-    async_setup_entry = AsyncMock()
-
-    # Patch async_unload_entry and async_setup_entry to track calls
-    with (
-        patch(
-            "custom_components.vogels_motion_mount_ble.async_unload_entry", async_unload
-        ),
-        patch(
-            "custom_components.vogels_motion_mount_ble.async_setup_entry",
-            async_setup_entry,
-        ),
-    ):
-        await async_reload_entry(hass, mock_config_entry)
-
-        # Assert reloading was called with correct entry_id
-        async_unload.assert_awaited_once_with(hass, mock_config_entry)
-        async_setup_entry.assert_awaited_once_with(hass, mock_config_entry)
 
 
 # -------------------------------

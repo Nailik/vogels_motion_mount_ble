@@ -81,7 +81,8 @@ def _get_coordinator(call: ServiceCall) -> VogelsMotionMountBleCoordinator:
 
 
 async def _set_authorised_user_pin(call: ServiceCall) -> None:
-    _LOGGER.debug("Set authorised user pin service called with data: %s", call.data)
+    # do not log call.data, it contains the pin
+    _LOGGER.debug("Set authorised user pin service called")
     try:
         await _get_coordinator(call).set_authorised_user_pin(
             call.data[HA_SERVICE_PIN_ID]
@@ -94,7 +95,7 @@ async def _set_authorised_user_pin(call: ServiceCall) -> None:
 
 
 async def _set_supervisior_pin(call: ServiceCall) -> None:
-    _LOGGER.debug("Set supervisior pin service called with data: %s", call.data)
+    _LOGGER.debug("Set supervisior pin service called")
     try:
         await _get_coordinator(call).set_supervisior_pin(call.data[HA_SERVICE_PIN_ID])
     except VogelsMotionMountClientAuthenticationError as err:

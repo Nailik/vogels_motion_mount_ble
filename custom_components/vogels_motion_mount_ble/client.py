@@ -57,6 +57,10 @@ _LOGGER = logging.getLogger(__name__)
 # -------------------------------
 
 
+class VogelsMotionMountClientPermissionError(Exception):
+    """Exception class if pin is valid but has no permission for this action."""
+
+
 class VogelsMotionMountClientAuthenticationError(Exception):
     """Exception class if user is not authorized to do this action."""
 
@@ -121,7 +125,8 @@ class VogelsMotionMountBluetoothClient:
     async def read_distance(self) -> int:
         """Read and return the current distance value from the Vogels Motion Mount."""
         data = await self._read(CHAR_DISTANCE_UUID)
-        return int.from_bytes(data, "big")
+        # mount reports slightly out of range at the extremes
+        return max(0, min(int.from_bytes(data, "big"), 100))
 
     async def read_freeze_preset_index(self) -> int:
         """Read and return the index of the current freeze preset from the Vogels Motion Mount."""
@@ -179,7 +184,8 @@ class VogelsMotionMountBluetoothClient:
     async def read_rotation(self) -> int:
         """Read and return the current rotation value from the Vogels Motion Mount."""
         data = await self._read(CHAR_ROTATION_UUID)
-        return int.from_bytes(data, "big")
+        # mount reports 101 at the right extreme
+        return max(-100, min(int.from_bytes(data, "big", signed=True), 100))
 
     async def read_tv_width(self) -> int:
         """Read and return the width of the TV from the Vogels Motion Mount."""
@@ -395,16 +401,24 @@ class VogelsMotionMountBluetoothClient:
         """Writes data by first connecting, checking permission status and then writing data. Also reads updated data that is then returned to be verified."""
         session_data = await self._connect()
         if not self._has_write_permission(char_uuid, session_data.permissions):
-            raise VogelsMotionMountClientAuthenticationError(cooldown=0)
+            raise VogelsMotionMountClientPermissionError
         await session_data.client.write_gatt_char(char_uuid, data)
         _LOGGER.debug("Wrote data %s | %s", char_uuid, data)
 
     def _has_write_permission(
         self, char_uuid: str, permissions: VogelsMotionMountPermissions
     ) -> bool:
+        # moving and recalling presets is allowed for every authenticated user
+        if char_uuid in (CHAR_DISTANCE_UUID, CHAR_ROTATION_UUID, CHAR_PRESET_UUID):
+            return (
+                permissions.auth_status is not None
+                and permissions.auth_status.auth_type
+                != VogelsMotionMountAuthenticationType.Wrong
+            )
+
         return (
-            (char_uuid == CHAR_PRESET_UUIDS and permissions.change_presets)
-            or (char_uuid == CHAR_PRESET_NAMES_UUIDS and permissions.change_presets)
+            (char_uuid in CHAR_PRESET_UUIDS and permissions.change_presets)
+            or (char_uuid in CHAR_PRESET_NAMES_UUIDS and permissions.change_presets)
             or (char_uuid == CHAR_NAME_UUID and permissions.change_name)
             or (char_uuid == CHAR_DISABLE_CHANNEL and permissions.disable_channel)
             or (
